@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Entorno Virtual Interactivo</title>
+    <meta charset="utf-8">
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <!-- Piso -->
+      <a-plane position="0 0 0" rotation="-90 0 0" width="10" height="10" color="gray"></a-plane>
+
+      <!-- Cursor para interactuar con la caja -->
+      <a-entity cursor="rayOrigin: mouse" raycaster="objects: a-box"></a-entity>
+
+      
+      <!-- Caja interactiva -->
+      <a-box 
+        id="box" 
+        position="0 1 -3" 
+        rotation="0 45 0" 
+        color="#4CC3D9"
+        
+        >
+        
+      </a-box>
+
+      <!-- Luz y cámara -->
+      <a-light type="point" position="2 4 4"></a-light>
+      <a-sky color="#ECECEC"></a-sky>
+    </a-scene>
+
+    <!-- JavaScript para la interacción -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Seleccionar la caja por ID
+        const box = document.querySelector('#box');
+
+        
+
+        box.addEventListener('click', () => {
+            
+
+            if (box.getAttribute('color') === '#EF2D5E') {
+                box.setAttribute('color', '#4CC3D9');
+            }else{
+                box.setAttribute('color', '#EF2D5E'); 
+                
+            }
+        
+            let rotacion = box.getAttribute('rotation');
+            let posicionY= rotacion.y + 15;
+
+            // Animación de rotación
+            box.setAttribute('rotation', `0 ${posicionY} 0`);
+
+        });
+       
+
+      });
+    </script>
+  </body>
+</html>
