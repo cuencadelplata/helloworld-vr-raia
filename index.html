@@ -8,7 +8,7 @@
   <body>
     <a-scene>
       <!-- Piso -->
-      <a-plane position="0 0 0" rotation="-90 0 0" width="10" height="10" color="gray"></a-plane>
+      <a-plane position="0 0 0" rotation="-90 0 0" width="20" height="20" color="gray"></a-plane>
 
       <!-- Cursor para interactuar con la caja -->
       <a-entity cursor="rayOrigin: mouse" raycaster="objects: a-box"></a-entity>
@@ -26,11 +26,13 @@
       </a-box>
 
       <!-- Proyectil (Aplicar Fisica) -->
-    </a-sphere id="projectile" radius="0.1" color="red" visible="false"></a-sphere>
+      <a-sphere id="projectile" radius="0.1" color="red" visible="false"></a-sphere>
+
 
       <!-- Luz y cámara -->
       <a-light type="point" position="2 4 4"></a-light>
       <a-sky color="#ECECEC"></a-sky>
+
     </a-scene>
 
     <!-- JavaScript para la interacción -->
@@ -38,8 +40,10 @@
       document.addEventListener('DOMContentLoaded', () => {
         // Seleccionar la caja por ID
         const box = document.querySelector('#box');
+        //Selecciona la esfera por ID
+        const projectile = document.querySelector('#projectile');
 
-        
+        let isProjectileFlying = false;
 
         box.addEventListener('click', () => {
             
@@ -57,8 +61,41 @@
             // Animación de rotación
             box.setAttribute('rotation', `0 ${posicionY} 0`);
 
+            // Disparar el proyectil
+            shootProjectile();
+
         });
-       
+
+        function shootProjectile() {
+          isProjectileFlying = true;
+          projectile.setAttribute('visible', true);
+          projectile.setAttribute('position', '0 1 -3'); // Posición inicial
+
+          const velocity = 10; // Velocidad inicial
+          const angle = 10; // Ángulo de disparo en grados
+          const gravity = 9.8; // Gravedad
+
+          const rad = angle * (Math.PI / 180); // Convertir a radianes
+          const vx = velocity * Math.cos(rad); // Componente horizontal
+          const vy = velocity * Math.sin(rad); // Componente vertical
+
+          let time = 0;
+          const interval = setInterval(() => {
+            time += 0.1;
+
+            const x = vx * time; //Como no hay aceleración horizontal, la posición es simplemente vx * time
+            const y = vy * time - 0.5 * gravity * time * time;
+
+            if (y < 0) {
+              clearInterval(interval);
+              isProjectileFlying = false;
+              projectile.setAttribute('visible', false);
+              return;
+            }
+
+            projectile.setAttribute('position', `${x} ${y + 1} -3`);
+          }, 100);
+        }
 
       });
     </script>
