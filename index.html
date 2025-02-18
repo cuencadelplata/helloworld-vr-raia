@@ -71,9 +71,9 @@
           projectile.setAttribute('visible', true);
           projectile.setAttribute('position', '0 1 -3'); // Posición inicial
 
-          const velocity = 10; // Velocidad inicial
+          const velocity = 10; // Velocidad inicial m/s
           const angle = 10; // Ángulo de disparo en grados
-          const gravity = 9.8; // Gravedad
+          const gravity = 9.8; // Gravedad m/s2
 
           const rad = angle * (Math.PI / 180); // Convertir a radianes
           const vx = velocity * Math.cos(rad); // Componente horizontal
@@ -81,7 +81,7 @@
 
           let time = 0;
           const interval = setInterval(() => {
-            time += 0.1;
+            time += 0.06;
 
             const x = vx * time; //Como no hay aceleración horizontal, la posición es simplemente vx * time
             const y = vy * time - 0.5 * gravity * time * time;
