@@ -1,0 +1,21 @@
+{
+  "name": "Entorno Virtual Interactivo",
+  "short_name": "EntornoVR",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ECECEC",
+  "theme_color": "#ECECEC",
+  "description": "Demo VR en A-Frame como PWA",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

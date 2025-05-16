@@ -2,41 +2,57 @@
 <html>
   <head>
     <title>Entorno Virtual Interactivo</title>
-    <link rel="icon" href="data:,">
-    <meta charset="utf-8">
+    <link rel="icon" href="data:," />
+    <meta charset="utf-8" />
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#ECECEC" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("service-worker.js");
+        });
+      }
+    </script>
   </head>
   <body>
     <a-scene>
       <!-- Piso -->
-      <a-plane position="0 0 0" rotation="-90 0 0" width="20" height="20" color="white"></a-plane>
+      <a-plane
+        position="0 0 0"
+        rotation="-90 0 0"
+        width="20"
+        height="20"
+        color="white"
+      ></a-plane>
 
       <!-- Cursor para interactuar con la caja -->
       <a-entity cursor="rayOrigin: mouse" raycaster="objects: a-box"></a-entity>
 
-      
-
-      <a-entity 
+      <a-entity
         id="logo3d"
         position="0 2 -3"
         scale="4 4 4"
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear">
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear"
+      >
         <a-gltf-model src="./models/old_tyre_1k.gltf"></a-gltf-model>
       </a-entity>
 
       <!-- Proyectil (Aplicar Fisica) -->
-      <a-sphere id="projectile" radius="0.1" color="red" visible="false"></a-sphere>
-
+      <a-sphere
+        id="projectile"
+        radius="0.1"
+        color="red"
+        visible="false"
+      ></a-sphere>
 
       <!-- Luz y cámara -->
       <a-light type="point" position="2 4 4"></a-light>
       <a-sky color="#ECECEC"></a-sky>
-
     </a-scene>
 
     <!-- JavaScript para la interacción -->
-    <script>
-      
-    </script>
+    <script></script>
   </body>
 </html>
