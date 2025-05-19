@@ -18,7 +18,7 @@
   </head>
   <body>
     <a-scene>
-      <!-- Piso -->
+      <!-- Piso simple para referencia -->
       <a-plane
         position="0 0 0"
         rotation="-90 0 0"
@@ -27,80 +27,20 @@
         color="white"
       ></a-plane>
 
-      <!-- Cursor para interactuar con la caja -->
-      <a-entity cursor="rayOrigin: mouse" raycaster="objects: a-box"></a-entity>
-
-      <!-- LOGO 3D AJUSTADO: posición, escala y rotación para mejor visibilidad -->
+      <!-- Logo 3D centrado y visible -->
       <a-entity
         id="logo3d"
         position="0 1.5 -0.8"
         scale="2 2 2"
         rotation="0 45 0"
-        animation="property: rotation; to: 0 405 0; loop: true; dur: 8000;
-        easing: linear"
+        animation="property: rotation; to: 0 405 0; loop: true; dur: 8000; easing: linear"
       >
         <a-gltf-model src="./models-prueba/Iso.gltf"></a-gltf-model>
       </a-entity>
 
-      <!-- Proyectil (Aplicar Fisica) -->
-      <a-sphere
-        id="projectile"
-        radius="0.1"
-        color="red"
-        visible="false"
-      ></a-sphere>
-
-      <!-- Luz y cámara -->
+      <!-- Luz y cielo -->
       <a-light type="point" position="2 4 4"></a-light>
       <a-sky color="#ECECEC"></a-sky>
-
-      <!-- Menú 3D sobre el piso, centrado y elevado para que sea visible -->
-      <a-entity id="menu3d" position="0 0.11 -2">
-        <!-- Botón Rojo -->
-        <a-entity
-          id="btnRojo"
-          geometry="primitive: plane; width: 0.7; height: 0.2"
-          material="color: #ff4d4d"
-          position="-0.8 0 0"
-          class="menu-btn"
-          text="value: Rojo; align: center; color: #222"
-        ></a-entity>
-        <!-- Botón Verde -->
-        <a-entity
-          id="btnVerde"
-          geometry="primitive: plane; width: 0.7; height: 0.2"
-          material="color: #4dff4d"
-          position="0 0 0"
-          class="menu-btn"
-          text="value: Verde; align: center; color: #222"
-        ></a-entity>
-        <!-- Botón Azul -->
-        <a-entity
-          id="btnAzul"
-          geometry="primitive: plane; width: 0.7; height: 0.2"
-          material="color: #4d4dff"
-          position="0.8 0 0"
-          class="menu-btn"
-          text="value: Azul; align: center; color: #fff"
-        ></a-entity>
-      </a-entity>
     </a-scene>
-
-    <!-- JavaScript para la interacción -->
-    <script>
-      // --- MENÚ 3D SOBRE EL PISO ---
-      // Cada botón cambia el color del piso al hacer clic
-      document.querySelector("#btnRojo").addEventListener("click", function () {
-        document.querySelector("a-plane").setAttribute("color", "#ff4d4d");
-      });
-      document
-        .querySelector("#btnVerde")
-        .addEventListener("click", function () {
-          document.querySelector("a-plane").setAttribute("color", "#4dff4d");
-        });
-      document.querySelector("#btnAzul").addEventListener("click", function () {
-        document.querySelector("a-plane").setAttribute("color", "#4d4dff");
-      });
-    </script>
   </body>
 </html>
