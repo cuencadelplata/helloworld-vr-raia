@@ -30,13 +30,16 @@
       <!-- Cursor para interactuar con la caja -->
       <a-entity cursor="rayOrigin: mouse" raycaster="objects: a-box"></a-entity>
 
+      <!-- LOGO 3D AJUSTADO: posición, escala y rotación para mejor visibilidad -->
       <a-entity
         id="logo3d"
-        position="0 2 -3"
-        scale="4 4 4"
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear"
+        position="0 1.5 -0.8"
+        scale="2 2 2"
+        rotation="0 45 0"
+        animation="property: rotation; to: 0 405 0; loop: true; dur: 8000;
+        easing: linear"
       >
-        <a-gltf-model src="./models/old_tyre_1k.gltf"></a-gltf-model>
+        <a-gltf-model src="./models-prueba/Iso.gltf"></a-gltf-model>
       </a-entity>
 
       <!-- Proyectil (Aplicar Fisica) -->
