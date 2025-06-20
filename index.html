@@ -41,6 +41,74 @@
       <!-- Luz y cielo -->
       <a-light type="point" position="2 4 4"></a-light>
       <a-sky color="#ECECEC"></a-sky>
+
+      <!-- HUD para la versión -->
+      <a-camera>
+        <a-entity
+          text="value: v1.0.4; color: #000; align: right; width: 1.5; anchor: right;"
+          position="0.9 -0.7 -2"
+        ></a-entity>
+      </a-camera>
+
+      <!-- Menú interactivo en el piso -->
+      <a-entity id="menu" position="0 0.01 -2" rotation="-90 0 0">
+        <a-box
+          position="0 0 0"
+          width="2.2"
+          height="0.3"
+          depth="0.05"
+          color="#222"
+          opacity="0.7"
+        ></a-box>
+        <a-entity position="-0.7 0.05 0.03">
+          <a-box
+            width="0.6"
+            height="0.18"
+            depth="0.05"
+            color="#4CAF50"
+            opacity="0.9"
+          ></a-box>
+          <a-text
+            value="Escena 1"
+            align="center"
+            color="#fff"
+            width="1.5"
+            position="0 0 0.03"
+          ></a-text>
+        </a-entity>
+        <a-entity position="0 0.05 0.03">
+          <a-box
+            width="0.6"
+            height="0.18"
+            depth="0.05"
+            color="#2196F3"
+            opacity="0.9"
+          ></a-box>
+          <a-text
+            value="Escena 2"
+            align="center"
+            color="#fff"
+            width="1.5"
+            position="0 0 0.03"
+          ></a-text>
+        </a-entity>
+        <a-entity position="0.7 0.05 0.03">
+          <a-box
+            width="0.6"
+            height="0.18"
+            depth="0.05"
+            color="#FFC107"
+            opacity="0.9"
+          ></a-box>
+          <a-text
+            value="Escena 3"
+            align="center"
+            color="#222"
+            width="1.5"
+            position="0 0 0.03"
+          ></a-text>
+        </a-entity>
+      </a-entity>
     </a-scene>
   </body>
 </html>
