@@ -31,8 +31,8 @@
   </head>
   <body>
     <div id="mathHUD" class="hud-overlay" style="display: none">
-      <h3 id="functionTitle">Análisis Matemático</h3>
-      <p id="functionDescription">Selecciona una función para visualizar</p>
+      <h3 id="functionTitle">Analisis Matematico</h3>
+      <p id="functionDescription">Selecciona una funcion para visualizar</p>
       <p id="functionDomain">Explora diferentes funciones en 3D</p>
     </div>
 
@@ -59,7 +59,7 @@
           <a-gltf-model src="./models-prueba/Iso.gltf"></a-gltf-model>
         </a-entity>
 
-        <!-- Menú interactivo en el piso -->
+        <!-- Menu interactivo en el piso -->
         <a-entity id="menu" position="0 0.01 -2" rotation="-90 0 0">
           <a-box
             position="0 0 0"
@@ -85,7 +85,7 @@
               animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
             ></a-box>
             <a-text
-              value="Análisis Matemático"
+              value="Analisis Matematico"
               align="center"
               color="#fff"
               width="1.2"
@@ -141,13 +141,13 @@
         </a-entity>
       </a-entity>
 
-      <!-- Escena 1: Análisis Matemático -->
+      <!-- Escena 1: Analisis Matematico -->
       <a-entity id="scene-math" visible="false">
-        <!-- Menú de Funciones Matemáticas -->
+        <!-- Menu de Funciones Matematicas -->
         <a-entity id="math-menu" position="0 2 -3">
-          <!-- Título principal -->
+          <!-- Titulo principal -->
           <a-text
-            value="Análisis Matemático"
+            value="Analisis Matematico"
             position="0 1.5 0"
             align="center"
             color="#4CAF50"
@@ -155,7 +155,7 @@
           ></a-text>
 
           <a-text
-            value="Selecciona una función para visualizar:"
+            value="Selecciona una funcion para visualizar:"
             position="0 1 0"
             align="center"
             color="#fff"
@@ -294,7 +294,7 @@
             </a-entity>
           </a-entity>
 
-          <!-- Botón de regreso al menú principal -->
+          <!-- Boton de regreso al menu principal -->
           <a-entity
             id="btn-back"
             position="0 -1 0"
@@ -311,7 +311,7 @@
               animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
             ></a-box>
             <a-text
-              value="← Menú Principal"
+              value="← Menu Principal"
               align="center"
               color="#fff"
               width="3"
@@ -320,9 +320,9 @@
           </a-entity>
         </a-entity>
 
-        <!-- Área de visualización de funciones -->
+        <!-- Area de visualizacion de funciones -->
         <a-entity id="function-display" visible="false">
-          <!-- Título dinámico de la función -->
+          <!-- Titulo dinamico de la funcion -->
           <a-text
             id="current-function-title"
             value=""
@@ -332,10 +332,10 @@
             width="10"
           ></a-text>
 
-          <!-- Superficie matemática -->
+          <!-- Superficie matematica -->
           <a-entity id="math-surface" position="0 1.5 -4"></a-entity>
 
-          <!-- Ejes de coordenadas (solo visibles cuando se muestra una función) -->
+          <!-- Ejes de coordenadas (solo visibles cuando se muestra una funcion) -->
           <!-- Eje X -->
           <a-cylinder
             position="0 1 -4"
@@ -370,7 +370,7 @@
           ></a-cylinder>
           <a-text value="Z" position="0 1 -0.8" color="blue" width="4"></a-text>
 
-          <!-- Botón para regresar al menú de funciones -->
+          <!-- Boton para regresar al menu de funciones -->
           <a-entity
             id="btn-back-to-menu"
             position="0 0.5 -2"
@@ -387,7 +387,7 @@
               animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
             ></a-box>
             <a-text
-              value="← Menú Funciones"
+              value="← Menu Funciones"
               align="center"
               color="#fff"
               width="3"
@@ -402,13 +402,13 @@
       <a-light type="ambient" color="#404040"></a-light>
       <a-sky color="#ECECEC"></a-sky>
 
-      <!-- HUD para la versión -->
+      <!-- HUD para la version -->
       <a-camera>
         <a-entity
           text="value: v1.0.5; color: #000; align: right; width: 1.5; anchor: right;"
           position="0.9 -0.7 -2"
         ></a-entity>
-        <!-- Cursor para interacción -->
+        <!-- Cursor para interaccion -->
         <a-cursor
           position="0 0 -1"
           geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
@@ -420,7 +420,7 @@
     </a-scene>
 
     <script>
-      // Sistema de navegación entre escenas
+      // Sistema de navegacion entre escenas
       const scenes = {
         home: document.getElementById("scene-home"),
         math: document.getElementById("scene-math"),
@@ -437,7 +437,7 @@
           scenes[sceneName].setAttribute("visible", true);
         }
 
-        // Mostrar/ocultar HUD matemático
+        // Mostrar/ocultar HUD matematico
         const mathHUD = document.getElementById("mathHUD");
         if (sceneName === "math") {
           mathHUD.style.display = "block";
@@ -447,7 +447,7 @@
         }
       }
 
-      // Función para mostrar el menú de funciones matemáticas
+      // Funcion para mostrar el menu de funciones matematicas
       function showMathMenu() {
         document.getElementById("math-menu").setAttribute("visible", true);
         document
@@ -456,9 +456,9 @@
 
         // Resetear HUD
         document.getElementById("functionTitle").textContent =
-          "Análisis Matemático";
+          "Analisis Matematico";
         document.getElementById("functionDescription").textContent =
-          "Selecciona una función para visualizar";
+          "Selecciona una funcion para visualizar";
         document.getElementById("functionDomain").textContent =
           "Explora diferentes funciones en 3D";
       }
@@ -478,7 +478,7 @@
       const mathFunctions = {
         func1: {
           name: "f(x,y) = sin(x) * cos(y)",
-          description: "Función trigonométrica que crea ondas entrecruzadas",
+          description: "Funcion trigonometrica que crea ondas entrecruzadas",
           domain: "Dominio: x ∈ [-π, π], y ∈ [-π, π]",
           formula: (x, z) => Math.sin(x) * Math.cos(z),
         },
@@ -490,19 +490,19 @@
         },
         func3: {
           name: "f(x,y) = sin(√(x²+y²))",
-          description: "Ondas circulares concéntricas",
+          description: "Ondas circulares concentricas",
           domain: "Dominio: x ∈ [-3π, 3π], y ∈ [-3π, 3π]",
           formula: (x, z) => Math.sin(Math.sqrt(x * x + z * z)),
         },
         func4: {
           name: "f(x,y) = cos(x) * sin(y)",
-          description: "Ondas trigonométricas perpendiculares",
+          description: "Ondas trigonometricas perpendiculares",
           domain: "Dominio: x ∈ [-π, π], y ∈ [-π, π]",
           formula: (x, z) => Math.cos(x) * Math.sin(z),
         },
         func5: {
           name: "f(x,y) = e^(-(x²+y²))",
-          description: "Distribución gaussiana - campana 3D",
+          description: "Distribucion gaussiana - campana 3D",
           domain: "Dominio: x ∈ [-2, 2], y ∈ [-2, 2]",
           formula: (x, z) => Math.exp(-(x * x + z * z)),
         },
@@ -605,7 +605,7 @@
         // Mostrar escena inicial
         showScene("home");
 
-        // Botón Análisis Matemático
+        // Boton Analisis Matematico
         document
           .getElementById("btn-scene1")
           .addEventListener("click", function () {
@@ -616,17 +616,17 @@
         document
           .getElementById("btn-scene2")
           .addEventListener("click", function () {
-            alert("Escena 2 - Próximamente disponible");
+            alert("Escena 2 - Proximamente disponible");
           });
 
         // Botón Escena 3 (placeholder)
         document
           .getElementById("btn-scene3")
           .addEventListener("click", function () {
-            alert("Escena 3 - Próximamente disponible");
+            alert("Escena 3 - Proximamente disponible");
           });
 
-        // Botón regresar al menú principal
+        // Boton regresar al menu principal
         document
           .getElementById("btn-back")
           .addEventListener("click", function () {
@@ -664,7 +664,7 @@
             showFunction("func5");
           });
 
-        // Botón regresar al menú de funciones
+        // Boton regresar al menu de funciones
         document
           .getElementById("btn-back-to-menu")
           .addEventListener("click", function () {
