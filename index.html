@@ -403,7 +403,7 @@
       <a-sky color="#ECECEC"></a-sky>
 
       <!-- HUD para la version -->
-      <a-camera>
+      <a-camera id="mainCamera" camera="fov: 75">
         <a-entity
           text="value: v1.0.5; color: #000; align: right; width: 1.5; anchor: right;"
           position="0.9 -0.7 -2"
@@ -439,11 +439,24 @@
 
         // Mostrar/ocultar HUD matematico
         const mathHUD = document.getElementById("mathHUD");
+        const cameraEl = document.getElementById("mainCamera");
         if (sceneName === "math") {
           mathHUD.style.display = "block";
           showMathMenu();
+
+          // Reposicionar cámara para una mejor perspectiva de la función
+          if (cameraEl) {
+            cameraEl.setAttribute("position", { x: 0, y: 2.5, z: 2.8 });
+            const target = new THREE.Vector3(0, 1.5, -4);
+            cameraEl.object3D.lookAt(target);
+          }
         } else {
           mathHUD.style.display = "none";
+          // Restaurar vista inicial en Home
+          if (cameraEl) {
+            cameraEl.setAttribute("position", { x: 0, y: 1.6, z: 0 });
+            cameraEl.setAttribute("rotation", { x: 0, y: 0, z: 0 });
+          }
         }
       }
 
