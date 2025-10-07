@@ -502,15 +502,37 @@
           "Explora diferentes funciones en 3D";
       }
 
-      // Función para mostrar una función específica
-      function showFunction(functionKey) {
-        document.getElementById("math-menu").setAttribute("visible", false);
-        document
-          .getElementById("function-display")
-          .setAttribute("visible", true);
+      // Variable para evitar renderizado excesivo
+      let lastRenderTime = 0;
+      let isRenderingFunction = false;
 
+      // Función para mostrar una función específica (con protección contra sobrecargas)
+      function showFunction(functionKey) {
+        // Evitar múltiples renderizaciones rápidas que puedan causar bloqueos
+        const now = Date.now();
+        if (now - lastRenderTime < 1000 || isRenderingFunction) {
+          console.log("Renderizado evitado por protección de sobrecarga");
+          return;
+        }
+
+        // Mostrar indicador de carga (opcional)
+        document.getElementById("mathHUD").style.display = "block";
+        document.getElementById("functionTitle").textContent = "Cargando...";
+        
+        // Cambiar visibilidad
+        document.getElementById("math-menu").setAttribute("visible", false);
+        document.getElementById("function-display").setAttribute("visible", true);
+
+        // Establecer bandera para evitar renderizados múltiples
+        isRenderingFunction = true;
+        lastRenderTime = now;
         currentFunction = functionKey;
-        generateMathSurface(functionKey);
+        
+        // Retrasamos ligeramente la generación para permitir que la interfaz se actualice
+        setTimeout(() => {
+          generateMathSurface(functionKey);
+          isRenderingFunction = false;
+        }, 100);
       }
 
       // Definición de funciones matemáticas
@@ -562,44 +584,121 @@
         if (!mathFunctions[functionKey]) return;
 
         const func = mathFunctions[functionKey];
-        const step = 0.2;
-        const range = 3;
+        
+        // Detectar si estamos en un dispositivo VR para ajustar la calidad
+        const isVRMode = AFRAME.utils.device.checkHeadsetConnected();
+        const step = isVRMode ? 0.4 : 0.2; // Menos resolución en VR
+        const range = isVRMode ? 2.5 : 3;  // Menos rango en VR
 
-        // Crear una malla de cuadriláteros usando triángulos
-        for (let x = -range; x < range; x += step) {
-          for (let z = -range; z < range; z += step) {
-            // Calcular las 4 esquinas del cuadrilátero
-            const x1 = x,
-              x2 = x + step;
-            const z1 = z,
-              z2 = z + step;
+        // Crear una malla de cuadriláteros usando triángulos con manejo de errores
+        try {
+          let triangleCount = 0;
+          const maxTriangles = 500; // Límite para dispositivos VR
+          const isVR = AFRAME.utils.device.checkHeadsetConnected();
+          
+          for (let x = -range; x < range; x += step) {
+            for (let z = -range; z < range; z += step) {
+              // Limitar número total de triángulos para evitar sobrecarga
+              if (isVR && triangleCount > maxTriangles) {
+                console.log("Límite de triángulos alcanzado para VR");
+                break;
+              }
+              
+              // Calcular las 4 esquinas del cuadrilátero
+              const x1 = x,
+                x2 = x + step;
+              const z1 = z,
+                z2 = z + step;
 
-            // Calcular las alturas usando la función matemática seleccionada
-            const y1 = func.formula(x1, z1);
-            const y2 = func.formula(x2, z1);
-            const y3 = func.formula(x1, z2);
-            const y4 = func.formula(x2, z2);
+              // Calcular las alturas usando la función matemática seleccionada
+              let y1, y2, y3, y4;
+              try {
+                y1 = func.formula(x1, z1);
+                y2 = func.formula(x2, z1);
+                y3 = func.formula(x1, z2);
+                y4 = func.formula(x2, z2);
+                
+                // Validar que no sean valores incorrectos (NaN o Infinity)
+                if (!isFinite(y1) || !isFinite(y2) || !isFinite(y3) || !isFinite(y4)) {
+                  continue; // Saltar este cuadrilátero
+                }
+              } catch (err) {
+                console.error("Error calculando valores de la función:", err);
+                continue; // Saltar este cuadrilátero
+              }
 
-            // Crear los dos triángulos que forman el cuadrilátero
-            createTriangle(
-              surface,
-              [x1, y1, z1],
-              [x2, y2, z1],
-              [x1, y3, z2],
-              (y1 + y2 + y3) / 3
-            );
-            createTriangle(
-              surface,
-              [x2, y2, z1],
-              [x2, y4, z2],
-              [x1, y3, z2],
-              (y2 + y4 + y3) / 3
-            );
+              // Crear los dos triángulos que forman el cuadrilátero
+              createTriangle(
+                surface,
+                [x1, y1, z1],
+                [x2, y2, z1],
+                [x1, y3, z2],
+                (y1 + y2 + y3) / 3
+              );
+              triangleCount++;
+              
+              createTriangle(
+                surface,
+                [x2, y2, z1],
+                [x2, y4, z2],
+                [x1, y3, z2],
+                (y2 + y4 + y3) / 3
+              );
+              triangleCount++;
+            }
           }
+          
+          console.log(`Superficie generada con ${triangleCount} triángulos`);
+        } catch (error) {
+          console.error("Error generando superficie matemática:", error);
+          // Mostrar mensaje de error al usuario
+          document.getElementById("functionTitle").textContent = "Error al generar superficie";
+          document.getElementById("functionDescription").textContent = 
+            "Hubo un problema al mostrar esta función en VR";
         }
 
         // Actualizar información en el HUD
         updateMathHUD(func);
+        
+        // Si estamos en VR, asegurarnos de que el renderizado fue exitoso
+        if (AFRAME.utils.device.checkHeadsetConnected()) {
+          // Comprobar si la superficie se generó correctamente
+          if (surface.childElementCount < 10) {
+            console.warn("Fallback: Usando representación simple para VR");
+            createSimpleVRRepresentation(surface, func);
+          }
+        }
+      }
+      
+      // Función de fallback para representación simple en VR
+      function createSimpleVRRepresentation(parent, func) {
+        // Limpiar superficie
+        while (parent.firstChild) {
+          parent.removeChild(parent.firstChild);
+        }
+        
+        // Crear una representación más simple usando planos con textura de gradiente
+        const plane = document.createElement("a-plane");
+        plane.setAttribute("width", 5);
+        plane.setAttribute("height", 5);
+        plane.setAttribute("rotation", "-90 0 0");
+        plane.setAttribute("material", {
+          color: "#4285F4",
+          opacity: 0.8,
+          transparent: true,
+          shader: "flat"
+        });
+        parent.appendChild(plane);
+        
+        // Añadir texto 3D que representa la fórmula
+        const formulaText = document.createElement("a-text");
+        formulaText.setAttribute("value", func.name);
+        formulaText.setAttribute("position", "0 0.1 0");
+        formulaText.setAttribute("rotation", "-90 0 0");
+        formulaText.setAttribute("align", "center");
+        formulaText.setAttribute("color", "white");
+        formulaText.setAttribute("width", 4);
+        parent.appendChild(formulaText);
       }
 
       // Función para actualizar el HUD con información de la función
@@ -613,7 +712,7 @@
           .setAttribute("value", func.name);
       }
 
-      // Función auxiliar para crear triángulos
+      // Función auxiliar para crear triángulos (optimizada)
       function createTriangle(parent, v1, v2, v3, avgHeight) {
         const triangle = document.createElement("a-triangle");
 
@@ -629,11 +728,13 @@
         const normalizedY = (avgHeight + 1) / 2; // Normalizar entre 0 y 1
         const color = `hsl(${240 + normalizedY * 120}, 70%, 60%)`;
 
+        // Configurar material una sola vez (más eficiente)
         triangle.setAttribute("material", {
           color: color,
           side: "double",
           transparent: true,
           opacity: 0.8,
+          shader: "flat" // Shader más simple para mejor rendimiento
         });
 
         parent.appendChild(triangle);
