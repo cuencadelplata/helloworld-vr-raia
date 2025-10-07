@@ -37,6 +37,24 @@
     </div>
 
     <a-scene>
+        <a-box
+          width="0.5"
+          height="0.2"
+          depth="0.05"
+          color="#FF5252"
+          opacity="0.9"
+          animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+          animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+        ></a-box>
+        <a-text
+          value="Salir VR"
+          align="center"
+          color="#fff"
+          width="1.5"
+          position="0 0 0.03"
+        ></a-text>
+      </a-entity>
+      
       <!-- Piso simple para referencia -->
       <a-plane
         position="0 0 0"
@@ -408,6 +426,31 @@
           text="value: v1.0.5; color: #000; align: right; width: 1.5; anchor: right;"
           position="0.9 -0.7 -2"
         ></a-entity>
+        <!-- Botón para salir de VR adherido a la cámara -->
+        <a-entity
+          id="exit-vr-button"
+          position="0 0.4 -1"
+          visible="false"
+          class="clickable"
+          cursor-target
+        >
+          <a-box
+            width="0.5"
+            height="0.2"
+            depth="0.05"
+            color="#FF5252"
+            opacity="0.9"
+            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+          ></a-box>
+          <a-text
+            value="Salir VR"
+            align="center"
+            color="#fff"
+            width="2"
+            position="0 0 0.03"
+          ></a-text>
+        </a-entity>
         <!-- Cursor para interaccion -->
         <a-cursor
           position="0 0 -1"
@@ -696,6 +739,27 @@
           element.addEventListener("mouseleave", function () {
             this.dispatchEvent(new CustomEvent("mouseleave"));
           });
+        });
+        
+        // Manejar el botón de salida de VR
+        const exitVRButton = document.getElementById("exit-vr-button");
+        
+        // Mostrar el botón de salir cuando se entra en modo VR
+        document.querySelector('a-scene').addEventListener('enter-vr', function() {
+          exitVRButton.setAttribute('visible', true);
+        });
+        
+        // Ocultar el botón cuando se sale del modo VR
+        document.querySelector('a-scene').addEventListener('exit-vr', function() {
+          exitVRButton.setAttribute('visible', false);
+        });
+        
+        // Manejar el clic en el botón de salir
+        exitVRButton.addEventListener('click', function() {
+          const scene = document.querySelector('a-scene');
+          if (scene.is('vr-mode')) {
+            scene.exitVR();
+          }
         });
       });
     </script>
