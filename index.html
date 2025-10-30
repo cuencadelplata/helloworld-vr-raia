@@ -134,7 +134,7 @@
               animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
             ></a-box>
             <a-text
-              value="Escena 2"
+              value="Algoritmos"
               align="center"
               color="#fff"
               width="1.5"
@@ -168,7 +168,7 @@
       </a-entity>
 
       <!-- Escena 1: Analisis Matematico -->
-      <a-entity id="scene-math" visible="false">
+  <a-entity id="scene-math" visible="false">
         <!-- Menu de Funciones Matematicas -->
         <a-entity id="math-menu" position="0 2 -3">
           <!-- Titulo principal -->
@@ -423,6 +423,77 @@
         </a-entity>
       </a-entity>
 
+      <!-- Escena 2: Algoritmos de Ordenamiento -->
+      <a-entity id="scene-algorithms" visible="false">
+        <!-- Menu de algoritmos -->
+        <a-entity id="alg-menu" position="0 2 -3">
+          <a-text
+            value="Algoritmos de Ordenamiento"
+            position="0 1.5 0"
+            align="center"
+            color="#2196F3"
+            width="12"
+          ></a-text>
+
+          <a-text
+            value="Selecciona un algoritmo para visualizar:" 
+            position="0 1 0"
+            align="center"
+            color="#fff"
+            width="8"
+          ></a-text>
+
+          <a-entity position="-1 0.3 0">
+            <a-entity id="btn-algo1" class="clickable" cursor-target>
+              <a-box width="1.5" height="0.4" depth="0.08" color="#FF6B6B" opacity="0.9"
+                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+              <a-text value="Bubble Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
+            </a-entity>
+          </a-entity>
+
+          <a-entity position="1 0.3 0">
+            <a-entity id="btn-algo2" class="clickable" cursor-target>
+              <a-box width="1.5" height="0.4" depth="0.08" color="#4ECDC4" opacity="0.9"
+                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+              <a-text value="Insertion Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
+            </a-entity>
+          </a-entity>
+
+          <a-entity position="0 -0.3 0">
+            <a-entity id="btn-algo3" class="clickable" cursor-target>
+              <a-box width="1.5" height="0.4" depth="0.08" color="#45B7D1" opacity="0.9"
+                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+              <a-text value="Quick Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
+            </a-entity>
+          </a-entity>
+
+          <!-- Boton de regreso al menu principal -->
+          <a-entity id="btn-back-alg" position="0 -1 0" class="clickable" cursor-target>
+            <a-box width="1.2" height="0.3" depth="0.08" color="#f44336" opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+            <a-text value="← Menu Principal" align="center" color="#fff" width="3" position="0 0 0.05"></a-text>
+          </a-entity>
+        </a-entity>
+
+        <!-- Area de visualizacion de algoritmos -->
+        <a-entity id="algorithm-display" visible="false">
+          <a-text id="current-algo-title" value="" position="0 3 -3" align="center" color="#2196F3" width="10"></a-text>
+
+          <!-- Contenedor donde se agregarán barras (representación del array) -->
+          <a-entity id="algo-surface" position="0 1.2 -4"></a-entity>
+
+          <!-- Boton para regresar al menu de algoritmos -->
+          <a-entity id="btn-back-to-alg-menu" position="0 0.5 -2" class="clickable" cursor-target>
+            <a-box width="1.2" height="0.3" depth="0.1" color="#9B59B6" opacity="0.9"></a-box>
+            <a-text value="← Menu Algoritmos" align="center" color="#fff" width="3" position="0 0 0.06"></a-text>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+
       <!-- Luz y cielo -->
       <a-light type="point" position="2 4 4"></a-light>
       <a-light type="ambient" color="#404040"></a-light>
@@ -450,6 +521,7 @@
       const scenes = {
         home: document.getElementById("scene-home"),
         math: document.getElementById("scene-math"),
+        algorithms: document.getElementById("scene-algorithms"),
       };
 
       function showScene(sceneName) {
@@ -474,6 +546,16 @@
           if (cameraEl) {
             cameraEl.setAttribute("position", { x: 0, y: 2.5, z: 2.8 });
             const target = new THREE.Vector3(0, 1.5, -4);
+            cameraEl.object3D.lookAt(target);
+          }
+        } else if (sceneName === "algorithms") {
+          mathHUD.style.display = "block";
+          showAlgorithmsMenu();
+
+          // Reposicionar cámara para la vista de algoritmos
+          if (cameraEl) {
+            cameraEl.setAttribute("position", { x: 0, y: 2.2, z: 2.8 });
+            const target = new THREE.Vector3(0, 1.2, -4);
             cameraEl.object3D.lookAt(target);
           }
         } else {
@@ -669,6 +751,169 @@
           }
         }
       }
+
+      // =========================
+      // Algoritmos: visualizaciones
+      // =========================
+
+      function showAlgorithmsMenu() {
+        document.getElementById("alg-menu").setAttribute("visible", true);
+        document.getElementById("algorithm-display").setAttribute("visible", false);
+        document.getElementById("current-algo-title").setAttribute("value", "");
+        document.getElementById("mathHUD").style.display = "block";
+        document.getElementById("functionTitle").textContent = "Algoritmos";
+        document.getElementById("functionDescription").textContent = "Selecciona un algoritmo para visualizar";
+        document.getElementById("functionDomain").textContent = "Observa cómo cambian las posiciones del array durante el ordenamiento";
+      }
+
+      // Mostrar un algoritmo específico
+      function showAlgorithm(algoKey) {
+        // ocultar menu y mostrar display
+        document.getElementById("alg-menu").setAttribute("visible", false);
+        document.getElementById("algorithm-display").setAttribute("visible", true);
+        const title = {
+          bubble: "Bubble Sort",
+          insertion: "Insertion Sort",
+          quick: "Quick Sort",
+        }[algoKey] || "Algoritmo";
+        document.getElementById("current-algo-title").setAttribute("value", title);
+        document.getElementById("functionTitle").textContent = title;
+
+        // generar barras y pasos
+        const arr = generateRandomArray(12, 1, 12);
+        generateAlgorithmBars(arr);
+        const steps = getSortingSteps(algoKey, arr.slice());
+        animateAlgorithmSteps(steps, 120);
+      }
+
+      function generateRandomArray(n, min, max) {
+        const a = [];
+        for (let i = 0; i < n; i++) a.push(Math.floor(Math.random() * (max - min + 1)) + min);
+        return a;
+      }
+
+      function generateAlgorithmBars(array) {
+        const parent = document.getElementById("algo-surface");
+        // limpiar
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+
+        const spacing = 0.5;
+        const totalWidth = (array.length - 1) * spacing;
+        for (let i = 0; i < array.length; i++) {
+          const val = array[i];
+          const box = document.createElement("a-box");
+          const height = Math.max(0.2, val * 0.2);
+          const x = -totalWidth / 2 + i * spacing;
+          box.setAttribute("width", 0.3);
+          box.setAttribute("depth", 0.3);
+          box.setAttribute("height", height);
+          box.setAttribute("position", `${x} ${height / 2} 0`);
+          box.setAttribute("color", "#4CAF50");
+          box.setAttribute("class", "algo-bar");
+          box.setAttribute("data-index", i);
+          parent.appendChild(box);
+        }
+      }
+
+      // Obtener pasos para cada algoritmo (solo swaps registrados)
+      function getSortingSteps(algo, arr) {
+        const steps = [];
+        if (algo === "bubble") {
+          const n = arr.length;
+          for (let i = 0; i < n - 1; i++) {
+            for (let j = 0; j < n - 1 - i; j++) {
+              steps.push({ type: "compare", i: j, j: j + 1 });
+              if (arr[j] > arr[j + 1]) {
+                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                steps.push({ type: "swap", i: j, j: j + 1 });
+              }
+            }
+          }
+        } else if (algo === "insertion") {
+          for (let i = 1; i < arr.length; i++) {
+            let j = i;
+            while (j > 0) {
+              steps.push({ type: "compare", i: j - 1, j: j });
+              if (arr[j - 1] > arr[j]) {
+                [arr[j - 1], arr[j]] = [arr[j], arr[j - 1]];
+                steps.push({ type: "swap", i: j - 1, j: j });
+              } else break;
+              j--;
+            }
+          }
+        } else if (algo === "quick") {
+          // quicksort - record swaps via a helper
+          function qsort(a, lo, hi) {
+            if (lo >= hi) return;
+            const pivot = a[hi];
+            let p = lo;
+            for (let k = lo; k < hi; k++) {
+              steps.push({ type: "compare", i: k, j: hi });
+              if (a[k] < pivot) {
+                [a[k], a[p]] = [a[p], a[k]];
+                steps.push({ type: "swap", i: k, j: p });
+                p++;
+              }
+            }
+            [a[p], a[hi]] = [a[hi], a[p]];
+            steps.push({ type: "swap", i: p, j: hi });
+            qsort(a, lo, p - 1);
+            qsort(a, p + 1, hi);
+          }
+          qsort(arr, 0, arr.length - 1);
+        }
+        return steps;
+      }
+
+      // Animar pasos: swaps y destacando comparaciones
+      function animateAlgorithmSteps(steps, delayMs) {
+        const parent = document.getElementById("algo-surface");
+        const bars = Array.from(parent.querySelectorAll(".algo-bar"));
+
+        // Helper para actualizar array of bars by index attribute
+        function findBarByIndex(idx) {
+          return bars.find((b) => Number(b.getAttribute("data-index")) === idx);
+        }
+
+        steps.forEach((step, idx) => {
+          setTimeout(() => {
+            // reset colors
+            bars.forEach((b) => b.setAttribute("color", "#4CAF50"));
+            if (step.type === "compare") {
+              const a = findBarByIndex(step.i);
+              const b = findBarByIndex(step.j);
+              if (a) a.setAttribute("color", "#FFC107");
+              if (b) b.setAttribute("color", "#FFC107");
+            } else if (step.type === "swap") {
+              const a = findBarByIndex(step.i);
+              const b = findBarByIndex(step.j);
+              if (!a || !b) return;
+              // swap heights and data-index
+              const posA = a.getAttribute("position").split(" ").map(Number);
+              const posB = b.getAttribute("position").split(" ").map(Number);
+              const heightA = Number(a.getAttribute("height"));
+              const heightB = Number(b.getAttribute("height"));
+
+              // animate by setting new attributes (simple instant swap)
+              a.setAttribute("height", heightB);
+              a.setAttribute("position", `${posA[0]} ${heightB / 2} ${posA[2]}`);
+              b.setAttribute("height", heightA);
+              b.setAttribute("position", `${posB[0]} ${heightA / 2} ${posB[2]}`);
+
+              // swap data-index to keep findBarByIndex consistent
+              const idxA = a.getAttribute("data-index");
+              const idxB = b.getAttribute("data-index");
+              a.setAttribute("data-index", idxB);
+              b.setAttribute("data-index", idxA);
+            }
+
+            // mark completed at the last step
+            if (idx === steps.length - 1) {
+              bars.forEach((b) => b.setAttribute("color", "#8BC34A"));
+            }
+          }, idx * delayMs);
+        });
+      }
       
       // Función de fallback para representación simple en VR
       function createSimpleVRRepresentation(parent, func) {
@@ -756,8 +1001,29 @@
         document
           .getElementById("btn-scene2")
           .addEventListener("click", function () {
-            alert("Escena 2 - Proximamente disponible");
+            showScene("algorithms");
           });
+
+        // Botones y lógica para la escena de Algoritmos
+        document.getElementById("btn-algo1").addEventListener("click", function () {
+          showAlgorithm("bubble");
+        });
+        document.getElementById("btn-algo2").addEventListener("click", function () {
+          showAlgorithm("insertion");
+        });
+        document.getElementById("btn-algo3").addEventListener("click", function () {
+          showAlgorithm("quick");
+        });
+
+        document.getElementById("btn-back-alg").addEventListener("click", function () {
+          showScene("home");
+        });
+
+        document.getElementById("btn-back-to-alg-menu").addEventListener("click", function () {
+          // volver al menu de algoritmos
+          document.getElementById("alg-menu").setAttribute("visible", true);
+          document.getElementById("algorithm-display").setAttribute("visible", false);
+        });
 
         // Botón Escena 3 (placeholder)
         document
