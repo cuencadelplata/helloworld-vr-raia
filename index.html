@@ -1084,7 +1084,10 @@
           if (!el) return [0, 0, 0];
           const p = el.getAttribute("position");
           if (!p) return [0, 0, 0];
-          if (typeof p === "string") return p.split(" ").map(Number);
+          if (typeof p === "string") {
+            const parts = p.split(" ").map(x => parseFloat(x));
+            return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+          }
           // objeto {x,y,z}
           return [p.x || 0, p.y || 0, p.z || 0];
         }
@@ -1115,160 +1118,113 @@
           return parent.querySelector(`.algo-cube[data-index="${idx}"]`);
         }
 
-        // Realizar swap visual + metadata entre dos índices
-        function performSwap(i, j, durationMs = 1200, algorithmTypeLocal) {
+        // Realizar swap visual + metadata entre dos índices (A-FRAME NATIVO)
+        function performSwap(i, j, durationMs = 800, algorithmTypeLocal) {
           const aEl = findCubeByIndex(i);
           const bEl = findCubeByIndex(j);
-          if (!aEl || !bEl) return;
-          console.log(`performSwap: iniciando swap ${i} ↔ ${j} (algo=${algorithmTypeLocal})`);
-
-          // Leer posiciones iniciales (soportar tanto string como objeto)
-          function readPos(el) {
-            const p = el.getAttribute("position");
-            if (!p) return [0, 0, 0];
-            if (typeof p === 'string') return p.split(" ").map(Number);
-            // Si A-Frame devuelve un objeto
-            return [p.x || 0, p.y || 0, p.z || 0];
+          if (!aEl || !bEl) {
+            console.warn(`performSwap: cubos no encontrados ${i}, ${j}`);
+            return;
           }
+          
+          console.log(`performSwap: ${i} ↔ ${j}`);
 
           const posA = readPos(aEl);
           const posB = readPos(bEl);
+          const valA = parseInt(aEl.getAttribute("data-value"));
+          const valB = parseInt(bEl.getAttribute("data-value"));
 
-          // Tween un objeto intermedio y actualizar el atributo `position` en onUpdate
-          const objA = { x: posA[0], y: posA[1], z: posA[2] };
-          const objB = { x: posB[0], y: posB[1], z: posB[2] };
+          // Usar animaciones A-Frame nativas (más confiables)
+          const easing = "easeInOutQuad";
+          const dur = durationMs;
 
-          // Asegurar que la animación se sincronice: animar ambos y en onComplete hacer el swap de metadata
-          let completed = 0;
-          function maybeComplete() {
-            completed++;
-            if (completed < 2) return;
-            console.log(`performSwap: completado tween para ${i} ↔ ${j}`);
-            try {
-              // intercambiar data-index y data-value
-              const aIndex = aEl.getAttribute("data-index");
-              const bIndex = bEl.getAttribute("data-index");
-              const aVal = aEl.getAttribute("data-value");
-              const bVal = bEl.getAttribute("data-value");
-
-              aEl.setAttribute("data-index", bIndex);
-              bEl.setAttribute("data-index", aIndex);
-
-              aEl.setAttribute("data-value", bVal);
-              bEl.setAttribute("data-value", aVal);
-
-              // actualizar texto visible
-              const tA = aEl.querySelector("a-text");
-              const tB = bEl.querySelector("a-text");
-              if (tA) tA.setAttribute("value", bVal);
-              if (tB) tB.setAttribute("value", aVal);
-
-              // fijar atributos position para persistencia en A-Frame
-              aEl.setAttribute("position", `${objB.x} ${objB.y} ${objB.z}`);
-              bEl.setAttribute("position", `${objA.x} ${objA.y} ${objA.z}`);
-
-              // color temporal para bubble
-              if (algorithmTypeLocal === "bubble") {
-                const bodyA = aEl.querySelector(".cube-body");
-                const bodyB = bEl.querySelector(".cube-body");
-                if (bodyA) bodyA.setAttribute("color", "#8BC34A");
-                if (bodyB) bodyB.setAttribute("color", "#8BC34A");
-              }
-            } catch (err) {
-              console.error("Error al completar swap:", err);
-            }
-          }
-
-          gsap.to(objA, {
-            x: posB[0],
-            duration: durationMs / 1000,
-            ease: "power2.inOut",
-            onUpdate: function() {
-              aEl.setAttribute("position", `${objA.x} ${objA.y} ${objA.z}`);
-            },
-            onComplete: maybeComplete
+          // Animar elemento A a posición de B
+          aEl.setAttribute("animation__swap", {
+            property: "position",
+            to: `${posB[0]} ${posA[1]} ${posA[2]}`,
+            dur: dur,
+            easing: easing,
+            loop: false
           });
 
-          gsap.to(objB, {
-            x: posA[0],
-            duration: durationMs / 1000,
-            ease: "power2.inOut",
-            onUpdate: function() {
-              bEl.setAttribute("position", `${objB.x} ${objB.y} ${objB.z}`);
-            },
-            onComplete: maybeComplete
+          // Animar elemento B a posición de A
+          bEl.setAttribute("animation__swap", {
+            property: "position",
+            to: `${posA[0]} ${posB[1]} ${posB[2]}`,
+            dur: dur,
+            easing: easing,
+            loop: false
           });
+
+          // Cambiar colores
+          const bodyA = aEl.querySelector(".cube-body");
+          const bodyB = bEl.querySelector(".cube-body");
+          if (bodyA) bodyA.setAttribute("color", "#FF9800");
+          if (bodyB) bodyB.setAttribute("color", "#FF9800");
+
+          // AL TERMINAR LA ANIMACIÓN, actualizar datos
+          setTimeout(() => {
+            const indexA = aEl.getAttribute("data-index");
+            const indexB = bEl.getAttribute("data-index");
+
+            // Intercambiar data-index
+            aEl.setAttribute("data-index", indexB);
+            bEl.setAttribute("data-index", indexA);
+
+            // Intercambiar valores
+            aEl.setAttribute("data-value", valB);
+            bEl.setAttribute("data-value", valA);
+
+            // Actualizar textos
+            const tA = aEl.querySelector("a-text");
+            const tB = bEl.querySelector("a-text");
+            if (tA) tA.setAttribute("value", String(valB));
+            if (tB) tB.setAttribute("value", String(valA));
+
+            // Actualizar posiciones en atributos
+            aEl.setAttribute("position", `${posB[0]} ${posA[1]} ${posA[2]}`);
+            bEl.setAttribute("position", `${posA[0]} ${posB[1]} ${posB[2]}`);
+
+            // Cambiar a verde
+            if (bodyA) bodyA.setAttribute("color", "#8BC34A");
+            if (bodyB) bodyB.setAttribute("color", "#8BC34A");
+
+            // Remover animación
+            aEl.removeAttribute("animation__swap");
+            bEl.removeAttribute("animation__swap");
+
+            console.log(`performSwap completado: ${indexB}=${valB}, ${indexA}=${valA}`);
+          }, durationMs);
         }
 
-        // Función para crear efecto de "burbuja" para Bubble Sort usando GSAP
+        // Función para crear efecto de "burbuja" para Bubble Sort usando GSAP (SIMPLIFICADO)
         function createBubbleEffect(cube, direction) {
+          if (!cube) return;
           const pos = readPos(cube);
           const bubble = document.createElement("a-sphere");
-          bubble.setAttribute("radius", 0.08);
+          bubble.setAttribute("radius", 0.06);
           bubble.setAttribute("color", "#81C784");
-          bubble.setAttribute("opacity", 0.6);
-          bubble.setAttribute("position", `${pos[0]} ${pos[1] + 0.3} ${pos[2]}`);
-
+          bubble.setAttribute("opacity", 0.5);
+          bubble.setAttribute("position", `${pos[0]} ${pos[1] + 0.2} ${pos[2]}`);
           parent.appendChild(bubble);
 
-          // Movimiento de burbuja con GSAP
-          const moveDistance = direction === 'right' ? 0.3 : -0.3;
           gsap.to(bubble.object3D.position, {
-            x: pos[0] + moveDistance,
-            y: pos[1] + 0.6,
-            duration: 0.8,
-            ease: "power2.out"
-          });
-
-          gsap.to(bubble, {
-            opacity: 0,
-            duration: 0.8,
+            y: pos[1] + 0.4,
+            duration: 0.6,
             ease: "power2.out",
-            onComplete: function() {
+            onComplete: () => {
               if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
             }
           });
         }
 
-        // Función para crear efecto de "inserción" para Insertion Sort usando GSAP
+        // Función para crear efecto de "inserción" para Insertion Sort (SIMPLIFICADO)
         function createInsertionEffect(fromCube, toCube) {
-          const fromPos = readPos(fromCube);
-          const toPos = readPos(toCube);
-
-          // Crear flecha visual
-          const arrow = document.createElement("a-entity");
-          arrow.setAttribute("geometry", {
-            primitive: "cone",
-            radiusBottom: 0.05,
-            radiusTop: 0.01,
-            height: 0.2
-          });
-          arrow.setAttribute("material", { color: "#FF9800", opacity: 0.8 });
-          arrow.setAttribute("position", `${fromPos[0]} ${fromPos[1] + 0.3} ${fromPos[2]}`);
-          arrow.setAttribute("rotation", "0 0 0");
-
-          parent.appendChild(arrow);
-
-          // Animar flecha moviéndose hacia la posición de inserción con GSAP
-          gsap.to(arrow.object3D.position, {
-            x: toPos[0],
-            y: toPos[1] + 0.3,
-            z: toPos[2],
-            duration: 0.8,
-            ease: "power2.inOut"
-          });
-
-          gsap.to(arrow, {
-            opacity: 0,
-            duration: 0.8,
-            ease: "power2.out",
-            onComplete: function() {
-              if (arrow.parentNode) arrow.parentNode.removeChild(arrow);
-            }
-          });
+          if (!fromCube || !toCube) return;
+          // Solo un efecto visual simple: no crear más objetos
         }
 
-        // Función para resaltar el pivote en Quick Sort usando GSAP
+        // Función para resaltar el pivote en Quick Sort (SIMPLIFICADO)
         function highlightPivot(index) {
           const pivotCube = findCubeByIndex(index);
           if (pivotCube) {
@@ -1276,159 +1232,57 @@
             if (pivotBody) {
               gsap.to(pivotBody, {
                 duration: 0.3,
-                onUpdate: function() {
+                onUpdate: () => {
                   pivotBody.setAttribute("color", "#9C27B0");
                 },
                 ease: "power2.inOut"
               });
             }
-
-            // Crear aura alrededor del pivote
-            const pos = readPos(pivotCube);
-            const aura = document.createElement("a-cylinder");
-            aura.setAttribute("radius", 0.2);
-            aura.setAttribute("height", 0.05);
-            aura.setAttribute("color", "#9C27B0");
-            aura.setAttribute("opacity", 0.3);
-            aura.setAttribute("position", `${pos[0]} ${pos[1] - 0.3} ${pos[2]}`);
-            aura.setAttribute("rotation", "90 0 0");
-
-            parent.appendChild(aura);
-
-            // Animar aura con GSAP
-            gsap.to(aura.object3D.scale, {
-              x: 1.5,
-              y: 1.5,
-              z: 1.5,
-              duration: 1,
-              ease: "power2.inOut",
-              yoyo: true,
-              repeat: -1
-            });
-
-            // Remover aura después de un tiempo
-            gsap.delayedCall(2, function() {
-              if (aura.parentNode) aura.parentNode.removeChild(aura);
-            });
           }
         }
 
-        // Función para animar movimiento suave de un cubo usando GSAP
+        // Función para animar movimiento suave de un cubo (NO USADA - SIMPLIFICACIÓN)
         function animateBarMovement(cube, targetX, duration = 800) {
-          const startPos = readPos(cube);
-
-          // Cambiar color del cubo durante el movimiento usando GSAP
-          let moveColor = "#FF5722"; // default
-          if (algorithmType === "bubble") moveColor = "#2196F3"; // azul para bubble
-          else if (algorithmType === "insertion") moveColor = "#FF9800"; // naranja para insertion
-          else if (algorithmType === "quick") moveColor = "#9C27B0"; // morado para quick
-
-          const cubeBody = cube.querySelector(".cube-body");
-          if (cubeBody) {
-            gsap.to(cubeBody, {
-              duration: 0.2,
-              onUpdate: function() {
-                cubeBody.setAttribute("color", moveColor);
-              }
-            });
-          }
-
-          // Animar movimiento con GSAP (actualizando el atributo position en onUpdate para mantener DOM consistente)
-          const moving = { x: startPos[0], y: startPos[1], z: startPos[2] };
-          gsap.to(moving, {
-            x: targetX,
-            duration: duration / 1000,
-            ease: "power2.inOut",
-            onUpdate: function() {
-              cube.setAttribute("position", `${moving.x} ${moving.y} ${moving.z}`);
-            },
-            onComplete: function() {
-              // Reset color después del movimiento
-              if (cubeBody) {
-                gsap.to(cubeBody, {
-                  duration: 0.3,
-                  onUpdate: function() {
-                    cubeBody.setAttribute("color", "#4CAF50");
-                  }
-                });
-              }
-            }
-          });
-
-          // Agregar efecto de resaltado (aura) alrededor del cubo que se mueve
-          const highlightRing = document.createElement("a-cylinder");
-          highlightRing.setAttribute("radius", 0.4);
-          highlightRing.setAttribute("height", 0.08);
-          highlightRing.setAttribute("color", moveColor);
-          highlightRing.setAttribute("opacity", 0.8);
-          highlightRing.setAttribute("position", `${startPos[0]} 0 ${startPos[2]}`);
-          highlightRing.setAttribute("rotation", "90 0 0");
-          parent.appendChild(highlightRing);
-
-          // Animar el anillo junto con el cubo usando GSAP (anima el objeto temporal directamente)
-          gsap.to(highlightRing.object3D.position, {
-            x: targetX,
-            duration: duration / 1000,
-            ease: "power2.inOut"
-          });
-
-          // Animar opacidad del anillo
-          gsap.to(highlightRing, {
-            duration: duration / 1000,
-            opacity: 0.3,
-            ease: "power2.inOut",
-            onComplete: function() {
-              if (highlightRing.parentNode) {
-                highlightRing.parentNode.removeChild(highlightRing);
-              }
-            }
-          });
+          // Función NO usada; swap ya lo maneja performSwap
         }
 
         // Función para mostrar información educativa
         function showEducationalInfo(step, algorithmType) {
           const existingInfo = document.getElementById("educational-info");
           if (existingInfo) {
-            existingInfo.parentNode.removeChild(existingInfo);
+            if (existingInfo.parentNode) existingInfo.parentNode.removeChild(existingInfo);
           }
 
           const infoEntity = document.createElement("a-entity");
           infoEntity.setAttribute("id", "educational-info");
-          infoEntity.setAttribute("position", "0 2.2 -2");
+          infoEntity.setAttribute("position", "0 2.5 -2");
 
           let infoText = "";
           if (step.type === "compare") {
-            if (algorithmType === "bubble") {
-              infoText = `Comparando elementos ${step.i} y ${step.j}`;
-            } else if (algorithmType === "insertion") {
-              infoText = `Insertando elemento ${step.i} en su posición correcta`;
-            } else if (algorithmType === "quick") {
-              infoText = `Comparando con pivote (índice ${step.pivotIndex || 'N/A'})`;
-            }
+            infoText = `Comparando elementos ${step.i} y ${step.j}`;
           } else if (step.type === "swap") {
-            infoText = `Intercambiando elementos ${step.i} ↔ ${step.j}`;
+            infoText = `Intercambiando ${step.i} ↔ ${step.j}`;
           } else if (step.type === "pivot") {
-            infoText = `Seleccionando pivote: elemento ${step.index} (valor: ${step.value})`;
+            infoText = `Pivote: elemento ${step.index}`;
           }
 
-          const textEntity = document.createElement("a-text");
-          textEntity.setAttribute("value", infoText);
-          textEntity.setAttribute("align", "center");
-          textEntity.setAttribute("color", "#4CAF50");
-          textEntity.setAttribute("width", 6);
-          textEntity.setAttribute("font-size", "0.12");
+          if (infoText) {
+            const textEntity = document.createElement("a-text");
+            textEntity.setAttribute("value", infoText);
+            textEntity.setAttribute("align", "center");
+            textEntity.setAttribute("color", "#FFEB3B");
+            textEntity.setAttribute("width", 5);
+            textEntity.setAttribute("font-size", "0.12");
+            infoEntity.appendChild(textEntity);
+            parent.appendChild(infoEntity);
 
-          infoEntity.appendChild(textEntity);
-          parent.appendChild(infoEntity);
-
-          // Animar entrada
-          gsap.from(infoEntity.object3D.position, {
-            y: 2.5,
-            duration: 0.3,
-            ease: "power2.out"
-          });
+            // Remover después de 0.8s
+            scheduleAlgorithmTimeout(() => {
+              if (infoEntity.parentNode) infoEntity.parentNode.removeChild(infoEntity);
+            }, 800);
+          }
         }
-        function highlightElements(indices, color = "#FFC107", duration = 0.5) {
+        function highlightElements(indices, color = "#FFC107", duration = 0.4) {
           indices.forEach(index => {
             const cube = findCubeByIndex(index);
             if (cube) {
@@ -1436,147 +1290,72 @@
               if (cubeBody) {
                 gsap.to(cubeBody, {
                   duration: duration,
-                  onUpdate: function() {
+                  onUpdate: () => {
                     cubeBody.setAttribute("color", color);
                   },
-                  yoyo: true,
-                  repeat: 1,
                   ease: "power2.inOut"
-                });
-
-                // Agregar leve escala para destacar
-                gsap.to(cube.object3D.scale, {
-                  x: 1.1,
-                  y: 1.1,
-                  z: 1.1,
-                  duration: duration,
-                  ease: "power2.inOut",
-                  yoyo: true,
-                  repeat: 1
                 });
               }
             }
           });
         }
-        // Función para mostrar línea de separación en Quick Sort
-        function showPartitionLine(position) {
-          const separator = document.createElement("a-cylinder");
-          separator.setAttribute("radius", 0.02);
-          separator.setAttribute("height", 1.5);
-          separator.setAttribute("color", "#FF5722");
-          separator.setAttribute("position", `${position} 0.75 0`);
-          separator.setAttribute("rotation", "0 0 0");
-
-          parent.appendChild(separator);
-
-          // Animar entrada de la línea
-          gsap.from(separator.object3D.scale, {
-            x: 0,
-            y: 0,
-            z: 0,
-            duration: 0.5,
-            ease: "power2.out"
-          });
-
-          // Remover después de un tiempo
-          setTimeout(() => {
-            if (separator.parentNode) {
-              gsap.to(separator.object3D.scale, {
-                x: 0,
-                y: 0,
-                z: 0,
-                duration: 0.3,
-                ease: "power2.in",
-                onComplete: function() {
-                  separator.parentNode.removeChild(separator);
-                }
-              });
-            }
-          }, 2000);
-        }
 
         function updateArrayDisplay() {
-          // Remover display anterior si existe
           const existingDisplay = document.getElementById("array-display");
-          if (existingDisplay) {
+          if (existingDisplay && existingDisplay.parentNode) {
             existingDisplay.parentNode.removeChild(existingDisplay);
           }
 
-          // Crear nuevo display del array
           const arrayDisplay = document.createElement("a-entity");
           arrayDisplay.setAttribute("id", "array-display");
-          arrayDisplay.setAttribute("position", "0 2.5 -2");
+          arrayDisplay.setAttribute("position", "0 2.8 -2.5");
 
-          // Obtener valores actuales de los cubos en orden por data-index
+          // Obtener valores ordenados por position visual (data-index)
           const nodes = Array.from(parent.querySelectorAll('.algo-cube'));
           nodes.sort((x, y) => Number(x.getAttribute('data-index')) - Number(y.getAttribute('data-index')));
           const currentValues = nodes.map(cube => cube.getAttribute("data-value")).join(", ");
-          const displayText = `Array: [${currentValues}]`;
+          
+          // Mostrar array visual
+          const displayText = `[${currentValues}]`;
 
           const textEntity = document.createElement("a-text");
           textEntity.setAttribute("value", displayText);
           textEntity.setAttribute("align", "center");
           textEntity.setAttribute("color", "#ffffff");
           textEntity.setAttribute("width", 8);
-          textEntity.setAttribute("font-size", "0.15");
-
+          textEntity.setAttribute("font-size", "0.13");
           arrayDisplay.appendChild(textEntity);
           parent.appendChild(arrayDisplay);
 
-          // Animar entrada del display
-          gsap.from(arrayDisplay.object3D.position, {
-            y: 3,
-            duration: 0.5,
-            ease: "power2.out"
-          });
+          // Log para verificación
+          console.log("Array display:", displayText);
         }
+
         function updateProgressIndicator(currentStep, totalSteps) {
-          // Limpiar indicador anterior
           while (progressIndicator.firstChild) {
             progressIndicator.removeChild(progressIndicator.firstChild);
           }
 
-          // Crear barra de progreso
-          const progressBar = document.createElement("a-plane");
           const progress = currentStep / totalSteps;
-          progressBar.setAttribute("width", progress * 6); // máximo 6 unidades
-          progressBar.setAttribute("height", 0.05);
+          const progressBar = document.createElement("a-plane");
+          progressBar.setAttribute("width", Math.max(0.1, progress * 5));
+          progressBar.setAttribute("height", 0.04);
           progressBar.setAttribute("color", "#4CAF50");
-          progressBar.setAttribute("position", `${-3 + (progress * 3)} -0.5 0`);
+          progressBar.setAttribute("position", `${-2.5 + (progress * 2.5)} -1 0`);
           progressIndicator.appendChild(progressBar);
 
-          // Texto de progreso
           const progressText = document.createElement("a-text");
-          progressText.setAttribute("value", `Paso ${currentStep}/${totalSteps}`);
-          progressText.setAttribute("position", "0 -0.7 0");
+          progressText.setAttribute("value", `${currentStep}/${totalSteps}`);
+          progressText.setAttribute("position", "0 -0.8 0");
           progressText.setAttribute("align", "center");
           progressText.setAttribute("color", "#fff");
-          progressText.setAttribute("width", 4);
+          progressText.setAttribute("width", 3);
+          progressText.setAttribute("font-size", "0.11");
           progressIndicator.appendChild(progressText);
         }
 
-        // Función para rotar la vista de la cámara según el algoritmo
         function rotateCameraForAlgorithm(stepIndex, algoType) {
-          if (!cameraEl) return;
-          let rotationAngle = 0;
-
-          if (algoType === "bubble") {
-            // Movimiento de izquierda a derecha para bubble sort
-            rotationAngle = (stepIndex * 2) % 30 - 15; // -15 a 15 grados
-          } else if (algoType === "insertion") {
-            // Movimiento más sutil para insertion
-            rotationAngle = Math.sin(stepIndex * 0.1) * 10;
-          } else if (algoType === "quick") {
-            // Movimiento más dinámico para quick sort
-            rotationAngle = (stepIndex * 5) % 60 - 30; // -30 a 30 grados
-          }
-
-          cameraEl.setAttribute("animation__rotate", {
-            property: "rotation",
-            to: `0 ${rotationAngle} 0`,
-            dur: 800,
-            easing: "easeInOutQuad"
-          });
+          // SIMPLIFICADO: no rotar cámara, mantenerla fija
         }
 
         steps.forEach((step, idx) => {
@@ -1584,423 +1363,79 @@
             if (!isSorting || currentScene !== "algorithms") {
               return;
             }
+            
             // Actualizar indicador de progreso
             updateProgressIndicator(idx + 1, steps.length);
 
             // Mostrar información educativa
             showEducationalInfo(step, algorithmType);
 
-            // reset colors con animación
-            cubes.forEach((b) => {
-              if (!sortedElements.has(Number(b.getAttribute("data-index")))) {
-                b.setAttribute("animation__resetColor", `property: color; to: #4CAF50; dur: 300; easing: easeInOutQuad`);
-              }
-            });
-
-            // Obtener referencias dinámicas a los cubos implicados en este paso (si aplica)
-            const a = (step.i !== undefined) ? findCubeByIndex(step.i) : null;
-            const b = (step.j !== undefined) ? findCubeByIndex(step.j) : null;
-
-            if (step.type === "pivot") {
-              // Resaltar el pivote en Quick Sort
-              pivotIndex = step.index;
-              highlightPivot(step.index);
-
-            } else if (step.type === "compare") {
-              const a = findCubeByIndex(step.i);
-              const b = findCubeByIndex(step.j);
-
-              // Resaltar elementos siendo comparados en amarillo
-              highlightElements([step.i, step.j], "#FFC107");
-
-              // Para algoritmos específicos
-              if (algorithmType === "bubble") {
-                showEducationalInfo({
-                  ...step,
-                  type: "bubble_compare",
-                  message: `Comparando ${findCubeByIndex(step.i)?.getAttribute("data-value")} ↔ ${findCubeByIndex(step.j)?.getAttribute("data-value")}`
-                }, algorithmType);
-              } else if (algorithmType === "insertion") {
-                // Para Insertion Sort: resaltar el elemento que se está insertando
-                if (step.insertionIndex !== undefined) {
-                  const insertionElement = findCubeByIndex(step.insertionIndex);
-                  if (insertionElement) {
-                    const insertionBody = insertionElement.querySelector(".cube-body");
-                    if (insertionBody) {
-                      gsap.to(insertionBody, {
-                        duration: 0.3,
-                        onUpdate: function() {
-                          insertionBody.setAttribute("color", "#FF9800"); // Naranja
-                        },
-                        ease: "power2.inOut"
-                      });
-                    }
-                  }
-                }
-                showEducationalInfo({
-                  ...step,
-                  type: "insertion_compare",
-                  message: `Insertando elemento ${findCubeByIndex(step.j)?.getAttribute("data-value")}`
-                }, algorithmType);
-              } else if (algorithmType === "quick") {
-                // Para Quick Sort: mostrar información sobre el pivote
-                if (step.pivotIndex !== undefined) {
-                  const pivotValue = findCubeByIndex(step.pivotIndex)?.getAttribute("data-value");
-                  showEducationalInfo({
-                    ...step,
-                    type: "quick_compare",
-                    message: `Comparando con pivote ${pivotValue}`
-                  }, algorithmType);
-                }
-              }
-              if (a) {
-                // Animar color de comparación con GSAP
-                const cubeBodyA = a.querySelector(".cube-body");
-                if (cubeBodyA) {
-                  gsap.to(cubeBodyA, {
-                    duration: 0.3,
-                    onUpdate: function() {
-                      cubeBodyA.setAttribute("color", "#FFC107");
-                    },
-                    yoyo: true,
-                    repeat: 1,
-                    ease: "power2.inOut"
-                  });
-                }
-
-                // Agregar movimiento específico según algoritmo
-                const pos = readPos(a);
-                if (algorithmType === "bubble") {
-                  // Movimiento de burbuja hacia arriba con GSAP (actualiza position en onUpdate)
-                  const moverA = { y: pos[1] };
-                  gsap.to(moverA, {
-                    y: pos[1] + 0.15,
-                    duration: 0.4,
-                    ease: "power2.inOut",
-                    yoyo: true,
-                    repeat: 1,
-                    onUpdate: function() {
-                      a.setAttribute('position', `${pos[0]} ${moverA.y} ${pos[2]}`);
-                    }
-                  });
-                } else {
-                  // Movimiento estándar para otros algoritmos con GSAP
-                  const moverA2 = { y: pos[1] };
-                  gsap.to(moverA2, {
-                    y: pos[1] + 0.1,
-                    duration: 0.3,
-                    ease: "power2.inOut",
-                    yoyo: true,
-                    repeat: 1,
-                    onUpdate: function() {
-                      a.setAttribute('position', `${pos[0]} ${moverA2.y} ${pos[2]}`);
-                    }
-                  });
-                }
-              }
-              if (b) {
-                // Animar color de comparación con GSAP
-                const cubeBodyB = b.querySelector(".cube-body");
-                if (cubeBodyB) {
-                  gsap.to(cubeBodyB, {
-                    duration: 0.3,
-                    onUpdate: function() {
-                      cubeBodyB.setAttribute("color", "#FFC107");
-                    },
-                    yoyo: true,
-                    repeat: 1,
-                    ease: "power2.inOut"
-                  });
-                }
-
-                const pos = readPos(b);
-                if (algorithmType === "bubble") {
-                  const moverB = { y: pos[1] };
-                  gsap.to(moverB, {
-                    y: pos[1] + 0.15,
-                    duration: 0.4,
-                    ease: "power2.inOut",
-                    yoyo: true,
-                    repeat: 1,
-                    onUpdate: function() {
-                      b.setAttribute('position', `${pos[0]} ${moverB.y} ${pos[2]}`);
-                    }
-                  });
-                } else {
-                  const moverB2 = { y: pos[1] };
-                  gsap.to(moverB2, {
-                    y: pos[1] + 0.1,
-                    duration: 0.3,
-                    ease: "power2.inOut",
-                    yoyo: true,
-                    repeat: 1,
-                    onUpdate: function() {
-                      b.setAttribute('position', `${pos[0]} ${moverB2.y} ${pos[2]}`);
-                    }
-                  });
-                }
-              }
-
-              // Rotar cámara según algoritmo
-              rotateCameraForAlgorithm(idx, algorithmType);
-
-              // Efectos específicos de comparación
-              if (algorithmType === "quick" && step.j === pivotIndex) {
-                // Resaltar comparación con pivote
-                if (b) {
-                  b.setAttribute("animation__pivotCompare", {
-                    property: "scale",
-                    to: "1.2 1.2 1.2",
-                    dur: 200,
-                    easing: "easeInOutQuad",
-                    direction: "alternate",
-                    repeat: 1
-                  });
-                }
-              }
-
-            } else if (step.type === "no_swap") {
-              // Para Bubble Sort: cuando no hay intercambio, volver a color normal
-              if (algorithmType === "bubble") {
-                setTimeout(() => {
-                  const a = findCubeByIndex(step.i);
-                  const b = findCubeByIndex(step.j);
-
-                  if (a && !sortedElements.has(step.i)) {
-                    const cubeBodyA = a.querySelector(".cube-body");
-                    if (cubeBodyA) {
-                      gsap.to(cubeBodyA, {
-                        duration: 0.3,
-                        onUpdate: function() {
-                          cubeBodyA.setAttribute("color", "#4CAF50");
-                        },
-                        ease: "power2.inOut"
-                      });
-                    }
-                  }
-                  if (b && !sortedElements.has(step.j)) {
-                    const cubeBodyB = b.querySelector(".cube-body");
-                    if (cubeBodyB) {
-                      gsap.to(cubeBodyB, {
-                        duration: 0.3,
-                        onUpdate: function() {
-                          cubeBodyB.setAttribute("color", "#4CAF50");
-                        },
-                        ease: "power2.inOut"
-                      });
-                    }
-                  }
-                }, 800); // Después de que termine la animación de comparación
-              }
+            if (step.type === "compare") {
+              // Resaltar elementos siendo comparados
+              highlightElements([step.i, step.j], "#FFEB3B", 0.3);
 
             } else if (step.type === "swap") {
-              // Volver a leer posiciones actuales (podrían haber cambiado en pasos previos)
-              const posA = (a) ? readPos(a) : [0,0,0];
-              const posB = (b) ? readPos(b) : [0,0,0];
+              // EJECUTAR EL SWAP REAL CON A-FRAME
+              performSwap(step.i, step.j, 600, algorithmType);
 
-              // Usar performSwap para animar y actualizar metadata (data-index/data-value/text)
-              performSwap(step.i, step.j, 1200, algorithmType);
-
-              // Para Bubble Sort: cambiar a verde después del swap exitoso
-              if (algorithmType === "bubble") {
-                setTimeout(() => {
-                  if (a && !sortedElements.has(step.i)) {
-                    const cubeBodyA = a.querySelector(".cube-body");
-                    if (cubeBodyA) {
-                      gsap.to(cubeBodyA, {
-                        duration: 0.4,
-                        onUpdate: function() {
-                          cubeBodyA.setAttribute("color", "#8BC34A");
-                        },
-                        ease: "power2.inOut"
-                      });
-                    }
-                  }
-                  if (b && !sortedElements.has(step.j)) {
-                    const cubeBodyB = b.querySelector(".cube-body");
-                    if (cubeBodyB) {
-                      gsap.to(cubeBodyB, {
-                        duration: 0.4,
-                        onUpdate: function() {
-                          cubeBodyB.setAttribute("color", "#8BC34A");
-                        },
-                        ease: "power2.inOut"
-                      });
-                    }
-                  }
-                }, 1200); // Después de que termine la animación de movimiento
-              }
-
-              // Para Insertion Sort: cambiar a verde cuando se inserta correctamente
-              if (algorithmType === "insertion" && step.insertionIndex !== undefined) {
-                setTimeout(() => {
-                  const insertionElement = findCubeByIndex(step.insertionIndex);
-                  if (insertionElement) {
-                    const insertionBody = insertionElement.querySelector(".cube-body");
-                    if (insertionBody) {
-                      gsap.to(insertionBody, {
-                        duration: 0.4,
-                        onUpdate: function() {
-                          insertionBody.setAttribute("color", "#8BC34A"); // Verde
-                        },
-                        ease: "power2.inOut"
-                      });
-                    }
-                  }
-                }, 1200);
-              }
-
-              // Actualizar display del array después del swap
-              setTimeout(() => {
+              // Actualizar display después del swap
+              scheduleAlgorithmTimeout(() => {
                 updateArrayDisplay();
-              }, 1200);
+              }, 650);
 
-              // Efectos específicos según algoritmo
-              if (algorithmType === "bubble") {
-                // Efectos de burbuja para bubble sort
-                createBubbleEffect(a, step.i < step.j ? 'right' : 'left');
-                createBubbleEffect(b, step.i < step.j ? 'left' : 'right');
-              } else if (algorithmType === "insertion") {
-                // Efectos de inserción
-                createInsertionEffect(a, b);
-              } else if (algorithmType === "quick") {
-                // Efectos de partición para quick sort
-                if (step.j === pivotIndex) {
-                  // Swap con pivote - efecto especial
-                  const spark = document.createElement("a-sphere");
-                  const midX = (posA[0] + posB[0]) / 2;
-                  // Intentamos leer la altura real del cuerpo del cubo (a-box) si existe
-                  const bodyA = a.querySelector('.cube-body');
-                  const bodyB = b.querySelector('.cube-body');
-                  const heightA = readNumberAttr(bodyA, 'height', 0.8);
-                  const heightB = readNumberAttr(bodyB, 'height', 0.8);
-                  const avgHeight = (heightA + heightB) / 2;
-                  const midY = avgHeight / 2 + 0.3;
-                  spark.setAttribute("position", `${midX} ${midY} 0`);
-                  spark.setAttribute("radius", 0.03);
-                  spark.setAttribute("color", "#FFEB3B");
-                  spark.setAttribute("animation__spark", {
-                    property: "scale",
-                    to: "3 3 3",
-                    dur: 400,
-                    easing: "easeOutQuad"
-                  });
-                  spark.setAttribute("animation__sparkFade", {
-                    property: "opacity",
-                    to: 0,
-                    dur: 600, // Aumentado de 400 a 600
-                    easing: "easeOutQuad"
-                  });
-                  parent.appendChild(spark);
-                  setTimeout(() => {
-                    if (spark.parentNode) spark.parentNode.removeChild(spark);
-                  }, 600);
-                }
-              }
-
-              // (metadata swap now handled inside performSwap onComplete)
-
-              // Efecto de "explosión" visual durante el swap (común a todos)
-              const explosion = document.createElement("a-sphere");
-                  const midX = (posA[0] + posB[0]) / 2;
-                  const bodyA2 = a.querySelector('.cube-body');
-                  const bodyB2 = b.querySelector('.cube-body');
-                  const heightA2 = readNumberAttr(bodyA2, 'height', 0.8);
-                  const heightB2 = readNumberAttr(bodyB2, 'height', 0.8);
-                  const avgHeight2 = (heightA2 + heightB2) / 2;
-                  const midY = avgHeight2 / 2 + 0.5; // Usar altura promedio de las barras
-              explosion.setAttribute("position", `${midX} ${midY} 0`);
-              explosion.setAttribute("radius", 0.05);
-              explosion.setAttribute("color", "#FF5722");
-              explosion.setAttribute("opacity", 0.8);
-              explosion.setAttribute("animation__explode", {
-                property: "scale",
-                to: "2 2 2",
-                dur: 400,
-                easing: "easeOutQuad"
-              });
-              explosion.setAttribute("animation__fade", {
-                property: "opacity",
-                to: 0,
-                dur: 400,
-                easing: "easeOutQuad"
-              });
-              parent.appendChild(explosion);
-
-              // Remover la explosión después de la animación
-              setTimeout(() => {
-                if (explosion.parentNode) {
-                  explosion.parentNode.removeChild(explosion);
-                }
-              }, 600); // Aumentado de 400 a 600
+            } else if (step.type === "pivot") {
+              // Resaltar pivote
+              pivotIndex = step.index;
+              highlightPivot(step.index);
             }
 
-            // Marcar elementos como ordenados al final de cada pasada (para bubble sort)
-            if (algorithmType === "bubble" && step.type === "compare" && step.pass !== undefined) {
-              // Al final de cada pasada, marcar el último elemento como ordenado
-              const passEndIndex = cubes.length - 1 - step.pass;
-              if (step.j === passEndIndex - 1) {
-                const sortedBar = findCubeByIndex(passEndIndex);
-                if (sortedBar) {
-                  sortedElements.add(passEndIndex);
-                  sortedBar.setAttribute("animation__sorted", {
-                    property: "color",
-                    to: "#8BC34A",
-                    dur: 500,
-                    easing: "easeInOutQuad"
-                  });
-                }
-              }
-            }
-
-            // mark completed at the last step con animación final
+            // Al terminar todos los pasos
             if (idx === steps.length - 1) {
               scheduleAlgorithmTimeout(() => {
                 if (!isSorting || currentScene !== "algorithms") {
                   return;
                 }
-                cubes.forEach((b) => {
-                  b.setAttribute("animation__complete", {
-                    property: "color",
-                    to: "#8BC34A",
-                    dur: 500,
-                    easing: "easeInOutQuad"
-                  });
-                  // Animación de celebración: mover hacia arriba y volver
-                  const pos = readPos(b);
-                  b.setAttribute("animation__celebrate", {
+                
+                // Colorear todos en verde
+                const allCubes = Array.from(document.querySelectorAll(".algo-cube"));
+                allCubes.forEach((cube) => {
+                  const body = cube.querySelector(".cube-body");
+                  if (body) body.setAttribute("color", "#8BC34A");
+                });
+
+                // Animación de celebración
+                allCubes.forEach((cube) => {
+                  cube.setAttribute("animation__celebrate", {
                     property: "position",
-                    to: `${pos[0]} ${pos[1] + 0.3} ${pos[2]}`,
+                    from: cube.getAttribute("position"),
+                    to: (pos => {
+                      const p = readPos(cube);
+                      return `${p[0]} ${p[1] + 0.2} ${p[2]}`;
+                    })(),
                     dur: 300,
                     easing: "easeOutQuad",
                     direction: "alternate",
-                    repeat: 1
+                    repeat: 1,
+                    loop: false
                   });
                 });
 
-                // Limpiar indicador de progreso
-                while (progressIndicator.firstChild) {
-                  progressIndicator.removeChild(progressIndicator.firstChild);
-                }
+                // Actualizar display final
+                updateArrayDisplay();
 
-                // Resetear rotación de cámara al final
+                // Resetear cámara
                 if (cameraEl) {
                   cameraEl.setAttribute("animation__resetRotate", {
                     property: "rotation",
                     to: "0 0 0",
-                    dur: 1000,
+                    dur: 800,
                     easing: "easeInOutQuad"
                   });
                 }
-              }, 1000);
-              // Liberar bandera después de las animaciones finales
-              scheduleAlgorithmTimeout(() => {
-                if (!isSorting || currentScene !== "algorithms") {
-                  return;
-                }
+
                 isSorting = false;
-                console.log("animateAlgorithmSteps: ejecución finalizada.");
-              }, 1000 + 1200); // darle margen para animaciones finales
+                console.log("Algoritmo completado correctamente");
+              }, 700);
             }
           }, idx * delayMs);
         });
