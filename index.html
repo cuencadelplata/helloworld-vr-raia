@@ -1,1680 +1,1423 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Entorno Virtual Interactivo</title>
-    <link rel="icon" href="data:," />
-    <meta charset="utf-8" />
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#ECECEC" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", function () {
-          navigator.serviceWorker.register("service-worker.js");
-        });
-      }
-    </script>
-    <style>
-      .hud-overlay {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        color: white;
-        font-family: Arial, sans-serif;
-        background: rgba(0, 0, 0, 0.7);
-        padding: 10px;
-        border-radius: 5px;
-        z-index: 1000;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="mathHUD" class="hud-overlay" style="display: none">
-      <h3 id="functionTitle">Analisis Matematico</h3>
-      <p id="functionDescription">Selecciona una funcion para visualizar</p>
-      <p id="functionDomain">Explora diferentes funciones en 3D</p>
-    </div>
+
+<head>
+  <title>Entorno Virtual Interactivo</title>
+  <link rel="icon" href="data:," />
+  <meta charset="utf-8" />
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ECECEC" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("service-worker.js");
+      });
+    }
+  </script>
+  <style>
+    .hud-overlay {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: white;
+      font-family: Arial, sans-serif;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="mathHUD" class="hud-overlay" style="display: none">
+    <h3 id="functionTitle">Analisis Matematico</h3>
+    <p id="functionDescription">Selecciona una funcion para visualizar</p>
+    <p id="functionDomain">Explora diferentes funciones en 3D</p>
+  </div>
 
   <a-scene renderer="antialias: false">
-      <!-- Piso simple para referencia -->
-      <a-plane
-        position="0 0 0"
-        rotation="-90 0 0"
-        width="20"
-        height="20"
-        color="white"
-      ></a-plane>
-        <a-box
-          width="0.5"
-          height="0.2"
-          depth="0.05"
-          color="#FF5252"
-          opacity="0.9"
-          animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-          animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-        ></a-box>
-        <a-text
-          value="Salir VR"
-          align="center"
-          color="#fff"
-          width="1.5"
-          position="0 0 0.03"
-        ></a-text>
-      </a-entity>
-      
-      <!-- Piso simple para referencia -->
-      <a-plane
-        position="0 0 0"
-        rotation="-90 0 0"
-        width="20"
-        height="20"
-        color="white"
-      ></a-plane>
+    <!-- Piso simple para referencia -->
+    <a-plane position="0 0 0" rotation="-90 0 0" width="20" height="20" color="white"></a-plane>
+    <a-box width="0.5" height="0.2" depth="0.05" color="#FF5252" opacity="0.9"
+      animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+      animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+    <a-text value="Salir VR" align="center" color="#fff" width="1.5" position="0 0 0.03"></a-text>
+    </a-entity>
 
-      <!-- Escena Principal (Home) -->
-      <a-entity id="scene-home">
-        <!-- Logo 3D centrado y visible -->
-        <a-entity
-          id="logo3d"
-          position="0 1.5 -0.8"
-          scale="2 2 2"
-          rotation="0 45 0"
-          animation="property: rotation; to: 0 405 0; loop: true; dur: 8000; easing: linear"
-        >
-          <a-gltf-model src="./models-prueba/Iso.gltf"></a-gltf-model>
-        </a-entity>
+    <!-- Piso simple para referencia -->
+    <a-plane position="0 0 0" rotation="-90 0 0" width="20" height="20" color="white"></a-plane>
 
-        <!-- Menu interactivo en el piso -->
-        <a-entity id="menu" position="0 0.01 -2" rotation="-90 0 0">
-          <a-box
-            position="0 0 0"
-            width="2.2"
-            height="0.3"
-            depth="0.05"
-            color="#222"
-            opacity="0.7"
-          ></a-box>
-          <a-entity
-            id="btn-scene1"
-            position="-0.7 0.05 0.03"
-            class="clickable"
-            cursor-target
-          >
-            <a-box
-              width="0.6"
-              height="0.18"
-              depth="0.05"
-              color="#4CAF50"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Analisis Matematico"
-              align="center"
-              color="#fff"
-              width="1.2"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-          <a-entity
-            id="btn-scene2"
-            position="0 0.05 0.03"
-            class="clickable"
-            cursor-target
-          >
-            <a-box
-              width="0.6"
-              height="0.18"
-              depth="0.05"
-              color="#2196F3"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Algoritmos"
-              align="center"
-              color="#fff"
-              width="1.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-          <a-entity
-            id="btn-scene3"
-            position="0.7 0.05 0.03"
-            class="clickable"
-            cursor-target
-          >
-            <a-box
-              width="0.6"
-              height="0.18"
-              depth="0.05"
-              color="#FFC107"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Escena 3"
-              align="center"
-              color="#222"
-              width="1.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-        </a-entity>
+    <!-- Escena Principal (Home) -->
+    <a-entity id="scene-home">
+      <!-- Logo 3D centrado y visible -->
+      <a-entity id="logo3d" position="0 1.5 -0.8" scale="2 2 2" rotation="0 45 0"
+        animation="property: rotation; to: 0 405 0; loop: true; dur: 8000; easing: linear">
+        <a-gltf-model src="./models-prueba/Iso.gltf"></a-gltf-model>
       </a-entity>
 
-      <!-- Escena 1: Analisis Matematico -->
-  <a-entity id="scene-math" visible="false">
-        <!-- Menu de Funciones Matematicas -->
-        <a-entity id="math-menu" position="0 2 -3">
-          <!-- Titulo principal -->
-          <a-text
-            value="Analisis Matematico"
-            position="0 1.5 0"
-            align="center"
-            color="#4CAF50"
-            width="12"
-          ></a-text>
-
-          <a-text
-            value="Selecciona una funcion para visualizar:"
-            position="0 1 0"
-            align="center"
-            color="#fff"
-            width="8"
-          ></a-text>
-
-          <!-- Fila 1 de funciones -->
-          <a-entity position="-2 0.3 0">
-            <a-entity
-              id="btn-func1"
-              position="0 0 0"
-              class="clickable function-btn"
-              cursor-target
-            >
-              <a-box
-                width="1.5"
-                height="0.4"
-                depth="0.08"
-                color="#FF6B6B"
-                opacity="0.9"
-                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-              ></a-box>
-              <a-text
-                value="sin(x) * cos(y)"
-                align="center"
-                color="#fff"
-                width="4"
-                position="0 0 0.05"
-              ></a-text>
-            </a-entity>
-          </a-entity>
-
-          <a-entity position="0 0.3 0">
-            <a-entity
-              id="btn-func2"
-              position="0 0 0"
-              class="clickable function-btn"
-              cursor-target
-            >
-              <a-box
-                width="1.5"
-                height="0.4"
-                depth="0.08"
-                color="#4ECDC4"
-                opacity="0.9"
-                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-              ></a-box>
-              <a-text
-                value="x² + y²"
-                align="center"
-                color="#fff"
-                width="4"
-                position="0 0 0.05"
-              ></a-text>
-            </a-entity>
-          </a-entity>
-
-          <a-entity position="2 0.3 0">
-            <a-entity
-              id="btn-func3"
-              position="0 0 0"
-              class="clickable function-btn"
-              cursor-target
-            >
-              <a-box
-                width="1.5"
-                height="0.4"
-                depth="0.08"
-                color="#45B7D1"
-                opacity="0.9"
-                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-              ></a-box>
-              <a-text
-                value="sin(√(x²+y²))"
-                align="center"
-                color="#fff"
-                width="3.5"
-                position="0 0 0.05"
-              ></a-text>
-            </a-entity>
-          </a-entity>
-
-          <!-- Fila 2 de funciones -->
-          <a-entity position="-1 -0.3 0">
-            <a-entity
-              id="btn-func4"
-              position="0 0 0"
-              class="clickable function-btn"
-              cursor-target
-            >
-              <a-box
-                width="1.5"
-                height="0.4"
-                depth="0.08"
-                color="#96CEB4"
-                opacity="0.9"
-                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-              ></a-box>
-              <a-text
-                value="cos(x) * sin(y)"
-                align="center"
-                color="#fff"
-                width="3.5"
-                position="0 0 0.05"
-              ></a-text>
-            </a-entity>
-          </a-entity>
-
-          <a-entity position="1 -0.3 0">
-            <a-entity
-              id="btn-func5"
-              position="0 0 0"
-              class="clickable function-btn"
-              cursor-target
-            >
-              <a-box
-                width="1.5"
-                height="0.4"
-                depth="0.08"
-                color="#FFEAA7"
-                opacity="0.9"
-                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-              ></a-box>
-              <a-text
-                value="e^(-(x²+y²))"
-                align="center"
-                color="#333"
-                width="3.5"
-                position="0 0 0.05"
-              ></a-text>
-            </a-entity>
-          </a-entity>
-
-          <!-- Boton de regreso al menu principal -->
-          <a-entity
-            id="btn-back"
-            position="0 -1 0"
-            class="clickable"
-            cursor-target
-          >
-            <a-box
-              width="1.2"
-              height="0.3"
-              depth="0.08"
-              color="#f44336"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="← Menu Principal"
-              align="center"
-              color="#fff"
-              width="3"
-              position="0 0 0.05"
-            ></a-text>
-          </a-entity>
+      <!-- Menu interactivo en el piso -->
+      <a-entity id="menu" position="0 0.01 -2" rotation="-90 0 0">
+        <a-box position="0 0 0" width="2.2" height="0.3" depth="0.05" color="#222" opacity="0.7"></a-box>
+        <a-entity id="btn-scene1" position="-0.7 0.05 0.03" class="clickable" cursor-target>
+          <a-box width="0.6" height="0.18" depth="0.05" color="#4CAF50" opacity="0.9"
+            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+          <a-text value="Analisis Matematico" align="center" color="#fff" width="1.2" position="0 0 0.03"></a-text>
         </a-entity>
-
-        <!-- Area de visualizacion de funciones -->
-        <a-entity id="function-display" visible="false">
-          <!-- Titulo dinamico de la funcion -->
-          <a-text
-            id="current-function-title"
-            value=""
-            position="0 3 -3"
-            align="center"
-            color="#4CAF50"
-            width="10"
-          ></a-text>
-
-          <!-- Superficie matematica -->
-          <a-entity id="math-surface" position="0 1.5 -4"></a-entity>
-
-          <!-- Ejes de coordenadas (solo visibles cuando se muestra una funcion) -->
-          <!-- Eje X -->
-          <a-cylinder
-            position="0 1 -4"
-            rotation="0 0 90"
-            height="6"
-            radius="0.02"
-            color="red"
-          ></a-cylinder>
-          <a-text value="X" position="3.2 1 -4" color="red" width="4"></a-text>
-
-          <!-- Eje Y -->
-          <a-cylinder
-            position="0 1 -4"
-            height="6"
-            radius="0.02"
-            color="green"
-          ></a-cylinder>
-          <a-text
-            value="Y"
-            position="0 4.2 -4"
-            color="green"
-            width="4"
-          ></a-text>
-
-          <!-- Eje Z -->
-          <a-cylinder
-            position="0 1 -4"
-            rotation="90 0 0"
-            height="6"
-            radius="0.02"
-            color="blue"
-          ></a-cylinder>
-          <a-text value="Z" position="0 1 -0.8" color="blue" width="4"></a-text>
-
-          <!-- Boton para regresar al menu de funciones -->
-          <a-entity
-            id="btn-back-to-menu"
-            position="0 0.5 -2"
-            class="clickable"
-            cursor-target
-          >
-            <a-box
-              width="1.2"
-              height="0.3"
-              depth="0.1"
-              color="#9B59B6"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="← Menu Funciones"
-              align="center"
-              color="#fff"
-              width="3"
-              position="0 0 0.06"
-            ></a-text>
-          </a-entity>
+        <a-entity id="btn-scene2" position="0 0.05 0.03" class="clickable" cursor-target>
+          <a-box width="0.6" height="0.18" depth="0.05" color="#2196F3" opacity="0.9"
+            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+          <a-text value="Algoritmos" align="center" color="#fff" width="1.5" position="0 0 0.03"></a-text>
+        </a-entity>
+        <a-entity id="btn-scene3" position="0.7 0.05 0.03" class="clickable" cursor-target>
+          <a-box width="0.6" height="0.18" depth="0.05" color="#FFC107" opacity="0.9"
+            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+          <a-text value="Escena 3" align="center" color="#222" width="1.5" position="0 0 0.03"></a-text>
         </a-entity>
       </a-entity>
+    </a-entity>
 
-      <!-- Escena 2: Algoritmos de Ordenamiento -->
-      <a-entity id="scene-algorithms" visible="false">
-        <!-- Menu de algoritmos -->
-        <a-entity id="alg-menu" position="0 2 -3">
-          <a-text
-            value="Algoritmos de Ordenamiento"
-            position="0 1.5 0"
-            align="center"
-            color="#2196F3"
-            width="12"
-          ></a-text>
+    <!-- Escena 1: Analisis Matematico -->
+    <a-entity id="scene-math" visible="false">
+      <!-- Menu de Funciones Matematicas -->
+      <a-entity id="math-menu" position="0 2 -3">
+        <!-- Titulo principal -->
+        <a-text value="Analisis Matematico" position="0 1.5 0" align="center" color="#4CAF50" width="12"></a-text>
 
-          <a-text
-            value="Selecciona un algoritmo para visualizar:" 
-            position="0 1 0"
-            align="center"
-            color="#fff"
-            width="8"
-          ></a-text>
+        <a-text value="Selecciona una funcion para visualizar:" position="0 1 0" align="center" color="#fff"
+          width="8"></a-text>
 
-          <a-entity position="-1 0.3 0">
-            <a-entity id="btn-algo1" class="clickable" cursor-target>
-              <a-box width="1.5" height="0.4" depth="0.08" color="#FF6B6B" opacity="0.9"
-                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-              <a-text value="Bubble Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
-            </a-entity>
-          </a-entity>
-
-          <a-entity position="1 0.3 0">
-            <a-entity id="btn-algo2" class="clickable" cursor-target>
-              <a-box width="1.5" height="0.4" depth="0.08" color="#4ECDC4" opacity="0.9"
-                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-              <a-text value="Insertion Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
-            </a-entity>
-          </a-entity>
-
-          <a-entity position="0 -0.3 0">
-            <a-entity id="btn-algo3" class="clickable" cursor-target>
-              <a-box width="1.5" height="0.4" depth="0.08" color="#45B7D1" opacity="0.9"
-                animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-              <a-text value="Quick Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
-            </a-entity>
-          </a-entity>
-
-          <!-- Boton de regreso al menu principal -->
-          <a-entity id="btn-back-alg" position="0 -1 0" class="clickable" cursor-target>
-            <a-box width="1.2" height="0.3" depth="0.08" color="#f44336" opacity="0.9"
+        <!-- Fila 1 de funciones -->
+        <a-entity position="-2 0.3 0">
+          <a-entity id="btn-func1" position="0 0 0" class="clickable function-btn" cursor-target>
+            <a-box width="1.5" height="0.4" depth="0.08" color="#FF6B6B" opacity="0.9"
               animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
               animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="← Menu Principal" align="center" color="#fff" width="3" position="0 0 0.05"></a-text>
+            <a-text value="sin(x) * cos(y)" align="center" color="#fff" width="4" position="0 0 0.05"></a-text>
           </a-entity>
         </a-entity>
 
-        <!-- Area de visualizacion de algoritmos -->
-        <a-entity id="algorithm-display" visible="false">
-          <a-text id="current-algo-title" value="" position="0 3 -3" align="center" color="#2196F3" width="10"></a-text>
-
-          <!-- Contenedor donde se agregarán barras (representación del array) -->
-          <a-entity id="algo-surface" position="0 1.2 -2.5"></a-entity>
-
-          <!-- Boton para regresar al menu de algoritmos -->
-          <a-entity id="btn-back-to-alg-menu" position="-0.8 0.5 -1" class="clickable" cursor-target>
-            <a-box width="1.2" height="0.3" depth="0.1" color="#9B59B6" opacity="0.9"
+        <a-entity position="0 0.3 0">
+          <a-entity id="btn-func2" position="0 0 0" class="clickable function-btn" cursor-target>
+            <a-box width="1.5" height="0.4" depth="0.08" color="#4ECDC4" opacity="0.9"
               animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
               animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="← Menu Algoritmos" align="center" color="#fff" width="3" position="0 0 0.06"></a-text>
+            <a-text value="x² + y²" align="center" color="#fff" width="4" position="0 0 0.05"></a-text>
           </a-entity>
+        </a-entity>
 
-          <!-- Boton para reiniciar el algoritmo -->
-          <a-entity id="btn-restart-algo" position="0.8 0.5 -1" class="clickable" cursor-target>
-            <a-box width="1.2" height="0.3" depth="0.1" color="#FF9800" opacity="0.9"
+        <a-entity position="2 0.3 0">
+          <a-entity id="btn-func3" position="0 0 0" class="clickable function-btn" cursor-target>
+            <a-box width="1.5" height="0.4" depth="0.08" color="#45B7D1" opacity="0.9"
               animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
               animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="🔄 Reiniciar" align="center" color="#fff" width="3" position="0 0 0.06"></a-text>
+            <a-text value="sin(√(x²+y²))" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
           </a-entity>
+        </a-entity>
+
+        <!-- Fila 2 de funciones -->
+        <a-entity position="-1 -0.3 0">
+          <a-entity id="btn-func4" position="0 0 0" class="clickable function-btn" cursor-target>
+            <a-box width="1.5" height="0.4" depth="0.08" color="#96CEB4" opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+            <a-text value="cos(x) * sin(y)" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
+          </a-entity>
+        </a-entity>
+
+        <a-entity position="1 -0.3 0">
+          <a-entity id="btn-func5" position="0 0 0" class="clickable function-btn" cursor-target>
+            <a-box width="1.5" height="0.4" depth="0.08" color="#FFEAA7" opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+            <a-text value="e^(-(x²+y²))" align="center" color="#333" width="3.5" position="0 0 0.05"></a-text>
+          </a-entity>
+        </a-entity>
+
+        <!-- Boton de regreso al menu principal -->
+        <a-entity id="btn-back" position="0 -1 0" class="clickable" cursor-target>
+          <a-box width="1.2" height="0.3" depth="0.08" color="#f44336" opacity="0.9"
+            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+          <a-text value="← Menu Principal" align="center" color="#fff" width="3" position="0 0 0.05"></a-text>
         </a-entity>
       </a-entity>
 
-      <!-- Luz y cielo -->
-      <a-light type="point" position="2 4 4"></a-light>
-      <a-light type="ambient" color="#404040"></a-light>
-      <a-sky color="#ECECEC"></a-sky>
+      <!-- Area de visualizacion de funciones -->
+      <a-entity id="function-display" visible="false">
+        <!-- Titulo dinamico de la funcion -->
+        <a-text id="current-function-title" value="" position="0 3 -3" align="center" color="#4CAF50"
+          width="10"></a-text>
 
-      <!-- HUD para la version -->
-      <a-camera id="mainCamera" camera="fov: 75">
-        <a-entity
-          text="value: v1.0.5; color: #000; align: right; width: 1.5; anchor: right;"
-          position="0.9 -0.7 -2"
-        ></a-entity>
-        <!-- Cursor para interaccion -->
-        <a-cursor
-          position="0 0 -1"
-          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-          material="color: white; shader: flat"
-          animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 150"
-          animation__fusing="property: scale; startEvents: fusing; from: 1 1 1; to: 0.1 0.1 0.1; dur: 1500"
-        ></a-cursor>
-      </a-camera>
-    </a-scene>
+        <!-- Superficie matematica -->
+        <a-entity id="math-surface" position="0 1.5 -4"></a-entity>
 
-    <script>
-      // Sistema de navegacion entre escenas
-      const scenes = {
-        home: document.getElementById("scene-home"),
-        math: document.getElementById("scene-math"),
-        algorithms: document.getElementById("scene-algorithms"),
-      };
-      let currentScene = "home";
-      let algorithmTimeouts = [];
+        <!-- Ejes de coordenadas (solo visibles cuando se muestra una funcion) -->
+        <!-- Eje X -->
+        <a-cylinder position="0 1 -4" rotation="0 0 90" height="6" radius="0.02" color="red"></a-cylinder>
+        <a-text value="X" position="3.2 1 -4" color="red" width="4"></a-text>
 
-      function showScene(sceneName) {
-        // Ocultar todas las escenas
-        Object.values(scenes).forEach((scene) => {
-          if (scene) {
-            scene.setAttribute("visible", false);
-          }
-        });
+        <!-- Eje Y -->
+        <a-cylinder position="0 1 -4" height="6" radius="0.02" color="green"></a-cylinder>
+        <a-text value="Y" position="0 4.2 -4" color="green" width="4"></a-text>
 
-        // Mostrar la escena seleccionada
-        const targetScene = scenes[sceneName];
-        if (targetScene) {
-          targetScene.setAttribute("visible", true);
+        <!-- Eje Z -->
+        <a-cylinder position="0 1 -4" rotation="90 0 0" height="6" radius="0.02" color="blue"></a-cylinder>
+        <a-text value="Z" position="0 1 -0.8" color="blue" width="4"></a-text>
+
+        <!-- Boton para regresar al menu de funciones -->
+        <a-entity id="btn-back-to-menu" position="0 0.5 -2" class="clickable" cursor-target>
+          <a-box width="1.2" height="0.3" depth="0.1" color="#9B59B6" opacity="0.9"
+            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+          <a-text value="← Menu Funciones" align="center" color="#fff" width="3" position="0 0 0.06"></a-text>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- Escena 2: Algoritmos de Ordenamiento -->
+    <a-entity id="scene-algorithms" visible="false">
+      <!-- Menu de algoritmos -->
+      <a-entity id="alg-menu" position="0 2 -3">
+        <a-text value="Algoritmos de Ordenamiento" position="0 1.5 0" align="center" color="#2196F3"
+          width="12"></a-text>
+
+        <a-text value="Selecciona un algoritmo para visualizar:" position="0 1 0" align="center" color="#fff"
+          width="8"></a-text>
+
+        <a-entity position="-1 0.3 0">
+          <a-entity id="btn-algo1" class="clickable" cursor-target>
+            <a-box width="1.5" height="0.4" depth="0.08" color="#FF6B6B" opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+            <a-text value="Bubble Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
+          </a-entity>
+        </a-entity>
+
+        <a-entity position="1 0.3 0">
+          <a-entity id="btn-algo2" class="clickable" cursor-target>
+            <a-box width="1.5" height="0.4" depth="0.08" color="#4ECDC4" opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+            <a-text value="Insertion Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
+          </a-entity>
+        </a-entity>
+
+        <a-entity position="0 -0.3 0">
+          <a-entity id="btn-algo3" class="clickable" cursor-target>
+            <a-box width="1.5" height="0.4" depth="0.08" color="#45B7D1" opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+            <a-text value="Quick Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
+          </a-entity>
+        </a-entity>
+
+        <!-- Boton de regreso al menu principal -->
+        <a-entity id="btn-back-alg" position="0 -1 0" class="clickable" cursor-target>
+          <a-box width="1.2" height="0.3" depth="0.08" color="#f44336" opacity="0.9"
+            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+          <a-text value="← Menu Principal" align="center" color="#fff" width="3" position="0 0 0.05"></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- Area de visualizacion de algoritmos -->
+      <a-entity id="algorithm-display" visible="false">
+        <a-text id="current-algo-title" value="" position="0 3 -3" align="center" color="#2196F3" width="10"></a-text>
+
+        <!-- Contenedor donde se agregarán barras (representación del array) -->
+        <a-entity id="algo-surface" position="0 1.2 -2.5"></a-entity>
+
+        <!-- Boton para regresar al menu de algoritmos -->
+        <a-entity id="btn-back-to-alg-menu" position="-0.8 0.5 -1" class="clickable" cursor-target>
+          <a-box width="1.2" height="0.3" depth="0.1" color="#9B59B6" opacity="0.9"
+            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+          <a-text value="← Menu Algoritmos" align="center" color="#fff" width="3" position="0 0 0.06"></a-text>
+        </a-entity>
+
+        <!-- Boton para reiniciar el algoritmo -->
+        <a-entity id="btn-restart-algo" position="0.8 0.5 -1" class="clickable" cursor-target>
+          <a-box width="1.2" height="0.3" depth="0.1" color="#FF9800" opacity="0.9"
+            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
+          <a-text value="🔄 Reiniciar" align="center" color="#fff" width="3" position="0 0 0.06"></a-text>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- Luz y cielo -->
+    <a-light type="point" position="2 4 4"></a-light>
+    <a-light type="ambient" color="#404040"></a-light>
+    <a-sky color="#ECECEC"></a-sky>
+
+    <!-- HUD para la version -->
+    <a-camera id="mainCamera" camera="fov: 75">
+      <a-entity text="value: v1.0.5; color: #000; align: right; width: 1.5; anchor: right;"
+        position="0.9 -0.7 -2"></a-entity>
+      <!-- Cursor para interaccion -->
+      <a-cursor position="0 0 -1" geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+        material="color: white; shader: flat"
+        animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 150"
+        animation__fusing="property: scale; startEvents: fusing; from: 1 1 1; to: 0.1 0.1 0.1; dur: 1500"></a-cursor>
+    </a-camera>
+  </a-scene>
+
+  <script>
+    // Sistema de navegacion entre escenas
+    const scenes = {
+      home: document.getElementById("scene-home"),
+      math: document.getElementById("scene-math"),
+      algorithms: document.getElementById("scene-algorithms"),
+    };
+    let currentScene = "home";
+    let algorithmTimeouts = [];
+
+    function showScene(sceneName) {
+      // Ocultar todas las escenas
+      Object.values(scenes).forEach((scene) => {
+        if (scene) {
+          scene.setAttribute("visible", false);
         }
-        currentScene = sceneName;
+      });
 
-        // Mostrar/ocultar HUD matematico
-        const mathHUD = document.getElementById("mathHUD");
-        const cameraEl = document.getElementById("mainCamera");
-        if (sceneName === "math") {
-          mathHUD.style.display = "block";
-          showMathMenu();
+      // Mostrar la escena seleccionada
+      const targetScene = scenes[sceneName];
+      if (targetScene) {
+        targetScene.setAttribute("visible", true);
+      }
+      currentScene = sceneName;
 
-          // Reposicionar cámara para una mejor perspectiva de la función
-          if (cameraEl) {
-            cameraEl.setAttribute("position", { x: 0, y: 2.5, z: 2.8 });
-            const target = new THREE.Vector3(0, 1.5, -4);
-            cameraEl.object3D.lookAt(target);
-          }
-        } else if (sceneName === "algorithms") {
-          mathHUD.style.display = "block";
-          showAlgorithmsMenu();
+      // Mostrar/ocultar HUD matematico
+      const mathHUD = document.getElementById("mathHUD");
+      const cameraEl = document.getElementById("mainCamera");
+      if (sceneName === "math") {
+        mathHUD.style.display = "block";
+        showMathMenu();
 
-          // Reposicionar cámara para la vista de algoritmos
-          if (cameraEl) {
-            cameraEl.setAttribute("position", { x: 0, y: 2.2, z: 2.8 });
-            const target = new THREE.Vector3(0, 1.2, -4);
-            cameraEl.object3D.lookAt(target);
-          }
-        } else {
-          mathHUD.style.display = "none";
-          // Restaurar vista inicial en Home
-          if (cameraEl) {
-            cameraEl.setAttribute("position", { x: 0, y: 1.6, z: 0 });
-            cameraEl.setAttribute("rotation", { x: 0, y: 0, z: 0 });
-          }
+        // Reposicionar cámara para una mejor perspectiva de la función
+        if (cameraEl) {
+          cameraEl.setAttribute("position", { x: 0, y: 2.5, z: 2.8 });
+          const target = new THREE.Vector3(0, 1.5, -4);
+          cameraEl.object3D.lookAt(target);
         }
+      } else if (sceneName === "algorithms") {
+        mathHUD.style.display = "block";
+        showAlgorithmsMenu();
 
-        if (sceneName !== "algorithms") {
-          stopAlgorithmAnimations({ resetDisplay: true });
+        // Reposicionar cámara para la vista de algoritmos
+        if (cameraEl) {
+          cameraEl.setAttribute("position", { x: 0, y: 2.2, z: 2.8 });
+          const target = new THREE.Vector3(0, 1.2, -4);
+          cameraEl.object3D.lookAt(target);
+        }
+      } else {
+        mathHUD.style.display = "none";
+        // Restaurar vista inicial en Home
+        if (cameraEl) {
+          cameraEl.setAttribute("position", { x: 0, y: 1.6, z: 0 });
+          cameraEl.setAttribute("rotation", { x: 0, y: 0, z: 0 });
         }
       }
 
-      // Funcion para mostrar el menu de funciones matematicas
-      function showMathMenu() {
-        document.getElementById("math-menu").setAttribute("visible", true);
-        document
-          .getElementById("function-display")
-          .setAttribute("visible", false);
+      if (sceneName !== "algorithms") {
+        stopAlgorithmAnimations({ resetDisplay: true });
+      }
+    }
 
-        // Resetear HUD
-        document.getElementById("functionTitle").textContent =
-          "Analisis Matematico";
-        document.getElementById("functionDescription").textContent =
-          "Selecciona una funcion para visualizar";
-        document.getElementById("functionDomain").textContent =
-          "Explora diferentes funciones en 3D";
+    // Funcion para mostrar el menu de funciones matematicas
+    function showMathMenu() {
+      document.getElementById("math-menu").setAttribute("visible", true);
+      document
+        .getElementById("function-display")
+        .setAttribute("visible", false);
+
+      // Resetear HUD
+      document.getElementById("functionTitle").textContent =
+        "Analisis Matematico";
+      document.getElementById("functionDescription").textContent =
+        "Selecciona una funcion para visualizar";
+      document.getElementById("functionDomain").textContent =
+        "Explora diferentes funciones en 3D";
+    }
+
+    // Variable para evitar renderizado excesivo
+    let lastRenderTime = 0;
+    let isRenderingFunction = false;
+
+    // Función para mostrar una función específica (con protección contra sobrecargas)
+    function showFunction(functionKey) {
+      // Evitar múltiples renderizaciones rápidas que puedan causar bloqueos
+      const now = Date.now();
+      if (now - lastRenderTime < 1000 || isRenderingFunction) {
+        console.log("Renderizado evitado por protección de sobrecarga");
+        return;
       }
 
-      // Variable para evitar renderizado excesivo
-      let lastRenderTime = 0;
-      let isRenderingFunction = false;
+      // Mostrar indicador de carga (opcional)
+      document.getElementById("mathHUD").style.display = "block";
+      document.getElementById("functionTitle").textContent = "Cargando...";
 
-      // Función para mostrar una función específica (con protección contra sobrecargas)
-      function showFunction(functionKey) {
-        // Evitar múltiples renderizaciones rápidas que puedan causar bloqueos
-        const now = Date.now();
-        if (now - lastRenderTime < 1000 || isRenderingFunction) {
-          console.log("Renderizado evitado por protección de sobrecarga");
-          return;
-        }
+      // Cambiar visibilidad
+      document.getElementById("math-menu").setAttribute("visible", false);
+      document.getElementById("function-display").setAttribute("visible", true);
 
-        // Mostrar indicador de carga (opcional)
-        document.getElementById("mathHUD").style.display = "block";
-        document.getElementById("functionTitle").textContent = "Cargando...";
-        
-        // Cambiar visibilidad
-        document.getElementById("math-menu").setAttribute("visible", false);
-        document.getElementById("function-display").setAttribute("visible", true);
+      // Establecer bandera para evitar renderizados múltiples
+      isRenderingFunction = true;
+      lastRenderTime = now;
+      currentFunction = functionKey;
 
-        // Establecer bandera para evitar renderizados múltiples
-        isRenderingFunction = true;
-        lastRenderTime = now;
-        currentFunction = functionKey;
-        
-        // Retrasamos ligeramente la generación para permitir que la interfaz se actualice
-        setTimeout(() => {
-          generateMathSurface(functionKey);
-          isRenderingFunction = false;
-        }, 100);
+      // Retrasamos ligeramente la generación para permitir que la interfaz se actualice
+      setTimeout(() => {
+        generateMathSurface(functionKey);
+        isRenderingFunction = false;
+      }, 100);
+    }
+
+    // Definición de funciones matemáticas
+    const mathFunctions = {
+      func1: {
+        name: "f(x,y) = sin(x) * cos(y)",
+        description: "Funcion trigonometrica que crea ondas entrecruzadas",
+        domain: "Dominio: x ∈ [-π, π], y ∈ [-π, π]",
+        formula: (x, z) => Math.sin(x) * Math.cos(z),
+      },
+      func2: {
+        name: "f(x,y) = x² + y²",
+        description: "Paraboloide circular - forma de cuenco",
+        domain: "Dominio: x ∈ [-2, 2], y ∈ [-2, 2]",
+        formula: (x, z) => (x * x + z * z) * 0.3,
+      },
+      func3: {
+        name: "f(x,y) = sin(√(x²+y²))",
+        description: "Ondas circulares concentricas",
+        domain: "Dominio: x ∈ [-3π, 3π], y ∈ [-3π, 3π]",
+        formula: (x, z) => Math.sin(Math.sqrt(x * x + z * z)),
+      },
+      func4: {
+        name: "f(x,y) = cos(x) * sin(y)",
+        description: "Ondas trigonometricas perpendiculares",
+        domain: "Dominio: x ∈ [-π, π], y ∈ [-π, π]",
+        formula: (x, z) => Math.cos(x) * Math.sin(z),
+      },
+      func5: {
+        name: "f(x,y) = e^(-(x²+y²))",
+        description: "Distribucion gaussiana - campana 3D",
+        domain: "Dominio: x ∈ [-2, 2], y ∈ [-2, 2]",
+        formula: (x, z) => Math.exp(-(x * x + z * z)),
+      },
+    };
+
+    // Variable global para la función actual
+    let currentFunction = null;
+
+    // Variable global para el algoritmo actual
+    let currentAlgorithm = null;
+    // Bandera para evitar reentradas mientras se anima un algoritmo
+    let isSorting = false;
+
+    function stopAlgorithmAnimations({ resetDisplay = false } = {}) {
+      algorithmTimeouts.forEach(clearTimeout);
+      algorithmTimeouts = [];
+      isSorting = false;
+
+      const progressIndicator = document.getElementById("progress-indicator");
+      if (progressIndicator && progressIndicator.parentNode) {
+        progressIndicator.parentNode.removeChild(progressIndicator);
       }
 
-      // Definición de funciones matemáticas
-      const mathFunctions = {
-        func1: {
-          name: "f(x,y) = sin(x) * cos(y)",
-          description: "Funcion trigonometrica que crea ondas entrecruzadas",
-          domain: "Dominio: x ∈ [-π, π], y ∈ [-π, π]",
-          formula: (x, z) => Math.sin(x) * Math.cos(z),
-        },
-        func2: {
-          name: "f(x,y) = x² + y²",
-          description: "Paraboloide circular - forma de cuenco",
-          domain: "Dominio: x ∈ [-2, 2], y ∈ [-2, 2]",
-          formula: (x, z) => (x * x + z * z) * 0.3,
-        },
-        func3: {
-          name: "f(x,y) = sin(√(x²+y²))",
-          description: "Ondas circulares concentricas",
-          domain: "Dominio: x ∈ [-3π, 3π], y ∈ [-3π, 3π]",
-          formula: (x, z) => Math.sin(Math.sqrt(x * x + z * z)),
-        },
-        func4: {
-          name: "f(x,y) = cos(x) * sin(y)",
-          description: "Ondas trigonometricas perpendiculares",
-          domain: "Dominio: x ∈ [-π, π], y ∈ [-π, π]",
-          formula: (x, z) => Math.cos(x) * Math.sin(z),
-        },
-        func5: {
-          name: "f(x,y) = e^(-(x²+y²))",
-          description: "Distribucion gaussiana - campana 3D",
-          domain: "Dominio: x ∈ [-2, 2], y ∈ [-2, 2]",
-          formula: (x, z) => Math.exp(-(x * x + z * z)),
-        },
-      };
-
-      // Variable global para la función actual
-      let currentFunction = null;
-
-      // Variable global para el algoritmo actual
-      let currentAlgorithm = null;
-      // Bandera para evitar reentradas mientras se anima un algoritmo
-      let isSorting = false;
-
-      function stopAlgorithmAnimations({ resetDisplay = false } = {}) {
-        algorithmTimeouts.forEach(clearTimeout);
-        algorithmTimeouts = [];
-        isSorting = false;
-
-        const progressIndicator = document.getElementById("progress-indicator");
-        if (progressIndicator && progressIndicator.parentNode) {
-          progressIndicator.parentNode.removeChild(progressIndicator);
-        }
-
-        const arrayDisplay = document.getElementById("array-display");
-        if (arrayDisplay && arrayDisplay.parentNode) {
-          arrayDisplay.parentNode.removeChild(arrayDisplay);
-        }
-
-        if (resetDisplay) {
-          const algorithmDisplay = document.getElementById("algorithm-display");
-          const algorithmMenu = document.getElementById("alg-menu");
-          const currentTitle = document.getElementById("current-algo-title");
-
-          if (algorithmDisplay) {
-            algorithmDisplay.setAttribute("visible", false);
-          }
-          if (algorithmMenu) {
-            algorithmMenu.setAttribute("visible", true);
-          }
-          if (currentTitle) {
-            currentTitle.setAttribute("value", "");
-          }
-          currentAlgorithm = null;
-        }
+      const arrayDisplay = document.getElementById("array-display");
+      if (arrayDisplay && arrayDisplay.parentNode) {
+        arrayDisplay.parentNode.removeChild(arrayDisplay);
       }
 
-      function scheduleAlgorithmTimeout(callback, delay) {
-        const timerId = setTimeout(() => {
-          algorithmTimeouts = algorithmTimeouts.filter((id) => id !== timerId);
-          callback();
-        }, delay);
-        algorithmTimeouts.push(timerId);
-        return timerId;
-      }
+      if (resetDisplay) {
+        const algorithmDisplay = document.getElementById("algorithm-display");
+        const algorithmMenu = document.getElementById("alg-menu");
+        const currentTitle = document.getElementById("current-algo-title");
 
-      // Función para generar la superficie matemática (optimizada: merge en una sola malla)
-      function generateMathSurface(functionKey) {
-        const surface = document.getElementById("math-surface");
-
-        // Limpiar superficie anterior
-        while (surface.firstChild) {
-          // Si existe un objeto three.js asociado, eliminarlo primero
-          try {
-            const first = surface.firstChild;
-            if (first && first.removeObject3D) {
-              first.removeObject3D('mesh');
-            }
-          } catch (e) {}
-          surface.removeChild(surface.firstChild);
+        if (algorithmDisplay) {
+          algorithmDisplay.setAttribute("visible", false);
         }
+        if (algorithmMenu) {
+          algorithmMenu.setAttribute("visible", true);
+        }
+        if (currentTitle) {
+          currentTitle.setAttribute("value", "");
+        }
+        currentAlgorithm = null;
+      }
+    }
 
-        if (!mathFunctions[functionKey]) return;
+    function scheduleAlgorithmTimeout(callback, delay) {
+      const timerId = setTimeout(() => {
+        algorithmTimeouts = algorithmTimeouts.filter((id) => id !== timerId);
+        callback();
+      }, delay);
+      algorithmTimeouts.push(timerId);
+      return timerId;
+    }
 
-        const func = mathFunctions[functionKey];
+    // Función para generar la superficie matemática (optimizada: merge en una sola malla)
+    function generateMathSurface(functionKey) {
+      const surface = document.getElementById("math-surface");
 
-        // Detectar si estamos en un dispositivo VR para ajustar la calidad
-        const isVRMode = AFRAME.utils.device.checkHeadsetConnected();
-        const step = isVRMode ? 0.45 : 0.18; // reducir resolución en VR (mayor step)
-        const range = isVRMode ? 2.2 : 3; // reducir rango en VR
-
-        // Intentaremos crear una sola malla usando BufferGeometry para reducir draw calls
+      // Limpiar superficie anterior
+      while (surface.firstChild) {
+        // Si existe un objeto three.js asociado, eliminarlo primero
         try {
-          let triangleCount = 0;
-          const maxTriangles = isVRMode ? 1500 : 20000; // límites más seguros para VR
+          const first = surface.firstChild;
+          if (first && first.removeObject3D) {
+            first.removeObject3D('mesh');
+          }
+        } catch (e) { }
+        surface.removeChild(surface.firstChild);
+      }
 
-          const positions = [];
-          const colors = [];
+      if (!mathFunctions[functionKey]) return;
 
-          // Recorrer la rejilla y acumular vértices en arrays
-          outer: for (let x = -range; x < range; x += step) {
-            for (let z = -range; z < range; z += step) {
-              // Calcular las 4 esquinas del cuadrilátero
-              const x1 = x,
-                x2 = x + step;
-              const z1 = z,
-                z2 = z + step;
+      const func = mathFunctions[functionKey];
 
-              // Calcular las alturas usando la función matemática seleccionada
-              let y1, y2, y3, y4;
-              try {
-                y1 = func.formula(x1, z1);
-                y2 = func.formula(x2, z1);
-                y3 = func.formula(x1, z2);
-                y4 = func.formula(x2, z2);
+      // Detectar si estamos en un dispositivo VR para ajustar la calidad
+      const isVRMode = AFRAME.utils.device.checkHeadsetConnected();
+      const step = isVRMode ? 0.45 : 0.18; // reducir resolución en VR (mayor step)
+      const range = isVRMode ? 2.2 : 3; // reducir rango en VR
 
-                // Validar que no sean valores incorrectos (NaN o Infinity)
-                if (!isFinite(y1) || !isFinite(y2) || !isFinite(y3) || !isFinite(y4)) {
-                  continue; // Saltar este cuadrilátero
-                }
-              } catch (err) {
-                console.error("Error calculando valores de la función:", err);
+      // Intentaremos crear una sola malla usando BufferGeometry para reducir draw calls
+      try {
+        let triangleCount = 0;
+        const maxTriangles = isVRMode ? 1500 : 20000; // límites más seguros para VR
+
+        const positions = [];
+        const colors = [];
+
+        // Recorrer la rejilla y acumular vértices en arrays
+        outer: for (let x = -range; x < range; x += step) {
+          for (let z = -range; z < range; z += step) {
+            // Calcular las 4 esquinas del cuadrilátero
+            const x1 = x,
+              x2 = x + step;
+            const z1 = z,
+              z2 = z + step;
+
+            // Calcular las alturas usando la función matemática seleccionada
+            let y1, y2, y3, y4;
+            try {
+              y1 = func.formula(x1, z1);
+              y2 = func.formula(x2, z1);
+              y3 = func.formula(x1, z2);
+              y4 = func.formula(x2, z2);
+
+              // Validar que no sean valores incorrectos (NaN o Infinity)
+              if (!isFinite(y1) || !isFinite(y2) || !isFinite(y3) || !isFinite(y4)) {
                 continue; // Saltar este cuadrilátero
               }
+            } catch (err) {
+              console.error("Error calculando valores de la función:", err);
+              continue; // Saltar este cuadrilátero
+            }
 
-              // Primer triángulo (v1, v2, v3)
-              positions.push(x1, y1, z1, x2, y2, z1, x1, y3, z2);
-              const avg1 = (y1 + y2 + y3) / 3;
-              const normalized1 = Math.max(0, Math.min(1, (avg1 + 1) / 2));
-              const col1 = hslToRgb(240 + normalized1 * 120, 0.7, 0.6);
-              colors.push(col1.r, col1.g, col1.b, col1.r, col1.g, col1.b, col1.r, col1.g, col1.b);
-              triangleCount++;
+            // Primer triángulo (v1, v2, v3)
+            positions.push(x1, y1, z1, x2, y2, z1, x1, y3, z2);
+            const avg1 = (y1 + y2 + y3) / 3;
+            const normalized1 = Math.max(0, Math.min(1, (avg1 + 1) / 2));
+            const col1 = hslToRgb(240 + normalized1 * 120, 0.7, 0.6);
+            colors.push(col1.r, col1.g, col1.b, col1.r, col1.g, col1.b, col1.r, col1.g, col1.b);
+            triangleCount++;
 
-              // Segundo triángulo (v2, v4, v3)
-              positions.push(x2, y2, z1, x2, y4, z2, x1, y3, z2);
-              const avg2 = (y2 + y4 + y3) / 3;
-              const normalized2 = Math.max(0, Math.min(1, (avg2 + 1) / 2));
-              const col2 = hslToRgb(240 + normalized2 * 120, 0.7, 0.6);
-              colors.push(col2.r, col2.g, col2.b, col2.r, col2.g, col2.b, col2.r, col2.g, col2.b);
-              triangleCount++;
+            // Segundo triángulo (v2, v4, v3)
+            positions.push(x2, y2, z1, x2, y4, z2, x1, y3, z2);
+            const avg2 = (y2 + y4 + y3) / 3;
+            const normalized2 = Math.max(0, Math.min(1, (avg2 + 1) / 2));
+            const col2 = hslToRgb(240 + normalized2 * 120, 0.7, 0.6);
+            colors.push(col2.r, col2.g, col2.b, col2.r, col2.g, col2.b, col2.r, col2.g, col2.b);
+            triangleCount++;
 
-              if (triangleCount > maxTriangles) {
-                console.log("Límite de triángulos alcanzado para modo (VR?)", isVRMode);
-                break outer;
-              }
+            if (triangleCount > maxTriangles) {
+              console.log("Límite de triángulos alcanzado para modo (VR?)", isVRMode);
+              break outer;
             }
           }
-
-          if (positions.length === 0) {
-            throw new Error('No se generaron vértices para la malla');
-          }
-
-          // Construir BufferGeometry y mesh (Three.js incluido por A-Frame)
-          const geometry = new THREE.BufferGeometry();
-          const posArray = new Float32Array(positions);
-          geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-          const colorArray = new Float32Array(colors);
-          geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-
-          geometry.computeVertexNormals();
-
-          const material = new THREE.MeshBasicMaterial({
-            vertexColors: true,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.88
-          });
-
-          const mesh = new THREE.Mesh(geometry, material);
-
-          // Crear entidad A-Frame y añadir el mesh como objeto three.js único (menos draw calls)
-          const meshEl = document.createElement('a-entity');
-          meshEl.setAttribute('position', '0 0 0');
-          meshEl.object3D.add(mesh);
-          surface.appendChild(meshEl);
-
-          console.log(`Superficie generada con ${triangleCount} triángulos (merged mesh)`);
-        } catch (error) {
-          console.error("Error generando superficie matemática:", error);
-          // Mostrar mensaje de error al usuario
-          document.getElementById("functionTitle").textContent = "Error al generar superficie";
-          document.getElementById("functionDescription").textContent = 
-            "Hubo un problema al mostrar esta función en VR";
         }
 
-        // Actualizar información en el HUD
-        updateMathHUD(func);
-
-        // Si estamos en VR, asegurarnos de que el renderizado fue exitoso
-        if (AFRAME.utils.device.checkHeadsetConnected()) {
-          // Comprobar si la superficie se generó correctamente
-          if (surface.childElementCount < 1) {
-            console.warn("Fallback: Usando representación simple para VR");
-            createSimpleVRRepresentation(surface, func);
-          }
+        if (positions.length === 0) {
+          throw new Error('No se generaron vértices para la malla');
         }
+
+        // Construir BufferGeometry y mesh (Three.js incluido por A-Frame)
+        const geometry = new THREE.BufferGeometry();
+        const posArray = new Float32Array(positions);
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const colorArray = new Float32Array(colors);
+        geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+
+        geometry.computeVertexNormals();
+
+        const material = new THREE.MeshBasicMaterial({
+          vertexColors: true,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.88
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+
+        // Crear entidad A-Frame y añadir el mesh como objeto three.js único (menos draw calls)
+        const meshEl = document.createElement('a-entity');
+        meshEl.setAttribute('position', '0 0 0');
+        meshEl.object3D.add(mesh);
+        surface.appendChild(meshEl);
+
+        console.log(`Superficie generada con ${triangleCount} triángulos (merged mesh)`);
+      } catch (error) {
+        console.error("Error generando superficie matemática:", error);
+        // Mostrar mensaje de error al usuario
+        document.getElementById("functionTitle").textContent = "Error al generar superficie";
+        document.getElementById("functionDescription").textContent =
+          "Hubo un problema al mostrar esta función en VR";
       }
 
-      // Helper: convertir HSL (deg, sat, light) a RGB 0-1 (para atributos de color)
-      function hslToRgb(h, s, l) {
-        // h: 0-360, s,l: 0-1
-        h = h / 360;
-        let r, g, b;
-        if (s === 0) {
-          r = g = b = l; // achromatic
-        } else {
-          const hue2rgb = function(p, q, t) {
-            if (t < 0) t += 1;
-            if (t > 1) t -= 1;
-            if (t < 1 / 6) return p + (q - p) * 6 * t;
-            if (t < 1 / 2) return q;
-            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-            return p;
-          };
-          const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-          const p = 2 * l - q;
-          r = hue2rgb(p, q, h + 1 / 3);
-          g = hue2rgb(p, q, h);
-          b = hue2rgb(p, q, h - 1 / 3);
-        }
-        return { r: r, g: g, b: b };
-      }
+      // Actualizar información en el HUD
+      updateMathHUD(func);
 
-      // =========================
-      // Algoritmos: visualizaciones
-      // =========================
-
-      function showAlgorithmsMenu() {
-        stopAlgorithmAnimations({ resetDisplay: true });
-        document.getElementById("alg-menu").setAttribute("visible", true);
-        document.getElementById("algorithm-display").setAttribute("visible", false);
-        document.getElementById("current-algo-title").setAttribute("value", "");
-        document.getElementById("mathHUD").style.display = "block";
-        document.getElementById("functionTitle").textContent = "Algoritmos";
-        document.getElementById("functionDescription").textContent = "Selecciona un algoritmo para visualizar";
-        document.getElementById("functionDomain").textContent = "Observa cómo cambian las posiciones del array durante el ordenamiento";
-
-        // Limpiar indicador de progreso si existe
-        const existingIndicator = document.getElementById("progress-indicator");
-        if (existingIndicator) {
-          existingIndicator.parentNode.removeChild(existingIndicator);
+      // Si estamos en VR, asegurarnos de que el renderizado fue exitoso
+      if (AFRAME.utils.device.checkHeadsetConnected()) {
+        // Comprobar si la superficie se generó correctamente
+        if (surface.childElementCount < 1) {
+          console.warn("Fallback: Usando representación simple para VR");
+          createSimpleVRRepresentation(surface, func);
         }
       }
+    }
 
-      // Mostrar un algoritmo específico
-      function showAlgorithm(algoKey) {
-        if (currentScene !== "algorithms") {
-          console.warn("showAlgorithm: escena de algoritmos inactiva, se omite la animación.");
-          return;
-        }
-
-        // Asegurarnos de limpiar cualquier animación previa antes de iniciar una nueva
-        stopAlgorithmAnimations();
-
-        currentAlgorithm = algoKey; // Guardar el algoritmo actual
-        // Limpiar indicador de progreso anterior si existe
-        const existingIndicator = document.getElementById("progress-indicator");
-        if (existingIndicator) {
-          existingIndicator.parentNode.removeChild(existingIndicator);
-        }
-        // ocultar menu y mostrar display
-        document.getElementById("alg-menu").setAttribute("visible", false);
-        document.getElementById("algorithm-display").setAttribute("visible", true);
-        const title = {
-          bubble: "Bubble Sort",
-          insertion: "Insertion Sort",
-          quick: "Quick Sort",
-        }[algoKey] || "Algoritmo";
-        document.getElementById("current-algo-title").setAttribute("value", title);
-        document.getElementById("functionTitle").textContent = title;
-
-        // Actualizar descripción según algoritmo
-        const descriptions = {
-          bubble: "Compara elementos adyacentes e intercambia si están en orden incorrecto. El elemento más grande 'burbujea' hacia el final.",
-          insertion: "Toma elementos de la parte no ordenada e inserta en la posición correcta de la parte ordenada.",
-          quick: "Selecciona un pivote y reorganiza los elementos alrededor de él, dividiendo el array en particiones."
+    // Helper: convertir HSL (deg, sat, light) a RGB 0-1 (para atributos de color)
+    function hslToRgb(h, s, l) {
+      // h: 0-360, s,l: 0-1
+      h = h / 360;
+      let r, g, b;
+      if (s === 0) {
+        r = g = b = l; // achromatic
+      } else {
+        const hue2rgb = function (p, q, t) {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1 / 6) return p + (q - p) * 6 * t;
+          if (t < 1 / 2) return q;
+          if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+          return p;
         };
-        document.getElementById("functionDescription").textContent = descriptions[algoKey] || "Algoritmo de ordenamiento";
-        document.getElementById("functionDomain").textContent = "Observa las comparaciones (amarillo) y movimientos (colores específicos) durante el proceso";
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+      }
+      return { r: r, g: g, b: b };
+    }
 
-        // generar barras y pasos
-        const arr = generateRandomArray();
-        generateAlgorithmBars(arr);
-        const steps = getSortingSteps(algoKey, arr.slice());
-        animateAlgorithmSteps(steps, 800, algoKey); // Ajustado para GSAP
+    // =========================
+    // Algoritmos: visualizaciones
+    // =========================
+
+    function showAlgorithmsMenu() {
+      stopAlgorithmAnimations({ resetDisplay: true });
+      document.getElementById("alg-menu").setAttribute("visible", true);
+      document.getElementById("algorithm-display").setAttribute("visible", false);
+      document.getElementById("current-algo-title").setAttribute("value", "");
+      document.getElementById("mathHUD").style.display = "block";
+      document.getElementById("functionTitle").textContent = "Algoritmos";
+      document.getElementById("functionDescription").textContent = "Selecciona un algoritmo para visualizar";
+      document.getElementById("functionDomain").textContent = "Observa cómo cambian las posiciones del array durante el ordenamiento";
+
+      // Limpiar indicador de progreso si existe
+      const existingIndicator = document.getElementById("progress-indicator");
+      if (existingIndicator) {
+        existingIndicator.parentNode.removeChild(existingIndicator);
+      }
+    }
+
+    // Mostrar un algoritmo específico
+    function showAlgorithm(algoKey) {
+      if (currentScene !== "algorithms") {
+        console.warn("showAlgorithm: escena de algoritmos inactiva, se omite la animación.");
+        return;
       }
 
-      function generateRandomArray() {
-        // Genera números del 1 al 10 sin repeticiones
-        const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      // Asegurarnos de limpiar cualquier animación previa antes de iniciar una nueva
+      stopAlgorithmAnimations();
 
-        // Shuffle usando algoritmo Fisher-Yates
-        for (let i = numbers.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-        }
+      currentAlgorithm = algoKey; // Guardar el algoritmo actual
+      // Limpiar indicador de progreso anterior si existe
+      const existingIndicator = document.getElementById("progress-indicator");
+      if (existingIndicator) {
+        existingIndicator.parentNode.removeChild(existingIndicator);
+      }
+      // ocultar menu y mostrar display
+      document.getElementById("alg-menu").setAttribute("visible", false);
+      document.getElementById("algorithm-display").setAttribute("visible", true);
+      const title = {
+        bubble: "Bubble Sort",
+        insertion: "Insertion Sort",
+        quick: "Quick Sort",
+      }[algoKey] || "Algoritmo";
+      document.getElementById("current-algo-title").setAttribute("value", title);
+      document.getElementById("functionTitle").textContent = title;
 
-        return numbers;
+      // Actualizar descripción según algoritmo
+      const descriptions = {
+        bubble: "Compara elementos adyacentes e intercambia si están en orden incorrecto. El elemento más grande 'burbujea' hacia el final.",
+        insertion: "Toma elementos de la parte no ordenada e inserta en la posición correcta de la parte ordenada.",
+        quick: "Selecciona un pivote y reorganiza los elementos alrededor de él, dividiendo el array en particiones."
+      };
+      document.getElementById("functionDescription").textContent = descriptions[algoKey] || "Algoritmo de ordenamiento";
+      document.getElementById("functionDomain").textContent = "Observa las comparaciones (amarillo) y movimientos (colores específicos) durante el proceso";
+
+      // generar barras y pasos
+      const arr = generateRandomArray();
+      generateAlgorithmBars(arr);
+      const steps = getSortingSteps(algoKey, arr.slice());
+      animateAlgorithmSteps(steps, 800, algoKey); // Ajustado para GSAP
+    }
+
+    function generateRandomArray() {
+      // Genera números del 1 al 10 sin repeticiones
+      const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+      // Shuffle usando algoritmo Fisher-Yates
+      for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
       }
 
-      function generateAlgorithmBars(array) {
-        const parent = document.getElementById("algo-surface");
-        // limpiar
-        while (parent.firstChild) parent.removeChild(parent.firstChild);
+      return numbers;
+    }
 
-        const spacing = 1.0; // Espaciado para 10 cubos (1-10)
-        const totalWidth = (array.length - 1) * spacing;
-        const cubeSize = 0.8; // Más grandes para mejor visibilidad
+    function generateAlgorithmBars(array) {
+      const parent = document.getElementById("algo-surface");
+      // limpiar
+      while (parent.firstChild) parent.removeChild(parent.firstChild);
 
-        for (let i = 0; i < array.length; i++) {
-          const val = array[i];
-          const x = -totalWidth / 2 + i * spacing;
+      const spacing = 1.0; // Espaciado para 10 cubos (1-10)
+      const totalWidth = (array.length - 1) * spacing;
+      const cubeSize = 0.8; // Más grandes para mejor visibilidad
 
-          // Contenedor para el cubo y su texto
-          const cubeContainer = document.createElement("a-entity");
-          cubeContainer.setAttribute("position", `${x} ${cubeSize / 2} 0`);
-          cubeContainer.setAttribute("class", "algo-cube");
-          cubeContainer.setAttribute("data-index", i);
-          cubeContainer.setAttribute("data-value", val);
+      for (let i = 0; i < array.length; i++) {
+        const val = array[i];
+        const x = -totalWidth / 2 + i * spacing;
 
-          // Cubo con tamaño fijo
-          const cube = document.createElement("a-box");
-          cube.setAttribute("width", cubeSize);
-          cube.setAttribute("height", cubeSize);
-          cube.setAttribute("depth", cubeSize);
-          cube.setAttribute("color", "#4CAF50");
-          cube.setAttribute("class", "cube-body");
-          cubeContainer.appendChild(cube);
+        // Contenedor para el cubo y su texto
+        const cubeContainer = document.createElement("a-entity");
+        cubeContainer.setAttribute("position", `${x} ${cubeSize / 2} 0`);
+        cubeContainer.setAttribute("class", "algo-cube");
+        cubeContainer.setAttribute("data-index", i);
+        cubeContainer.setAttribute("data-value", val);
 
-          // Texto 3D en la cara frontal mostrando el valor
-          const text = document.createElement("a-text");
-          text.setAttribute("value", val.toString());
-          text.setAttribute("align", "center");
-          text.setAttribute("color", "#ffffff");
-          text.setAttribute("width", 4);
-          text.setAttribute("font-size", "0.3");
-          text.setAttribute("position", `0 0 ${cubeSize / 2 + 0.01}`); // Delante de la cara frontal
-          text.setAttribute("rotation", "0 0 0");
-          text.setAttribute("font", "mozillavr");
-          cubeContainer.appendChild(text);
+        // Cubo con tamaño fijo
+        const cube = document.createElement("a-box");
+        cube.setAttribute("width", cubeSize);
+        cube.setAttribute("height", cubeSize);
+        cube.setAttribute("depth", cubeSize);
+        cube.setAttribute("color", "#4CAF50");
+        cube.setAttribute("class", "cube-body");
+        cubeContainer.appendChild(cube);
 
-          parent.appendChild(cubeContainer);
-        }
+        // Texto 3D en la cara frontal mostrando el valor
+        const text = document.createElement("a-text");
+        text.setAttribute("value", val.toString());
+        text.setAttribute("align", "center");
+        text.setAttribute("color", "#ffffff");
+        text.setAttribute("width", 4);
+        text.setAttribute("font-size", "0.3");
+        text.setAttribute("position", `0 0 ${cubeSize / 2 + 0.01}`); // Delante de la cara frontal
+        text.setAttribute("rotation", "0 0 0");
+        text.setAttribute("font", "mozillavr");
+        cubeContainer.appendChild(text);
+
+        parent.appendChild(cubeContainer);
       }
+    }
 
-      // Obtener pasos para cada algoritmo (solo swaps registrados)
-      function getSortingSteps(algo, arr) {
-        const steps = [];
-        if (algo === "bubble") {
-          const n = arr.length;
-          for (let i = 0; i < n - 1; i++) {
-            for (let j = 0; j < n - 1 - i; j++) {
-              steps.push({ type: "compare", i: j, j: j + 1, pass: i });
-              if (arr[j] > arr[j + 1]) {
-                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
-                steps.push({ type: "swap", i: j, j: j + 1, pass: i });
-              } else {
-                // Registrar cuando no hay intercambio
-                steps.push({ type: "no_swap", i: j, j: j + 1, pass: i });
-              }
+    // Obtener pasos para cada algoritmo (solo swaps registrados)
+    function getSortingSteps(algo, arr) {
+      const steps = [];
+      if (algo === "bubble") {
+        const n = arr.length;
+        for (let i = 0; i < n - 1; i++) {
+          for (let j = 0; j < n - 1 - i; j++) {
+            steps.push({ type: "compare", i: j, j: j + 1, pass: i });
+            if (arr[j] > arr[j + 1]) {
+              [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+              steps.push({ type: "swap", i: j, j: j + 1, pass: i });
+            } else {
+              // Registrar cuando no hay intercambio
+              steps.push({ type: "no_swap", i: j, j: j + 1, pass: i });
             }
           }
-        } else if (algo === "insertion") {
-          for (let i = 1; i < arr.length; i++) {
-            let j = i;
-            while (j > 0) {
-              steps.push({ type: "compare", i: j - 1, j: j, insertionIndex: i });
-              if (arr[j - 1] > arr[j]) {
-                [arr[j - 1], arr[j]] = [arr[j], arr[j - 1]];
-                steps.push({ type: "swap", i: j - 1, j: j, insertionIndex: i });
-              } else break;
-              j--;
-            }
-          }
-        } else if (algo === "quick") {
-          // quicksort - record swaps via a helper
-          function qsort(a, lo, hi, depth = 0) {
-            if (lo >= hi) return;
-            const pivot = a[hi];
-            let p = lo;
-            // Marcar el pivote
-            steps.push({ type: "pivot", index: hi, value: pivot, depth: depth });
-            for (let k = lo; k < hi; k++) {
-              steps.push({ type: "compare", i: k, j: hi, pivotIndex: hi, depth: depth });
-              if (a[k] < pivot) {
-                [a[k], a[p]] = [a[p], a[k]];
-                steps.push({ type: "swap", i: k, j: p, pivotIndex: hi, depth: depth });
-                p++;
-              }
-            }
-            [a[p], a[hi]] = [a[hi], a[p]];
-            steps.push({ type: "swap", i: p, j: hi, pivotIndex: hi, depth: depth });
-            qsort(a, lo, p - 1, depth + 1);
-            qsort(a, p + 1, hi, depth + 1);
-          }
-          qsort(arr, 0, arr.length - 1);
         }
-        return steps;
+      } else if (algo === "insertion") {
+        for (let i = 1; i < arr.length; i++) {
+          let j = i;
+          while (j > 0) {
+            steps.push({ type: "compare", i: j - 1, j: j, insertionIndex: i });
+            if (arr[j - 1] > arr[j]) {
+              [arr[j - 1], arr[j]] = [arr[j], arr[j - 1]];
+              steps.push({ type: "swap", i: j - 1, j: j, insertionIndex: i });
+            } else break;
+            j--;
+          }
+        }
+      } else if (algo === "quick") {
+        // quicksort - record swaps via a helper
+        function qsort(a, lo, hi, depth = 0) {
+          if (lo >= hi) return;
+          const pivot = a[hi];
+          let p = lo;
+          // Marcar el pivote
+          steps.push({ type: "pivot", index: hi, value: pivot, depth: depth });
+          for (let k = lo; k < hi; k++) {
+            steps.push({ type: "compare", i: k, j: hi, pivotIndex: hi, depth: depth });
+            if (a[k] < pivot) {
+              [a[k], a[p]] = [a[p], a[k]];
+              steps.push({ type: "swap", i: k, j: p, pivotIndex: hi, depth: depth });
+              p++;
+            }
+          }
+          [a[p], a[hi]] = [a[hi], a[p]];
+          steps.push({ type: "swap", i: p, j: hi, pivotIndex: hi, depth: depth });
+          qsort(a, lo, p - 1, depth + 1);
+          qsort(a, p + 1, hi, depth + 1);
+        }
+        qsort(arr, 0, arr.length - 1);
+      }
+      return steps;
+    }
+
+    // Animar pasos: swaps y destacando comparaciones con animaciones mejoradas
+    function animateAlgorithmSteps(steps, delayMs, algorithmType) {
+      if (currentScene !== "algorithms") {
+        console.warn("animateAlgorithmSteps: escena de algoritmos inactiva, se cancela la animación.");
+        return;
       }
 
-      // Animar pasos: swaps y destacando comparaciones con animaciones mejoradas
-      function animateAlgorithmSteps(steps, delayMs, algorithmType) {
-        if (currentScene !== "algorithms") {
-          console.warn("animateAlgorithmSteps: escena de algoritmos inactiva, se cancela la animación.");
+      // Asegurar que no queden temporizadores pendientes de ejecuciones previas
+      stopAlgorithmAnimations();
+
+      // Marcar estado de ejecución para evitar reentradas
+      isSorting = true;
+      console.log(
+        "animateAlgorithmSteps: iniciando ejecución de",
+        steps.length,
+        "pasos para",
+        algorithmType
+      );
+      const parent = document.getElementById("algo-surface");
+      const cubes = Array.from(parent.querySelectorAll(".algo-cube"));
+      const cameraEl = document.getElementById("mainCamera");
+
+      // Helper robusto para leer posición (A-Frame puede devolver string o objeto)
+      function readPos(el) {
+        if (!el) return [0, 0, 0];
+        const p = el.getAttribute("position");
+        if (!p) return [0, 0, 0];
+        if (typeof p === "string") {
+          const parts = p.split(" ").map(x => parseFloat(x));
+          return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+        }
+        // objeto {x,y,z}
+        return [p.x || 0, p.y || 0, p.z || 0];
+      }
+
+      // Helper para leer un atributo numérico (ej. height) de forma segura
+      function readNumberAttr(el, name, fallback = 0) {
+        if (!el) return fallback;
+        const v = el.getAttribute(name);
+        const n = Number(v);
+        return isFinite(n) ? n : fallback;
+      }
+
+      // Mostrar estado inicial del array
+      updateArrayDisplay();
+
+      // Variables para tracking del progreso del algoritmo
+      let currentPass = 0;
+      let sortedElements = new Set();
+      let pivotIndex = -1;
+
+      // Crear indicador de progreso visual
+      const progressIndicator = document.createElement("a-entity");
+      progressIndicator.setAttribute("id", "progress-indicator");
+      parent.appendChild(progressIndicator);
+
+      // Helper para obtener el cubo actual por data-index (consulta dinámica del DOM)
+      function findCubeByIndex(idx) {
+        return parent.querySelector(`.algo-cube[data-index="${idx}"]`);
+      }
+
+      // Realizar swap visual + metadata entre dos índices (A-FRAME NATIVO)
+      function performSwap(i, j, durationMs = 800, algorithmTypeLocal) {
+        const aEl = findCubeByIndex(i);
+        const bEl = findCubeByIndex(j);
+        if (!aEl || !bEl) {
+          console.warn(`performSwap: cubos no encontrados ${i}, ${j}`);
           return;
         }
 
-        // Asegurar que no queden temporizadores pendientes de ejecuciones previas
-        stopAlgorithmAnimations();
+        console.log(`performSwap: ${i} ↔ ${j}`);
 
-        // Marcar estado de ejecución para evitar reentradas
-        isSorting = true;
-        console.log(
-          "animateAlgorithmSteps: iniciando ejecución de",
-          steps.length,
-          "pasos para",
-          algorithmType
-        );
-        const parent = document.getElementById("algo-surface");
-        const cubes = Array.from(parent.querySelectorAll(".algo-cube"));
-        const cameraEl = document.getElementById("mainCamera");
+        const posA = readPos(aEl);
+        const posB = readPos(bEl);
+        const valA = parseInt(aEl.getAttribute("data-value"));
+        const valB = parseInt(bEl.getAttribute("data-value"));
 
-        // Helper robusto para leer posición (A-Frame puede devolver string o objeto)
-        function readPos(el) {
-          if (!el) return [0, 0, 0];
-          const p = el.getAttribute("position");
-          if (!p) return [0, 0, 0];
-          if (typeof p === "string") {
-            const parts = p.split(" ").map(x => parseFloat(x));
-            return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+        // Usar animaciones A-Frame nativas (más confiables)
+        const easing = "easeInOutQuad";
+        const dur = durationMs;
+
+        // Animar elemento A a posición de B
+        aEl.setAttribute("animation__swap", {
+          property: "position",
+          to: `${posB[0]} ${posA[1]} ${posA[2]}`,
+          dur: dur,
+          easing: easing,
+          loop: false
+        });
+
+        // Animar elemento B a posición de A
+        bEl.setAttribute("animation__swap", {
+          property: "position",
+          to: `${posA[0]} ${posB[1]} ${posB[2]}`,
+          dur: dur,
+          easing: easing,
+          loop: false
+        });
+
+        // Cambiar colores
+        const bodyA = aEl.querySelector(".cube-body");
+        const bodyB = bEl.querySelector(".cube-body");
+        if (bodyA) bodyA.setAttribute("color", "#FF9800");
+        if (bodyB) bodyB.setAttribute("color", "#FF9800");
+
+        // AL TERMINAR LA ANIMACIÓN, actualizar datos
+        setTimeout(() => {
+          const indexA = aEl.getAttribute("data-index");
+          const indexB = bEl.getAttribute("data-index");
+
+          // Intercambiar data-index
+          aEl.setAttribute("data-index", indexB);
+          bEl.setAttribute("data-index", indexA);
+
+          // Intercambiar valores
+          aEl.setAttribute("data-value", valB);
+          bEl.setAttribute("data-value", valA);
+
+          // Actualizar textos
+          const tA = aEl.querySelector("a-text");
+          const tB = bEl.querySelector("a-text");
+          if (tA) tA.setAttribute("value", String(valB));
+          if (tB) tB.setAttribute("value", String(valA));
+
+          // Actualizar posiciones en atributos
+          aEl.setAttribute("position", `${posB[0]} ${posA[1]} ${posA[2]}`);
+          bEl.setAttribute("position", `${posA[0]} ${posB[1]} ${posB[2]}`);
+
+          // Cambiar a verde
+          if (bodyA) bodyA.setAttribute("color", "#8BC34A");
+          if (bodyB) bodyB.setAttribute("color", "#8BC34A");
+
+          // Remover animación
+          aEl.removeAttribute("animation__swap");
+          bEl.removeAttribute("animation__swap");
+
+          console.log(`performSwap completado: ${indexB}=${valB}, ${indexA}=${valA}`);
+        }, durationMs);
+      }
+
+      // Función para crear efecto de "burbuja" para Bubble Sort usando GSAP (SIMPLIFICADO)
+      function createBubbleEffect(cube, direction) {
+        if (!cube) return;
+        const pos = readPos(cube);
+        const bubble = document.createElement("a-sphere");
+        bubble.setAttribute("radius", 0.06);
+        bubble.setAttribute("color", "#81C784");
+        bubble.setAttribute("opacity", 0.5);
+        bubble.setAttribute("position", `${pos[0]} ${pos[1] + 0.2} ${pos[2]}`);
+        parent.appendChild(bubble);
+
+        gsap.to(bubble.object3D.position, {
+          y: pos[1] + 0.4,
+          duration: 0.6,
+          ease: "power2.out",
+          onComplete: () => {
+            if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
           }
-          // objeto {x,y,z}
-          return [p.x || 0, p.y || 0, p.z || 0];
-        }
+        });
+      }
 
-        // Helper para leer un atributo numérico (ej. height) de forma segura
-        function readNumberAttr(el, name, fallback = 0) {
-          if (!el) return fallback;
-          const v = el.getAttribute(name);
-          const n = Number(v);
-          return isFinite(n) ? n : fallback;
-        }
+      // Función para crear efecto de "inserción" para Insertion Sort (SIMPLIFICADO)
+      function createInsertionEffect(fromCube, toCube) {
+        if (!fromCube || !toCube) return;
+        // Solo un efecto visual simple: no crear más objetos
+      }
 
-        // Mostrar estado inicial del array
-        updateArrayDisplay();
-
-        // Variables para tracking del progreso del algoritmo
-        let currentPass = 0;
-        let sortedElements = new Set();
-        let pivotIndex = -1;
-
-        // Crear indicador de progreso visual
-        const progressIndicator = document.createElement("a-entity");
-        progressIndicator.setAttribute("id", "progress-indicator");
-        parent.appendChild(progressIndicator);
-
-        // Helper para obtener el cubo actual por data-index (consulta dinámica del DOM)
-        function findCubeByIndex(idx) {
-          return parent.querySelector(`.algo-cube[data-index="${idx}"]`);
-        }
-
-        // Realizar swap visual + metadata entre dos índices (A-FRAME NATIVO)
-        function performSwap(i, j, durationMs = 800, algorithmTypeLocal) {
-          const aEl = findCubeByIndex(i);
-          const bEl = findCubeByIndex(j);
-          if (!aEl || !bEl) {
-            console.warn(`performSwap: cubos no encontrados ${i}, ${j}`);
-            return;
+      // Función para resaltar el pivote en Quick Sort (SIMPLIFICADO)
+      function highlightPivot(index) {
+        const pivotCube = findCubeByIndex(index);
+        if (pivotCube) {
+          const pivotBody = pivotCube.querySelector(".cube-body");
+          if (pivotBody) {
+            gsap.to(pivotBody, {
+              duration: 0.3,
+              onUpdate: () => {
+                pivotBody.setAttribute("color", "#9C27B0");
+              },
+              ease: "power2.inOut"
+            });
           }
-          
-          console.log(`performSwap: ${i} ↔ ${j}`);
+        }
+      }
 
-          const posA = readPos(aEl);
-          const posB = readPos(bEl);
-          const valA = parseInt(aEl.getAttribute("data-value"));
-          const valB = parseInt(bEl.getAttribute("data-value"));
+      // Función para animar movimiento suave de un cubo (NO USADA - SIMPLIFICACIÓN)
+      function animateBarMovement(cube, targetX, duration = 800) {
+        // Función NO usada; swap ya lo maneja performSwap
+      }
 
-          // Usar animaciones A-Frame nativas (más confiables)
-          const easing = "easeInOutQuad";
-          const dur = durationMs;
-
-          // Animar elemento A a posición de B
-          aEl.setAttribute("animation__swap", {
-            property: "position",
-            to: `${posB[0]} ${posA[1]} ${posA[2]}`,
-            dur: dur,
-            easing: easing,
-            loop: false
-          });
-
-          // Animar elemento B a posición de A
-          bEl.setAttribute("animation__swap", {
-            property: "position",
-            to: `${posA[0]} ${posB[1]} ${posB[2]}`,
-            dur: dur,
-            easing: easing,
-            loop: false
-          });
-
-          // Cambiar colores
-          const bodyA = aEl.querySelector(".cube-body");
-          const bodyB = bEl.querySelector(".cube-body");
-          if (bodyA) bodyA.setAttribute("color", "#FF9800");
-          if (bodyB) bodyB.setAttribute("color", "#FF9800");
-
-          // AL TERMINAR LA ANIMACIÓN, actualizar datos
-          setTimeout(() => {
-            const indexA = aEl.getAttribute("data-index");
-            const indexB = bEl.getAttribute("data-index");
-
-            // Intercambiar data-index
-            aEl.setAttribute("data-index", indexB);
-            bEl.setAttribute("data-index", indexA);
-
-            // Intercambiar valores
-            aEl.setAttribute("data-value", valB);
-            bEl.setAttribute("data-value", valA);
-
-            // Actualizar textos
-            const tA = aEl.querySelector("a-text");
-            const tB = bEl.querySelector("a-text");
-            if (tA) tA.setAttribute("value", String(valB));
-            if (tB) tB.setAttribute("value", String(valA));
-
-            // Actualizar posiciones en atributos
-            aEl.setAttribute("position", `${posB[0]} ${posA[1]} ${posA[2]}`);
-            bEl.setAttribute("position", `${posA[0]} ${posB[1]} ${posB[2]}`);
-
-            // Cambiar a verde
-            if (bodyA) bodyA.setAttribute("color", "#8BC34A");
-            if (bodyB) bodyB.setAttribute("color", "#8BC34A");
-
-            // Remover animación
-            aEl.removeAttribute("animation__swap");
-            bEl.removeAttribute("animation__swap");
-
-            console.log(`performSwap completado: ${indexB}=${valB}, ${indexA}=${valA}`);
-          }, durationMs);
+      // Función para mostrar información educativa
+      function showEducationalInfo(step, algorithmType) {
+        const existingInfo = document.getElementById("educational-info");
+        if (existingInfo) {
+          if (existingInfo.parentNode) existingInfo.parentNode.removeChild(existingInfo);
         }
 
-        // Función para crear efecto de "burbuja" para Bubble Sort usando GSAP (SIMPLIFICADO)
-        function createBubbleEffect(cube, direction) {
-          if (!cube) return;
-          const pos = readPos(cube);
-          const bubble = document.createElement("a-sphere");
-          bubble.setAttribute("radius", 0.06);
-          bubble.setAttribute("color", "#81C784");
-          bubble.setAttribute("opacity", 0.5);
-          bubble.setAttribute("position", `${pos[0]} ${pos[1] + 0.2} ${pos[2]}`);
-          parent.appendChild(bubble);
+        const infoEntity = document.createElement("a-entity");
+        infoEntity.setAttribute("id", "educational-info");
+        infoEntity.setAttribute("position", "0 2.5 -2");
 
-          gsap.to(bubble.object3D.position, {
-            y: pos[1] + 0.4,
-            duration: 0.6,
-            ease: "power2.out",
-            onComplete: () => {
-              if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
-            }
-          });
+        let infoText = "";
+        if (step.type === "compare") {
+          infoText = `Comparando elementos ${step.i} y ${step.j}`;
+        } else if (step.type === "swap") {
+          infoText = `Intercambiando ${step.i} ↔ ${step.j}`;
+        } else if (step.type === "pivot") {
+          infoText = `Pivote: elemento ${step.index}`;
         }
 
-        // Función para crear efecto de "inserción" para Insertion Sort (SIMPLIFICADO)
-        function createInsertionEffect(fromCube, toCube) {
-          if (!fromCube || !toCube) return;
-          // Solo un efecto visual simple: no crear más objetos
-        }
+        if (infoText) {
+          const textEntity = document.createElement("a-text");
+          textEntity.setAttribute("value", infoText);
+          textEntity.setAttribute("align", "center");
+          textEntity.setAttribute("color", "#FFEB3B");
+          textEntity.setAttribute("width", 5);
+          textEntity.setAttribute("font-size", "0.12");
+          infoEntity.appendChild(textEntity);
+          parent.appendChild(infoEntity);
 
-        // Función para resaltar el pivote en Quick Sort (SIMPLIFICADO)
-        function highlightPivot(index) {
-          const pivotCube = findCubeByIndex(index);
-          if (pivotCube) {
-            const pivotBody = pivotCube.querySelector(".cube-body");
-            if (pivotBody) {
-              gsap.to(pivotBody, {
-                duration: 0.3,
+          // Remover después de 0.8s
+          scheduleAlgorithmTimeout(() => {
+            if (infoEntity.parentNode) infoEntity.parentNode.removeChild(infoEntity);
+          }, 800);
+        }
+      }
+      function highlightElements(indices, color = "#FFC107", duration = 0.4) {
+        indices.forEach(index => {
+          const cube = findCubeByIndex(index);
+          if (cube) {
+            const cubeBody = cube.querySelector(".cube-body");
+            if (cubeBody) {
+              gsap.to(cubeBody, {
+                duration: duration,
                 onUpdate: () => {
-                  pivotBody.setAttribute("color", "#9C27B0");
+                  cubeBody.setAttribute("color", color);
                 },
                 ease: "power2.inOut"
               });
             }
           }
+        });
+      }
+
+      function updateArrayDisplay() {
+        const existingDisplay = document.getElementById("array-display");
+        if (existingDisplay && existingDisplay.parentNode) {
+          existingDisplay.parentNode.removeChild(existingDisplay);
         }
 
-        // Función para animar movimiento suave de un cubo (NO USADA - SIMPLIFICACIÓN)
-        function animateBarMovement(cube, targetX, duration = 800) {
-          // Función NO usada; swap ya lo maneja performSwap
+        const arrayDisplay = document.createElement("a-entity");
+        arrayDisplay.setAttribute("id", "array-display");
+        arrayDisplay.setAttribute("position", "0 2.8 -2.5");
+
+        // Obtener valores ordenados por position visual (data-index)
+        const nodes = Array.from(parent.querySelectorAll('.algo-cube'));
+        nodes.sort((x, y) => Number(x.getAttribute('data-index')) - Number(y.getAttribute('data-index')));
+        const currentValues = nodes.map(cube => cube.getAttribute("data-value")).join(", ");
+
+        // Mostrar array visual
+        const displayText = `[${currentValues}]`;
+
+        const textEntity = document.createElement("a-text");
+        textEntity.setAttribute("value", displayText);
+        textEntity.setAttribute("align", "center");
+        textEntity.setAttribute("color", "#ffffff");
+        textEntity.setAttribute("width", 8);
+        textEntity.setAttribute("font-size", "0.13");
+        arrayDisplay.appendChild(textEntity);
+        parent.appendChild(arrayDisplay);
+
+        // Log para verificación
+        console.log("Array display:", displayText);
+      }
+
+      function updateProgressIndicator(currentStep, totalSteps) {
+        while (progressIndicator.firstChild) {
+          progressIndicator.removeChild(progressIndicator.firstChild);
         }
 
-        // Función para mostrar información educativa
-        function showEducationalInfo(step, algorithmType) {
-          const existingInfo = document.getElementById("educational-info");
-          if (existingInfo) {
-            if (existingInfo.parentNode) existingInfo.parentNode.removeChild(existingInfo);
+        const progress = currentStep / totalSteps;
+        const progressBar = document.createElement("a-plane");
+        progressBar.setAttribute("width", Math.max(0.1, progress * 5));
+        progressBar.setAttribute("height", 0.04);
+        progressBar.setAttribute("color", "#4CAF50");
+        progressBar.setAttribute("position", `${-2.5 + (progress * 2.5)} -1 0`);
+        progressIndicator.appendChild(progressBar);
+
+        const progressText = document.createElement("a-text");
+        progressText.setAttribute("value", `${currentStep}/${totalSteps}`);
+        progressText.setAttribute("position", "0 -0.8 0");
+        progressText.setAttribute("align", "center");
+        progressText.setAttribute("color", "#fff");
+        progressText.setAttribute("width", 3);
+        progressText.setAttribute("font-size", "0.11");
+        progressIndicator.appendChild(progressText);
+      }
+
+      function rotateCameraForAlgorithm(stepIndex, algoType) {
+        // SIMPLIFICADO: no rotar cámara, mantenerla fija
+      }
+
+      steps.forEach((step, idx) => {
+        scheduleAlgorithmTimeout(() => {
+          if (!isSorting || currentScene !== "algorithms") {
+            return;
           }
 
-          const infoEntity = document.createElement("a-entity");
-          infoEntity.setAttribute("id", "educational-info");
-          infoEntity.setAttribute("position", "0 2.5 -2");
+          // Actualizar indicador de progreso
+          updateProgressIndicator(idx + 1, steps.length);
 
-          let infoText = "";
+          // Mostrar información educativa
+          showEducationalInfo(step, algorithmType);
+
           if (step.type === "compare") {
-            infoText = `Comparando elementos ${step.i} y ${step.j}`;
+            // Resaltar elementos siendo comparados
+            highlightElements([step.i, step.j], "#FFEB3B", 0.3);
+
           } else if (step.type === "swap") {
-            infoText = `Intercambiando ${step.i} ↔ ${step.j}`;
-          } else if (step.type === "pivot") {
-            infoText = `Pivote: elemento ${step.index}`;
-          }
+            // EJECUTAR EL SWAP REAL CON A-FRAME
+            performSwap(step.i, step.j, 600, algorithmType);
 
-          if (infoText) {
-            const textEntity = document.createElement("a-text");
-            textEntity.setAttribute("value", infoText);
-            textEntity.setAttribute("align", "center");
-            textEntity.setAttribute("color", "#FFEB3B");
-            textEntity.setAttribute("width", 5);
-            textEntity.setAttribute("font-size", "0.12");
-            infoEntity.appendChild(textEntity);
-            parent.appendChild(infoEntity);
-
-            // Remover después de 0.8s
+            // Actualizar display después del swap
             scheduleAlgorithmTimeout(() => {
-              if (infoEntity.parentNode) infoEntity.parentNode.removeChild(infoEntity);
-            }, 800);
+              updateArrayDisplay();
+            }, 650);
+
+          } else if (step.type === "pivot") {
+            // Resaltar pivote
+            pivotIndex = step.index;
+            highlightPivot(step.index);
           }
-        }
-        function highlightElements(indices, color = "#FFC107", duration = 0.4) {
-          indices.forEach(index => {
-            const cube = findCubeByIndex(index);
-            if (cube) {
-              const cubeBody = cube.querySelector(".cube-body");
-              if (cubeBody) {
-                gsap.to(cubeBody, {
-                  duration: duration,
-                  onUpdate: () => {
-                    cubeBody.setAttribute("color", color);
-                  },
-                  ease: "power2.inOut"
+
+          // Al terminar todos los pasos
+          if (idx === steps.length - 1) {
+            scheduleAlgorithmTimeout(() => {
+              if (!isSorting || currentScene !== "algorithms") {
+                return;
+              }
+
+              // Colorear todos en verde
+              const allCubes = Array.from(document.querySelectorAll(".algo-cube"));
+              allCubes.forEach((cube) => {
+                const body = cube.querySelector(".cube-body");
+                if (body) body.setAttribute("color", "#8BC34A");
+              });
+
+              // Animación de celebración
+              allCubes.forEach((cube) => {
+                cube.setAttribute("animation__celebrate", {
+                  property: "position",
+                  from: cube.getAttribute("position"),
+                  to: (pos => {
+                    const p = readPos(cube);
+                    return `${p[0]} ${p[1] + 0.2} ${p[2]}`;
+                  })(),
+                  dur: 300,
+                  easing: "easeOutQuad",
+                  direction: "alternate",
+                  repeat: 1,
+                  loop: false
+                });
+              });
+
+              // Actualizar display final
+              updateArrayDisplay();
+
+              // Resetear cámara
+              if (cameraEl) {
+                cameraEl.setAttribute("animation__resetRotate", {
+                  property: "rotation",
+                  to: "0 0 0",
+                  dur: 800,
+                  easing: "easeInOutQuad"
                 });
               }
-            }
-          });
-        }
 
-        function updateArrayDisplay() {
-          const existingDisplay = document.getElementById("array-display");
-          if (existingDisplay && existingDisplay.parentNode) {
-            existingDisplay.parentNode.removeChild(existingDisplay);
+              isSorting = false;
+              console.log("Algoritmo completado correctamente");
+            }, 700);
           }
+        }, idx * delayMs);
+      });
+    }
 
-          const arrayDisplay = document.createElement("a-entity");
-          arrayDisplay.setAttribute("id", "array-display");
-          arrayDisplay.setAttribute("position", "0 2.8 -2.5");
-
-          // Obtener valores ordenados por position visual (data-index)
-          const nodes = Array.from(parent.querySelectorAll('.algo-cube'));
-          nodes.sort((x, y) => Number(x.getAttribute('data-index')) - Number(y.getAttribute('data-index')));
-          const currentValues = nodes.map(cube => cube.getAttribute("data-value")).join(", ");
-          
-          // Mostrar array visual
-          const displayText = `[${currentValues}]`;
-
-          const textEntity = document.createElement("a-text");
-          textEntity.setAttribute("value", displayText);
-          textEntity.setAttribute("align", "center");
-          textEntity.setAttribute("color", "#ffffff");
-          textEntity.setAttribute("width", 8);
-          textEntity.setAttribute("font-size", "0.13");
-          arrayDisplay.appendChild(textEntity);
-          parent.appendChild(arrayDisplay);
-
-          // Log para verificación
-          console.log("Array display:", displayText);
-        }
-
-        function updateProgressIndicator(currentStep, totalSteps) {
-          while (progressIndicator.firstChild) {
-            progressIndicator.removeChild(progressIndicator.firstChild);
-          }
-
-          const progress = currentStep / totalSteps;
-          const progressBar = document.createElement("a-plane");
-          progressBar.setAttribute("width", Math.max(0.1, progress * 5));
-          progressBar.setAttribute("height", 0.04);
-          progressBar.setAttribute("color", "#4CAF50");
-          progressBar.setAttribute("position", `${-2.5 + (progress * 2.5)} -1 0`);
-          progressIndicator.appendChild(progressBar);
-
-          const progressText = document.createElement("a-text");
-          progressText.setAttribute("value", `${currentStep}/${totalSteps}`);
-          progressText.setAttribute("position", "0 -0.8 0");
-          progressText.setAttribute("align", "center");
-          progressText.setAttribute("color", "#fff");
-          progressText.setAttribute("width", 3);
-          progressText.setAttribute("font-size", "0.11");
-          progressIndicator.appendChild(progressText);
-        }
-
-        function rotateCameraForAlgorithm(stepIndex, algoType) {
-          // SIMPLIFICADO: no rotar cámara, mantenerla fija
-        }
-
-        steps.forEach((step, idx) => {
-          scheduleAlgorithmTimeout(() => {
-            if (!isSorting || currentScene !== "algorithms") {
-              return;
-            }
-            
-            // Actualizar indicador de progreso
-            updateProgressIndicator(idx + 1, steps.length);
-
-            // Mostrar información educativa
-            showEducationalInfo(step, algorithmType);
-
-            if (step.type === "compare") {
-              // Resaltar elementos siendo comparados
-              highlightElements([step.i, step.j], "#FFEB3B", 0.3);
-
-            } else if (step.type === "swap") {
-              // EJECUTAR EL SWAP REAL CON A-FRAME
-              performSwap(step.i, step.j, 600, algorithmType);
-
-              // Actualizar display después del swap
-              scheduleAlgorithmTimeout(() => {
-                updateArrayDisplay();
-              }, 650);
-
-            } else if (step.type === "pivot") {
-              // Resaltar pivote
-              pivotIndex = step.index;
-              highlightPivot(step.index);
-            }
-
-            // Al terminar todos los pasos
-            if (idx === steps.length - 1) {
-              scheduleAlgorithmTimeout(() => {
-                if (!isSorting || currentScene !== "algorithms") {
-                  return;
-                }
-                
-                // Colorear todos en verde
-                const allCubes = Array.from(document.querySelectorAll(".algo-cube"));
-                allCubes.forEach((cube) => {
-                  const body = cube.querySelector(".cube-body");
-                  if (body) body.setAttribute("color", "#8BC34A");
-                });
-
-                // Animación de celebración
-                allCubes.forEach((cube) => {
-                  cube.setAttribute("animation__celebrate", {
-                    property: "position",
-                    from: cube.getAttribute("position"),
-                    to: (pos => {
-                      const p = readPos(cube);
-                      return `${p[0]} ${p[1] + 0.2} ${p[2]}`;
-                    })(),
-                    dur: 300,
-                    easing: "easeOutQuad",
-                    direction: "alternate",
-                    repeat: 1,
-                    loop: false
-                  });
-                });
-
-                // Actualizar display final
-                updateArrayDisplay();
-
-                // Resetear cámara
-                if (cameraEl) {
-                  cameraEl.setAttribute("animation__resetRotate", {
-                    property: "rotation",
-                    to: "0 0 0",
-                    dur: 800,
-                    easing: "easeInOutQuad"
-                  });
-                }
-
-                isSorting = false;
-                console.log("Algoritmo completado correctamente");
-              }, 700);
-            }
-          }, idx * delayMs);
-        });
-      }
-      
-      // Función de fallback para representación simple en VR
-      function createSimpleVRRepresentation(parent, func) {
-        // Limpiar superficie
-        while (parent.firstChild) {
-          parent.removeChild(parent.firstChild);
-        }
-        
-        // Crear una representación más simple usando planos con textura de gradiente
-        const plane = document.createElement("a-plane");
-        plane.setAttribute("width", 5);
-        plane.setAttribute("height", 5);
-        plane.setAttribute("rotation", "-90 0 0");
-        plane.setAttribute("material", {
-          color: "#4285F4",
-          opacity: 0.8,
-          transparent: true,
-          shader: "flat"
-        });
-        parent.appendChild(plane);
-        
-        // Añadir texto 3D que representa la fórmula
-        const formulaText = document.createElement("a-text");
-        formulaText.setAttribute("value", func.name);
-        formulaText.setAttribute("position", "0 0.1 0");
-        formulaText.setAttribute("rotation", "-90 0 0");
-        formulaText.setAttribute("align", "center");
-        formulaText.setAttribute("color", "white");
-        formulaText.setAttribute("width", 4);
-        parent.appendChild(formulaText);
+    // Función de fallback para representación simple en VR
+    function createSimpleVRRepresentation(parent, func) {
+      // Limpiar superficie
+      while (parent.firstChild) {
+        parent.removeChild(parent.firstChild);
       }
 
-      // Función para actualizar el HUD con información de la función
-      function updateMathHUD(func) {
-        document.getElementById("functionTitle").textContent = func.name;
-        document.getElementById("functionDescription").textContent =
-          func.description;
-        document.getElementById("functionDomain").textContent = func.domain;
-        document
-          .getElementById("current-function-title")
-          .setAttribute("value", func.name);
-      }
+      // Crear una representación más simple usando planos con textura de gradiente
+      const plane = document.createElement("a-plane");
+      plane.setAttribute("width", 5);
+      plane.setAttribute("height", 5);
+      plane.setAttribute("rotation", "-90 0 0");
+      plane.setAttribute("material", {
+        color: "#4285F4",
+        opacity: 0.8,
+        transparent: true,
+        shader: "flat"
+      });
+      parent.appendChild(plane);
 
-      // Función auxiliar para crear triángulos (optimizada)
-      function createTriangle(parent, v1, v2, v3, avgHeight) {
-        const triangle = document.createElement("a-triangle");
+      // Añadir texto 3D que representa la fórmula
+      const formulaText = document.createElement("a-text");
+      formulaText.setAttribute("value", func.name);
+      formulaText.setAttribute("position", "0 0.1 0");
+      formulaText.setAttribute("rotation", "-90 0 0");
+      formulaText.setAttribute("align", "center");
+      formulaText.setAttribute("color", "white");
+      formulaText.setAttribute("width", 4);
+      parent.appendChild(formulaText);
+    }
 
-        // Configurar los vértices del triángulo
-        triangle.setAttribute("geometry", {
-          primitive: "triangle",
-          vertexA: `${v1[0]} ${v1[1]} ${v1[2]}`,
-          vertexB: `${v2[0]} ${v2[1]} ${v2[2]}`,
-          vertexC: `${v3[0]} ${v3[1]} ${v3[2]}`,
+    // Función para actualizar el HUD con información de la función
+    function updateMathHUD(func) {
+      document.getElementById("functionTitle").textContent = func.name;
+      document.getElementById("functionDescription").textContent =
+        func.description;
+      document.getElementById("functionDomain").textContent = func.domain;
+      document
+        .getElementById("current-function-title")
+        .setAttribute("value", func.name);
+    }
+
+    // Función auxiliar para crear triángulos (optimizada)
+    function createTriangle(parent, v1, v2, v3, avgHeight) {
+      const triangle = document.createElement("a-triangle");
+
+      // Configurar los vértices del triángulo
+      triangle.setAttribute("geometry", {
+        primitive: "triangle",
+        vertexA: `${v1[0]} ${v1[1]} ${v1[2]}`,
+        vertexB: `${v2[0]} ${v2[1]} ${v2[2]}`,
+        vertexC: `${v3[0]} ${v3[1]} ${v3[2]}`,
+      });
+
+      // Color basado en la altura promedio
+      const normalizedY = (avgHeight + 1) / 2; // Normalizar entre 0 y 1
+      const color = `hsl(${240 + normalizedY * 120}, 70%, 60%)`;
+
+      // Configurar material una sola vez (más eficiente)
+      triangle.setAttribute("material", {
+        color: color,
+        side: "double",
+        transparent: true,
+        opacity: 0.8,
+        shader: "flat" // Shader más simple para mejor rendimiento
+      });
+
+      parent.appendChild(triangle);
+    }
+
+    // Event listeners para los botones
+    document.addEventListener("DOMContentLoaded", function () {
+      // Mostrar escena inicial
+      showScene("home");
+
+      // Boton Analisis Matematico
+      document
+        .getElementById("btn-scene1")
+        .addEventListener("click", function () {
+          showScene("math");
         });
 
-        // Color basado en la altura promedio
-        const normalizedY = (avgHeight + 1) / 2; // Normalizar entre 0 y 1
-        const color = `hsl(${240 + normalizedY * 120}, 70%, 60%)`;
-
-        // Configurar material una sola vez (más eficiente)
-        triangle.setAttribute("material", {
-          color: color,
-          side: "double",
-          transparent: true,
-          opacity: 0.8,
-          shader: "flat" // Shader más simple para mejor rendimiento
+      // Botón Escena 2 (placeholder)
+      document
+        .getElementById("btn-scene2")
+        .addEventListener("click", function () {
+          showScene("algorithms");
         });
 
-        parent.appendChild(triangle);
-      }
+      // Botones y lógica para la escena de Algoritmos
+      document.getElementById("btn-algo1").addEventListener("click", function () {
+        showAlgorithm("bubble");
+      });
+      document.getElementById("btn-algo2").addEventListener("click", function () {
+        showAlgorithm("insertion");
+      });
+      document.getElementById("btn-algo3").addEventListener("click", function () {
+        showAlgorithm("quick");
+      });
 
-      // Event listeners para los botones
-      document.addEventListener("DOMContentLoaded", function () {
-        // Mostrar escena inicial
+      document.getElementById("btn-back-alg").addEventListener("click", function () {
         showScene("home");
+      });
 
-        // Boton Analisis Matematico
-        document
-          .getElementById("btn-scene1")
-          .addEventListener("click", function () {
-            showScene("math");
-          });
+      document.getElementById("btn-back-to-alg-menu").addEventListener("click", function () {
+        // volver al menu de algoritmos
+        stopAlgorithmAnimations({ resetDisplay: true });
+        document.getElementById("alg-menu").setAttribute("visible", true);
+        document.getElementById("algorithm-display").setAttribute("visible", false);
+      });
 
-        // Botón Escena 2 (placeholder)
-        document
-          .getElementById("btn-scene2")
-          .addEventListener("click", function () {
-            showScene("algorithms");
-          });
+      document.getElementById("btn-restart-algo").addEventListener("click", function () {
+        // reiniciar el algoritmo actual
+        if (currentAlgorithm) {
+          showAlgorithm(currentAlgorithm);
+        }
+      });
 
-        // Botones y lógica para la escena de Algoritmos
-        document.getElementById("btn-algo1").addEventListener("click", function () {
-          showAlgorithm("bubble");
-        });
-        document.getElementById("btn-algo2").addEventListener("click", function () {
-          showAlgorithm("insertion");
-        });
-        document.getElementById("btn-algo3").addEventListener("click", function () {
-          showAlgorithm("quick");
+      // Botón Escena 3 (placeholder)
+      document
+        .getElementById("btn-scene3")
+        .addEventListener("click", function () {
+          alert("Escena 3 - Proximamente disponible");
         });
 
-        document.getElementById("btn-back-alg").addEventListener("click", function () {
+      // Boton regresar al menu principal
+      document
+        .getElementById("btn-back")
+        .addEventListener("click", function () {
           showScene("home");
         });
 
-        document.getElementById("btn-back-to-alg-menu").addEventListener("click", function () {
-          // volver al menu de algoritmos
-          stopAlgorithmAnimations({ resetDisplay: true });
-          document.getElementById("alg-menu").setAttribute("visible", true);
-          document.getElementById("algorithm-display").setAttribute("visible", false);
+      // Botones de funciones matemáticas
+      document
+        .getElementById("btn-func1")
+        .addEventListener("click", function () {
+          showFunction("func1");
         });
 
-        document.getElementById("btn-restart-algo").addEventListener("click", function () {
-          // reiniciar el algoritmo actual
-          if (currentAlgorithm) {
-            showAlgorithm(currentAlgorithm);
-          }
+      document
+        .getElementById("btn-func2")
+        .addEventListener("click", function () {
+          showFunction("func2");
         });
 
-        // Botón Escena 3 (placeholder)
-        document
-          .getElementById("btn-scene3")
-          .addEventListener("click", function () {
-            alert("Escena 3 - Proximamente disponible");
-          });
+      document
+        .getElementById("btn-func3")
+        .addEventListener("click", function () {
+          showFunction("func3");
+        });
 
-        // Boton regresar al menu principal
-        document
-          .getElementById("btn-back")
-          .addEventListener("click", function () {
-            showScene("home");
-          });
+      document
+        .getElementById("btn-func4")
+        .addEventListener("click", function () {
+          showFunction("func4");
+        });
 
-        // Botones de funciones matemáticas
-        document
-          .getElementById("btn-func1")
-          .addEventListener("click", function () {
-            showFunction("func1");
-          });
+      document
+        .getElementById("btn-func5")
+        .addEventListener("click", function () {
+          showFunction("func5");
+        });
 
-        document
-          .getElementById("btn-func2")
-          .addEventListener("click", function () {
-            showFunction("func2");
-          });
+      // Boton regresar al menu de funciones
+      document
+        .getElementById("btn-back-to-menu")
+        .addEventListener("click", function () {
+          showMathMenu();
+        });
+    });
 
-        document
-          .getElementById("btn-func3")
-          .addEventListener("click", function () {
-            showFunction("func3");
-          });
+    // Agregar interactividad con el cursor de VR
+    document.querySelector("a-scene").addEventListener("loaded", function () {
+      const clickables = document.querySelectorAll(".clickable");
+      clickables.forEach((element) => {
+        // Evitar bucle infinito: solo redisparamos el evento si no viene marcado
+        element.addEventListener("mouseenter", function (ev) {
+          if (ev && ev.detail && ev.detail._afGenerated) return;
+          const e = new CustomEvent("mouseenter", { detail: { _afGenerated: true } });
+          this.dispatchEvent(e);
+        });
 
-        document
-          .getElementById("btn-func4")
-          .addEventListener("click", function () {
-            showFunction("func4");
-          });
-
-        document
-          .getElementById("btn-func5")
-          .addEventListener("click", function () {
-            showFunction("func5");
-          });
-
-        // Boton regresar al menu de funciones
-        document
-          .getElementById("btn-back-to-menu")
-          .addEventListener("click", function () {
-            showMathMenu();
-          });
-      });
-
-      // Agregar interactividad con el cursor de VR
-      document.querySelector("a-scene").addEventListener("loaded", function () {
-        const clickables = document.querySelectorAll(".clickable");
-        clickables.forEach((element) => {
-          // Evitar bucle infinito: solo redisparamos el evento si no viene marcado
-          element.addEventListener("mouseenter", function (ev) {
-            if (ev && ev.detail && ev.detail._afGenerated) return;
-            const e = new CustomEvent("mouseenter", { detail: { _afGenerated: true } });
-            this.dispatchEvent(e);
-          });
-
-          element.addEventListener("mouseleave", function (ev) {
-            if (ev && ev.detail && ev.detail._afGenerated) return;
-            const e = new CustomEvent("mouseleave", { detail: { _afGenerated: true } });
-            this.dispatchEvent(e);
-          });
+        element.addEventListener("mouseleave", function (ev) {
+          if (ev && ev.detail && ev.detail._afGenerated) return;
+          const e = new CustomEvent("mouseleave", { detail: { _afGenerated: true } });
+          this.dispatchEvent(e);
         });
       });
+    });
 
-      // =========================
-      // Performance tweaks for VR headsets
-      // =========================
-      (function() {
-        const sceneEl = document.querySelector('a-scene');
-        if (!sceneEl) return;
+    // =========================
+    // Performance tweaks for VR headsets
+    // =========================
+    (function () {
+      const sceneEl = document.querySelector('a-scene');
+      if (!sceneEl) return;
 
-        // When entering VR, reduce pixel ratio and use framebufferScaleFactor when available
-        sceneEl.addEventListener('enter-vr', function () {
-          try {
-            // Access renderer (A-Frame attaches Three renderer to sceneEl.renderer after loaded)
-            const renderer = sceneEl.renderer || (sceneEl.systems && sceneEl.systems.renderer && sceneEl.systems.renderer.renderer);
-            if (!renderer) return;
+      // When entering VR, reduce pixel ratio and use framebufferScaleFactor when available
+      sceneEl.addEventListener('enter-vr', function () {
+        try {
+          // Access renderer (A-Frame attaches Three renderer to sceneEl.renderer after loaded)
+          const renderer = sceneEl.renderer || (sceneEl.systems && sceneEl.systems.renderer && sceneEl.systems.renderer.renderer);
+          if (!renderer) return;
 
-            // Force a lower pixel ratio to reduce GPU load on standalone headsets
-            renderer.setPixelRatio(Math.min(1, window.devicePixelRatio || 1));
+          // Force a lower pixel ratio to reduce GPU load on standalone headsets
+          renderer.setPixelRatio(Math.min(1, window.devicePixelRatio || 1));
 
-            // If WebXR framebuffer scaling is supported, reduce internal resolution
-            if (renderer.xr && typeof renderer.xr.setFramebufferScaleFactor === 'function') {
-              // 0.6 is a good tradeoff; adjust down if necessary (0.5, 0.4)
-              renderer.xr.setFramebufferScaleFactor(0.6);
-            }
-            console.log('VR performance: lowered pixelRatio and framebuffer scale');
-          } catch (err) {
-            console.warn('enter-vr performance tweak failed', err);
+          // If WebXR framebuffer scaling is supported, reduce internal resolution
+          if (renderer.xr && typeof renderer.xr.setFramebufferScaleFactor === 'function') {
+            // 0.6 is a good tradeoff; adjust down if necessary (0.5, 0.4)
+            renderer.xr.setFramebufferScaleFactor(0.6);
           }
-        });
+          console.log('VR performance: lowered pixelRatio and framebuffer scale');
+        } catch (err) {
+          console.warn('enter-vr performance tweak failed', err);
+        }
+      });
 
-        // Restore pixel ratio on exit
-        sceneEl.addEventListener('exit-vr', function () {
-          try {
-            const renderer = sceneEl.renderer || (sceneEl.systems && sceneEl.systems.renderer && sceneEl.systems.renderer.renderer);
-            if (!renderer) return;
-            renderer.setPixelRatio(window.devicePixelRatio || 1);
-            // No need to explicitly reset framebufferScaleFactor; leaving it is fine or set to 1 if needed
-            if (renderer.xr && typeof renderer.xr.setFramebufferScaleFactor === 'function') {
-              renderer.xr.setFramebufferScaleFactor(1.0);
-            }
-            console.log('Exited VR: restored pixelRatio');
-          } catch (err) {
-            console.warn('exit-vr performance tweak failed', err);
+      // Restore pixel ratio on exit
+      sceneEl.addEventListener('exit-vr', function () {
+        try {
+          const renderer = sceneEl.renderer || (sceneEl.systems && sceneEl.systems.renderer && sceneEl.systems.renderer.renderer);
+          if (!renderer) return;
+          renderer.setPixelRatio(window.devicePixelRatio || 1);
+          // No need to explicitly reset framebufferScaleFactor; leaving it is fine or set to 1 if needed
+          if (renderer.xr && typeof renderer.xr.setFramebufferScaleFactor === 'function') {
+            renderer.xr.setFramebufferScaleFactor(1.0);
           }
-        });
-      })();
-    </script>
-  </body>
+          console.log('Exited VR: restored pixelRatio');
+        } catch (err) {
+          console.warn('exit-vr performance tweak failed', err);
+        }
+      });
+    })();
+  </script>
+</body>
+
 </html>
