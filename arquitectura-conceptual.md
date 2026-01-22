@@ -6,7 +6,7 @@ RAIA es una Progressive Web App (PWA) inmersiva desarrollada con A-Frame 1.4.0 y
 
 En el módulo **Análisis Matemático**, cada visualización se genera de forma dinámica mediante triangulación automática de superficies multivariable, aplicando colorización basada en altura para una mejor comprensión espacial. Los usuarios pueden explorar funciones trigonométricas, polinómicas y exponenciales (sin(x)·cos(y), x²+y², e^(-(x²+y²)), etc.) renderizadas como geometrías 3D con ejes coordenados y etiquetado interactivo.
 
-En el módulo **Algoritmos de Ordenamiento**, se visualizan algoritmos clásicos (Bubble Sort, Insertion Sort, Quick Sort) mediante barras animadas en 3D que representan elementos del array. El sistema codifica con colores los eventos de comparación y movimiento, permitiendo seguir paso a paso la lógica del algoritmo con control de reproducción y reinicio. 
+En el módulo **Algoritmos de Ordenamiento**, se visualizan algoritmos clásicos (Bubble Sort, Insertion Sort, Quick Sort) mediante barras animadas en 3D que representan elementos del array. El sistema codifica con colores los eventos de comparación y movimiento, permitiendo seguir paso a paso la lógica del algoritmo con control de reproducción y reinicio.
 
 La aplicación es completamente accesible desde navegadores web convencionales, dispositivos móviles y headsets de realidad virtual, gracias al sistema de raycasting y renderizado estereoscópico de A-Frame. El componente PWA garantiza funcionamiento offline integral mediante un Service Worker que cachea de forma inteligente todos los recursos estáticos (HTML, CSS, JavaScript, modelos 3D .gltf y dependencias externas), permitiendo instalación como aplicación nativa con persistencia total. La arquitectura está diseñada para ser altamente escalable: agregar nuevas funciones matemáticas, algoritmos o escenas requiere únicamente modificaciones mínimas al archivo principal.
 
@@ -253,5 +253,3 @@ helloworld-vr-raia/
 **Fecha**: Enero 2026  
 **Proyecto**: Entorno Virtual Interactivo RAIA  
 **Versión**: 1.0
-
-
