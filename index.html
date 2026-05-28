@@ -1,1423 +1,2421 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-  <title>Entorno Virtual Interactivo</title>
-  <link rel="icon" href="data:," />
-  <meta charset="utf-8" />
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#ECECEC" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", function () {
-        navigator.serviceWorker.register("service-worker.js");
-      });
-    }
-  </script>
-  <style>
-    .hud-overlay {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      color: white;
-      font-family: Arial, sans-serif;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      border-radius: 5px;
-      z-index: 1000;
-    }
-  </style>
-</head>
-
-<body>
-  <div id="mathHUD" class="hud-overlay" style="display: none">
-    <h3 id="functionTitle">Analisis Matematico</h3>
-    <p id="functionDescription">Selecciona una funcion para visualizar</p>
-    <p id="functionDomain">Explora diferentes funciones en 3D</p>
-  </div>
-
-  <a-scene renderer="antialias: false">
-    <!-- Piso simple para referencia -->
-    <a-plane position="0 0 0" rotation="-90 0 0" width="20" height="20" color="white"></a-plane>
-    <a-box width="0.5" height="0.2" depth="0.05" color="#FF5252" opacity="0.9"
-      animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-      animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-    <a-text value="Salir VR" align="center" color="#fff" width="1.5" position="0 0 0.03"></a-text>
-    </a-entity>
-
-    <!-- Piso simple para referencia -->
-    <a-plane position="0 0 0" rotation="-90 0 0" width="20" height="20" color="white"></a-plane>
-
-    <!-- Escena Principal (Home) -->
-    <a-entity id="scene-home">
-      <!-- Logo 3D centrado y visible -->
-      <a-entity id="logo3d" position="0 1.5 -0.8" scale="2 2 2" rotation="0 45 0"
-        animation="property: rotation; to: 0 405 0; loop: true; dur: 8000; easing: linear">
-        <a-gltf-model src="./models-prueba/Iso.gltf"></a-gltf-model>
-      </a-entity>
-
-      <!-- Menu interactivo en el piso -->
-      <a-entity id="menu" position="0 0.01 -2" rotation="-90 0 0">
-        <a-box position="0 0 0" width="2.2" height="0.3" depth="0.05" color="#222" opacity="0.7"></a-box>
-        <a-entity id="btn-scene1" position="-0.7 0.05 0.03" class="clickable" cursor-target>
-          <a-box width="0.6" height="0.18" depth="0.05" color="#4CAF50" opacity="0.9"
-            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-          <a-text value="Analisis Matematico" align="center" color="#fff" width="1.2" position="0 0 0.03"></a-text>
-        </a-entity>
-        <a-entity id="btn-scene2" position="0 0.05 0.03" class="clickable" cursor-target>
-          <a-box width="0.6" height="0.18" depth="0.05" color="#2196F3" opacity="0.9"
-            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-          <a-text value="Algoritmos" align="center" color="#fff" width="1.5" position="0 0 0.03"></a-text>
-        </a-entity>
-        <a-entity id="btn-scene3" position="0.7 0.05 0.03" class="clickable" cursor-target>
-          <a-box width="0.6" height="0.18" depth="0.05" color="#FFC107" opacity="0.9"
-            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-          <a-text value="Escena 3" align="center" color="#222" width="1.5" position="0 0 0.03"></a-text>
-        </a-entity>
-      </a-entity>
-    </a-entity>
-
-    <!-- Escena 1: Analisis Matematico -->
-    <a-entity id="scene-math" visible="false">
-      <!-- Menu de Funciones Matematicas -->
-      <a-entity id="math-menu" position="0 2 -3">
-        <!-- Titulo principal -->
-        <a-text value="Analisis Matematico" position="0 1.5 0" align="center" color="#4CAF50" width="12"></a-text>
-
-        <a-text value="Selecciona una funcion para visualizar:" position="0 1 0" align="center" color="#fff"
-          width="8"></a-text>
-
-        <!-- Fila 1 de funciones -->
-        <a-entity position="-2 0.3 0">
-          <a-entity id="btn-func1" position="0 0 0" class="clickable function-btn" cursor-target>
-            <a-box width="1.5" height="0.4" depth="0.08" color="#FF6B6B" opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="sin(x) * cos(y)" align="center" color="#fff" width="4" position="0 0 0.05"></a-text>
-          </a-entity>
-        </a-entity>
-
-        <a-entity position="0 0.3 0">
-          <a-entity id="btn-func2" position="0 0 0" class="clickable function-btn" cursor-target>
-            <a-box width="1.5" height="0.4" depth="0.08" color="#4ECDC4" opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="x² + y²" align="center" color="#fff" width="4" position="0 0 0.05"></a-text>
-          </a-entity>
-        </a-entity>
-
-        <a-entity position="2 0.3 0">
-          <a-entity id="btn-func3" position="0 0 0" class="clickable function-btn" cursor-target>
-            <a-box width="1.5" height="0.4" depth="0.08" color="#45B7D1" opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="sin(√(x²+y²))" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
-          </a-entity>
-        </a-entity>
-
-        <!-- Fila 2 de funciones -->
-        <a-entity position="-1 -0.3 0">
-          <a-entity id="btn-func4" position="0 0 0" class="clickable function-btn" cursor-target>
-            <a-box width="1.5" height="0.4" depth="0.08" color="#96CEB4" opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="cos(x) * sin(y)" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
-          </a-entity>
-        </a-entity>
-
-        <a-entity position="1 -0.3 0">
-          <a-entity id="btn-func5" position="0 0 0" class="clickable function-btn" cursor-target>
-            <a-box width="1.5" height="0.4" depth="0.08" color="#FFEAA7" opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="e^(-(x²+y²))" align="center" color="#333" width="3.5" position="0 0 0.05"></a-text>
-          </a-entity>
-        </a-entity>
-
-        <!-- Boton de regreso al menu principal -->
-        <a-entity id="btn-back" position="0 -1 0" class="clickable" cursor-target>
-          <a-box width="1.2" height="0.3" depth="0.08" color="#f44336" opacity="0.9"
-            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-          <a-text value="← Menu Principal" align="center" color="#fff" width="3" position="0 0 0.05"></a-text>
-        </a-entity>
-      </a-entity>
-
-      <!-- Area de visualizacion de funciones -->
-      <a-entity id="function-display" visible="false">
-        <!-- Titulo dinamico de la funcion -->
-        <a-text id="current-function-title" value="" position="0 3 -3" align="center" color="#4CAF50"
-          width="10"></a-text>
-
-        <!-- Superficie matematica -->
-        <a-entity id="math-surface" position="0 1.5 -4"></a-entity>
-
-        <!-- Ejes de coordenadas (solo visibles cuando se muestra una funcion) -->
-        <!-- Eje X -->
-        <a-cylinder position="0 1 -4" rotation="0 0 90" height="6" radius="0.02" color="red"></a-cylinder>
-        <a-text value="X" position="3.2 1 -4" color="red" width="4"></a-text>
-
-        <!-- Eje Y -->
-        <a-cylinder position="0 1 -4" height="6" radius="0.02" color="green"></a-cylinder>
-        <a-text value="Y" position="0 4.2 -4" color="green" width="4"></a-text>
-
-        <!-- Eje Z -->
-        <a-cylinder position="0 1 -4" rotation="90 0 0" height="6" radius="0.02" color="blue"></a-cylinder>
-        <a-text value="Z" position="0 1 -0.8" color="blue" width="4"></a-text>
-
-        <!-- Boton para regresar al menu de funciones -->
-        <a-entity id="btn-back-to-menu" position="0 0.5 -2" class="clickable" cursor-target>
-          <a-box width="1.2" height="0.3" depth="0.1" color="#9B59B6" opacity="0.9"
-            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-          <a-text value="← Menu Funciones" align="center" color="#fff" width="3" position="0 0 0.06"></a-text>
-        </a-entity>
-      </a-entity>
-    </a-entity>
-
-    <!-- Escena 2: Algoritmos de Ordenamiento -->
-    <a-entity id="scene-algorithms" visible="false">
-      <!-- Menu de algoritmos -->
-      <a-entity id="alg-menu" position="0 2 -3">
-        <a-text value="Algoritmos de Ordenamiento" position="0 1.5 0" align="center" color="#2196F3"
-          width="12"></a-text>
-
-        <a-text value="Selecciona un algoritmo para visualizar:" position="0 1 0" align="center" color="#fff"
-          width="8"></a-text>
-
-        <a-entity position="-1 0.3 0">
-          <a-entity id="btn-algo1" class="clickable" cursor-target>
-            <a-box width="1.5" height="0.4" depth="0.08" color="#FF6B6B" opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="Bubble Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
-          </a-entity>
-        </a-entity>
-
-        <a-entity position="1 0.3 0">
-          <a-entity id="btn-algo2" class="clickable" cursor-target>
-            <a-box width="1.5" height="0.4" depth="0.08" color="#4ECDC4" opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="Insertion Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
-          </a-entity>
-        </a-entity>
-
-        <a-entity position="0 -0.3 0">
-          <a-entity id="btn-algo3" class="clickable" cursor-target>
-            <a-box width="1.5" height="0.4" depth="0.08" color="#45B7D1" opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-            <a-text value="Quick Sort" align="center" color="#fff" width="3.5" position="0 0 0.05"></a-text>
-          </a-entity>
-        </a-entity>
-
-        <!-- Boton de regreso al menu principal -->
-        <a-entity id="btn-back-alg" position="0 -1 0" class="clickable" cursor-target>
-          <a-box width="1.2" height="0.3" depth="0.08" color="#f44336" opacity="0.9"
-            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-          <a-text value="← Menu Principal" align="center" color="#fff" width="3" position="0 0 0.05"></a-text>
-        </a-entity>
-      </a-entity>
-
-      <!-- Area de visualizacion de algoritmos -->
-      <a-entity id="algorithm-display" visible="false">
-        <a-text id="current-algo-title" value="" position="0 3 -3" align="center" color="#2196F3" width="10"></a-text>
-
-        <!-- Contenedor donde se agregarán barras (representación del array) -->
-        <a-entity id="algo-surface" position="0 1.2 -2.5"></a-entity>
-
-        <!-- Boton para regresar al menu de algoritmos -->
-        <a-entity id="btn-back-to-alg-menu" position="-0.8 0.5 -1" class="clickable" cursor-target>
-          <a-box width="1.2" height="0.3" depth="0.1" color="#9B59B6" opacity="0.9"
-            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-          <a-text value="← Menu Algoritmos" align="center" color="#fff" width="3" position="0 0 0.06"></a-text>
-        </a-entity>
-
-        <!-- Boton para reiniciar el algoritmo -->
-        <a-entity id="btn-restart-algo" position="0.8 0.5 -1" class="clickable" cursor-target>
-          <a-box width="1.2" height="0.3" depth="0.1" color="#FF9800" opacity="0.9"
-            animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"></a-box>
-          <a-text value="🔄 Reiniciar" align="center" color="#fff" width="3" position="0 0 0.06"></a-text>
-        </a-entity>
-      </a-entity>
-    </a-entity>
-
-    <!-- Luz y cielo -->
-    <a-light type="point" position="2 4 4"></a-light>
-    <a-light type="ambient" color="#404040"></a-light>
-    <a-sky color="#ECECEC"></a-sky>
-
-    <!-- HUD para la version -->
-    <a-camera id="mainCamera" camera="fov: 75">
-      <a-entity text="value: v1.0.5; color: #000; align: right; width: 1.5; anchor: right;"
-        position="0.9 -0.7 -2"></a-entity>
-      <!-- Cursor para interaccion -->
-      <a-cursor position="0 0 -1" geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-        material="color: white; shader: flat"
-        animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 150"
-        animation__fusing="property: scale; startEvents: fusing; from: 1 1 1; to: 0.1 0.1 0.1; dur: 1500"></a-cursor>
-    </a-camera>
-  </a-scene>
-
-  <script>
-    // Sistema de navegacion entre escenas
-    const scenes = {
-      home: document.getElementById("scene-home"),
-      math: document.getElementById("scene-math"),
-      algorithms: document.getElementById("scene-algorithms"),
-    };
-    let currentScene = "home";
-    let algorithmTimeouts = [];
-
-    function showScene(sceneName) {
-      // Ocultar todas las escenas
-      Object.values(scenes).forEach((scene) => {
-        if (scene) {
-          scene.setAttribute("visible", false);
-        }
-      });
-
-      // Mostrar la escena seleccionada
-      const targetScene = scenes[sceneName];
-      if (targetScene) {
-        targetScene.setAttribute("visible", true);
-      }
-      currentScene = sceneName;
-
-      // Mostrar/ocultar HUD matematico
-      const mathHUD = document.getElementById("mathHUD");
-      const cameraEl = document.getElementById("mainCamera");
-      if (sceneName === "math") {
-        mathHUD.style.display = "block";
-        showMathMenu();
-
-        // Reposicionar cámara para una mejor perspectiva de la función
-        if (cameraEl) {
-          cameraEl.setAttribute("position", { x: 0, y: 2.5, z: 2.8 });
-          const target = new THREE.Vector3(0, 1.5, -4);
-          cameraEl.object3D.lookAt(target);
-        }
-      } else if (sceneName === "algorithms") {
-        mathHUD.style.display = "block";
-        showAlgorithmsMenu();
-
-        // Reposicionar cámara para la vista de algoritmos
-        if (cameraEl) {
-          cameraEl.setAttribute("position", { x: 0, y: 2.2, z: 2.8 });
-          const target = new THREE.Vector3(0, 1.2, -4);
-          cameraEl.object3D.lookAt(target);
-        }
-      } else {
-        mathHUD.style.display = "none";
-        // Restaurar vista inicial en Home
-        if (cameraEl) {
-          cameraEl.setAttribute("position", { x: 0, y: 1.6, z: 0 });
-          cameraEl.setAttribute("rotation", { x: 0, y: 0, z: 0 });
-        }
-      }
-
-      if (sceneName !== "algorithms") {
-        stopAlgorithmAnimations({ resetDisplay: true });
-      }
-    }
-
-    // Funcion para mostrar el menu de funciones matematicas
-    function showMathMenu() {
-      document.getElementById("math-menu").setAttribute("visible", true);
-      document
-        .getElementById("function-display")
-        .setAttribute("visible", false);
-
-      // Resetear HUD
-      document.getElementById("functionTitle").textContent =
-        "Analisis Matematico";
-      document.getElementById("functionDescription").textContent =
-        "Selecciona una funcion para visualizar";
-      document.getElementById("functionDomain").textContent =
-        "Explora diferentes funciones en 3D";
-    }
-
-    // Variable para evitar renderizado excesivo
-    let lastRenderTime = 0;
-    let isRenderingFunction = false;
-
-    // Función para mostrar una función específica (con protección contra sobrecargas)
-    function showFunction(functionKey) {
-      // Evitar múltiples renderizaciones rápidas que puedan causar bloqueos
-      const now = Date.now();
-      if (now - lastRenderTime < 1000 || isRenderingFunction) {
-        console.log("Renderizado evitado por protección de sobrecarga");
-        return;
-      }
-
-      // Mostrar indicador de carga (opcional)
-      document.getElementById("mathHUD").style.display = "block";
-      document.getElementById("functionTitle").textContent = "Cargando...";
-
-      // Cambiar visibilidad
-      document.getElementById("math-menu").setAttribute("visible", false);
-      document.getElementById("function-display").setAttribute("visible", true);
-
-      // Establecer bandera para evitar renderizados múltiples
-      isRenderingFunction = true;
-      lastRenderTime = now;
-      currentFunction = functionKey;
-
-      // Retrasamos ligeramente la generación para permitir que la interfaz se actualice
-      setTimeout(() => {
-        generateMathSurface(functionKey);
-        isRenderingFunction = false;
-      }, 100);
-    }
-
-    // Definición de funciones matemáticas
-    const mathFunctions = {
-      func1: {
-        name: "f(x,y) = sin(x) * cos(y)",
-        description: "Funcion trigonometrica que crea ondas entrecruzadas",
-        domain: "Dominio: x ∈ [-π, π], y ∈ [-π, π]",
-        formula: (x, z) => Math.sin(x) * Math.cos(z),
-      },
-      func2: {
-        name: "f(x,y) = x² + y²",
-        description: "Paraboloide circular - forma de cuenco",
-        domain: "Dominio: x ∈ [-2, 2], y ∈ [-2, 2]",
-        formula: (x, z) => (x * x + z * z) * 0.3,
-      },
-      func3: {
-        name: "f(x,y) = sin(√(x²+y²))",
-        description: "Ondas circulares concentricas",
-        domain: "Dominio: x ∈ [-3π, 3π], y ∈ [-3π, 3π]",
-        formula: (x, z) => Math.sin(Math.sqrt(x * x + z * z)),
-      },
-      func4: {
-        name: "f(x,y) = cos(x) * sin(y)",
-        description: "Ondas trigonometricas perpendiculares",
-        domain: "Dominio: x ∈ [-π, π], y ∈ [-π, π]",
-        formula: (x, z) => Math.cos(x) * Math.sin(z),
-      },
-      func5: {
-        name: "f(x,y) = e^(-(x²+y²))",
-        description: "Distribucion gaussiana - campana 3D",
-        domain: "Dominio: x ∈ [-2, 2], y ∈ [-2, 2]",
-        formula: (x, z) => Math.exp(-(x * x + z * z)),
-      },
-    };
-
-    // Variable global para la función actual
-    let currentFunction = null;
-
-    // Variable global para el algoritmo actual
-    let currentAlgorithm = null;
-    // Bandera para evitar reentradas mientras se anima un algoritmo
-    let isSorting = false;
-
-    function stopAlgorithmAnimations({ resetDisplay = false } = {}) {
-      algorithmTimeouts.forEach(clearTimeout);
-      algorithmTimeouts = [];
-      isSorting = false;
-
-      const progressIndicator = document.getElementById("progress-indicator");
-      if (progressIndicator && progressIndicator.parentNode) {
-        progressIndicator.parentNode.removeChild(progressIndicator);
-      }
-
-      const arrayDisplay = document.getElementById("array-display");
-      if (arrayDisplay && arrayDisplay.parentNode) {
-        arrayDisplay.parentNode.removeChild(arrayDisplay);
-      }
-
-      if (resetDisplay) {
-        const algorithmDisplay = document.getElementById("algorithm-display");
-        const algorithmMenu = document.getElementById("alg-menu");
-        const currentTitle = document.getElementById("current-algo-title");
-
-        if (algorithmDisplay) {
-          algorithmDisplay.setAttribute("visible", false);
-        }
-        if (algorithmMenu) {
-          algorithmMenu.setAttribute("visible", true);
-        }
-        if (currentTitle) {
-          currentTitle.setAttribute("value", "");
-        }
-        currentAlgorithm = null;
-      }
-    }
-
-    function scheduleAlgorithmTimeout(callback, delay) {
-      const timerId = setTimeout(() => {
-        algorithmTimeouts = algorithmTimeouts.filter((id) => id !== timerId);
-        callback();
-      }, delay);
-      algorithmTimeouts.push(timerId);
-      return timerId;
-    }
-
-    // Función para generar la superficie matemática (optimizada: merge en una sola malla)
-    function generateMathSurface(functionKey) {
-      const surface = document.getElementById("math-surface");
-
-      // Limpiar superficie anterior
-      while (surface.firstChild) {
-        // Si existe un objeto three.js asociado, eliminarlo primero
-        try {
-          const first = surface.firstChild;
-          if (first && first.removeObject3D) {
-            first.removeObject3D('mesh');
-          }
-        } catch (e) { }
-        surface.removeChild(surface.firstChild);
-      }
-
-      if (!mathFunctions[functionKey]) return;
-
-      const func = mathFunctions[functionKey];
-
-      // Detectar si estamos en un dispositivo VR para ajustar la calidad
-      const isVRMode = AFRAME.utils.device.checkHeadsetConnected();
-      const step = isVRMode ? 0.45 : 0.18; // reducir resolución en VR (mayor step)
-      const range = isVRMode ? 2.2 : 3; // reducir rango en VR
-
-      // Intentaremos crear una sola malla usando BufferGeometry para reducir draw calls
-      try {
-        let triangleCount = 0;
-        const maxTriangles = isVRMode ? 1500 : 20000; // límites más seguros para VR
-
-        const positions = [];
-        const colors = [];
-
-        // Recorrer la rejilla y acumular vértices en arrays
-        outer: for (let x = -range; x < range; x += step) {
-          for (let z = -range; z < range; z += step) {
-            // Calcular las 4 esquinas del cuadrilátero
-            const x1 = x,
-              x2 = x + step;
-            const z1 = z,
-              z2 = z + step;
-
-            // Calcular las alturas usando la función matemática seleccionada
-            let y1, y2, y3, y4;
-            try {
-              y1 = func.formula(x1, z1);
-              y2 = func.formula(x2, z1);
-              y3 = func.formula(x1, z2);
-              y4 = func.formula(x2, z2);
-
-              // Validar que no sean valores incorrectos (NaN o Infinity)
-              if (!isFinite(y1) || !isFinite(y2) || !isFinite(y3) || !isFinite(y4)) {
-                continue; // Saltar este cuadrilátero
-              }
-            } catch (err) {
-              console.error("Error calculando valores de la función:", err);
-              continue; // Saltar este cuadrilátero
-            }
-
-            // Primer triángulo (v1, v2, v3)
-            positions.push(x1, y1, z1, x2, y2, z1, x1, y3, z2);
-            const avg1 = (y1 + y2 + y3) / 3;
-            const normalized1 = Math.max(0, Math.min(1, (avg1 + 1) / 2));
-            const col1 = hslToRgb(240 + normalized1 * 120, 0.7, 0.6);
-            colors.push(col1.r, col1.g, col1.b, col1.r, col1.g, col1.b, col1.r, col1.g, col1.b);
-            triangleCount++;
-
-            // Segundo triángulo (v2, v4, v3)
-            positions.push(x2, y2, z1, x2, y4, z2, x1, y3, z2);
-            const avg2 = (y2 + y4 + y3) / 3;
-            const normalized2 = Math.max(0, Math.min(1, (avg2 + 1) / 2));
-            const col2 = hslToRgb(240 + normalized2 * 120, 0.7, 0.6);
-            colors.push(col2.r, col2.g, col2.b, col2.r, col2.g, col2.b, col2.r, col2.g, col2.b);
-            triangleCount++;
-
-            if (triangleCount > maxTriangles) {
-              console.log("Límite de triángulos alcanzado para modo (VR?)", isVRMode);
-              break outer;
-            }
-          }
-        }
-
-        if (positions.length === 0) {
-          throw new Error('No se generaron vértices para la malla');
-        }
-
-        // Construir BufferGeometry y mesh (Three.js incluido por A-Frame)
-        const geometry = new THREE.BufferGeometry();
-        const posArray = new Float32Array(positions);
-        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-        const colorArray = new Float32Array(colors);
-        geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-
-        geometry.computeVertexNormals();
-
-        const material = new THREE.MeshBasicMaterial({
-          vertexColors: true,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.88
-        });
-
-        const mesh = new THREE.Mesh(geometry, material);
-
-        // Crear entidad A-Frame y añadir el mesh como objeto three.js único (menos draw calls)
-        const meshEl = document.createElement('a-entity');
-        meshEl.setAttribute('position', '0 0 0');
-        meshEl.object3D.add(mesh);
-        surface.appendChild(meshEl);
-
-        console.log(`Superficie generada con ${triangleCount} triángulos (merged mesh)`);
-      } catch (error) {
-        console.error("Error generando superficie matemática:", error);
-        // Mostrar mensaje de error al usuario
-        document.getElementById("functionTitle").textContent = "Error al generar superficie";
-        document.getElementById("functionDescription").textContent =
-          "Hubo un problema al mostrar esta función en VR";
-      }
-
-      // Actualizar información en el HUD
-      updateMathHUD(func);
-
-      // Si estamos en VR, asegurarnos de que el renderizado fue exitoso
-      if (AFRAME.utils.device.checkHeadsetConnected()) {
-        // Comprobar si la superficie se generó correctamente
-        if (surface.childElementCount < 1) {
-          console.warn("Fallback: Usando representación simple para VR");
-          createSimpleVRRepresentation(surface, func);
-        }
-      }
-    }
-
-    // Helper: convertir HSL (deg, sat, light) a RGB 0-1 (para atributos de color)
-    function hslToRgb(h, s, l) {
-      // h: 0-360, s,l: 0-1
-      h = h / 360;
-      let r, g, b;
-      if (s === 0) {
-        r = g = b = l; // achromatic
-      } else {
-        const hue2rgb = function (p, q, t) {
-          if (t < 0) t += 1;
-          if (t > 1) t -= 1;
-          if (t < 1 / 6) return p + (q - p) * 6 * t;
-          if (t < 1 / 2) return q;
-          if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-          return p;
-        };
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1 / 3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1 / 3);
-      }
-      return { r: r, g: g, b: b };
-    }
-
-    // =========================
-    // Algoritmos: visualizaciones
-    // =========================
-
-    function showAlgorithmsMenu() {
-      stopAlgorithmAnimations({ resetDisplay: true });
-      document.getElementById("alg-menu").setAttribute("visible", true);
-      document.getElementById("algorithm-display").setAttribute("visible", false);
-      document.getElementById("current-algo-title").setAttribute("value", "");
-      document.getElementById("mathHUD").style.display = "block";
-      document.getElementById("functionTitle").textContent = "Algoritmos";
-      document.getElementById("functionDescription").textContent = "Selecciona un algoritmo para visualizar";
-      document.getElementById("functionDomain").textContent = "Observa cómo cambian las posiciones del array durante el ordenamiento";
-
-      // Limpiar indicador de progreso si existe
-      const existingIndicator = document.getElementById("progress-indicator");
-      if (existingIndicator) {
-        existingIndicator.parentNode.removeChild(existingIndicator);
-      }
-    }
-
-    // Mostrar un algoritmo específico
-    function showAlgorithm(algoKey) {
-      if (currentScene !== "algorithms") {
-        console.warn("showAlgorithm: escena de algoritmos inactiva, se omite la animación.");
-        return;
-      }
-
-      // Asegurarnos de limpiar cualquier animación previa antes de iniciar una nueva
-      stopAlgorithmAnimations();
-
-      currentAlgorithm = algoKey; // Guardar el algoritmo actual
-      // Limpiar indicador de progreso anterior si existe
-      const existingIndicator = document.getElementById("progress-indicator");
-      if (existingIndicator) {
-        existingIndicator.parentNode.removeChild(existingIndicator);
-      }
-      // ocultar menu y mostrar display
-      document.getElementById("alg-menu").setAttribute("visible", false);
-      document.getElementById("algorithm-display").setAttribute("visible", true);
-      const title = {
-        bubble: "Bubble Sort",
-        insertion: "Insertion Sort",
-        quick: "Quick Sort",
-      }[algoKey] || "Algoritmo";
-      document.getElementById("current-algo-title").setAttribute("value", title);
-      document.getElementById("functionTitle").textContent = title;
-
-      // Actualizar descripción según algoritmo
-      const descriptions = {
-        bubble: "Compara elementos adyacentes e intercambia si están en orden incorrecto. El elemento más grande 'burbujea' hacia el final.",
-        insertion: "Toma elementos de la parte no ordenada e inserta en la posición correcta de la parte ordenada.",
-        quick: "Selecciona un pivote y reorganiza los elementos alrededor de él, dividiendo el array en particiones."
-      };
-      document.getElementById("functionDescription").textContent = descriptions[algoKey] || "Algoritmo de ordenamiento";
-      document.getElementById("functionDomain").textContent = "Observa las comparaciones (amarillo) y movimientos (colores específicos) durante el proceso";
-
-      // generar barras y pasos
-      const arr = generateRandomArray();
-      generateAlgorithmBars(arr);
-      const steps = getSortingSteps(algoKey, arr.slice());
-      animateAlgorithmSteps(steps, 800, algoKey); // Ajustado para GSAP
-    }
-
-    function generateRandomArray() {
-      // Genera números del 1 al 10 sin repeticiones
-      const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-
-      // Shuffle usando algoritmo Fisher-Yates
-      for (let i = numbers.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-      }
-
-      return numbers;
-    }
-
-    function generateAlgorithmBars(array) {
-      const parent = document.getElementById("algo-surface");
-      // limpiar
-      while (parent.firstChild) parent.removeChild(parent.firstChild);
-
-      const spacing = 1.0; // Espaciado para 10 cubos (1-10)
-      const totalWidth = (array.length - 1) * spacing;
-      const cubeSize = 0.8; // Más grandes para mejor visibilidad
-
-      for (let i = 0; i < array.length; i++) {
-        const val = array[i];
-        const x = -totalWidth / 2 + i * spacing;
-
-        // Contenedor para el cubo y su texto
-        const cubeContainer = document.createElement("a-entity");
-        cubeContainer.setAttribute("position", `${x} ${cubeSize / 2} 0`);
-        cubeContainer.setAttribute("class", "algo-cube");
-        cubeContainer.setAttribute("data-index", i);
-        cubeContainer.setAttribute("data-value", val);
-
-        // Cubo con tamaño fijo
-        const cube = document.createElement("a-box");
-        cube.setAttribute("width", cubeSize);
-        cube.setAttribute("height", cubeSize);
-        cube.setAttribute("depth", cubeSize);
-        cube.setAttribute("color", "#4CAF50");
-        cube.setAttribute("class", "cube-body");
-        cubeContainer.appendChild(cube);
-
-        // Texto 3D en la cara frontal mostrando el valor
-        const text = document.createElement("a-text");
-        text.setAttribute("value", val.toString());
-        text.setAttribute("align", "center");
-        text.setAttribute("color", "#ffffff");
-        text.setAttribute("width", 4);
-        text.setAttribute("font-size", "0.3");
-        text.setAttribute("position", `0 0 ${cubeSize / 2 + 0.01}`); // Delante de la cara frontal
-        text.setAttribute("rotation", "0 0 0");
-        text.setAttribute("font", "mozillavr");
-        cubeContainer.appendChild(text);
-
-        parent.appendChild(cubeContainer);
-      }
-    }
-
-    // Obtener pasos para cada algoritmo (solo swaps registrados)
-    function getSortingSteps(algo, arr) {
-      const steps = [];
-      if (algo === "bubble") {
-        const n = arr.length;
-        for (let i = 0; i < n - 1; i++) {
-          for (let j = 0; j < n - 1 - i; j++) {
-            steps.push({ type: "compare", i: j, j: j + 1, pass: i });
-            if (arr[j] > arr[j + 1]) {
-              [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
-              steps.push({ type: "swap", i: j, j: j + 1, pass: i });
-            } else {
-              // Registrar cuando no hay intercambio
-              steps.push({ type: "no_swap", i: j, j: j + 1, pass: i });
-            }
-          }
-        }
-      } else if (algo === "insertion") {
-        for (let i = 1; i < arr.length; i++) {
-          let j = i;
-          while (j > 0) {
-            steps.push({ type: "compare", i: j - 1, j: j, insertionIndex: i });
-            if (arr[j - 1] > arr[j]) {
-              [arr[j - 1], arr[j]] = [arr[j], arr[j - 1]];
-              steps.push({ type: "swap", i: j - 1, j: j, insertionIndex: i });
-            } else break;
-            j--;
-          }
-        }
-      } else if (algo === "quick") {
-        // quicksort - record swaps via a helper
-        function qsort(a, lo, hi, depth = 0) {
-          if (lo >= hi) return;
-          const pivot = a[hi];
-          let p = lo;
-          // Marcar el pivote
-          steps.push({ type: "pivot", index: hi, value: pivot, depth: depth });
-          for (let k = lo; k < hi; k++) {
-            steps.push({ type: "compare", i: k, j: hi, pivotIndex: hi, depth: depth });
-            if (a[k] < pivot) {
-              [a[k], a[p]] = [a[p], a[k]];
-              steps.push({ type: "swap", i: k, j: p, pivotIndex: hi, depth: depth });
-              p++;
-            }
-          }
-          [a[p], a[hi]] = [a[hi], a[p]];
-          steps.push({ type: "swap", i: p, j: hi, pivotIndex: hi, depth: depth });
-          qsort(a, lo, p - 1, depth + 1);
-          qsort(a, p + 1, hi, depth + 1);
-        }
-        qsort(arr, 0, arr.length - 1);
-      }
-      return steps;
-    }
-
-    // Animar pasos: swaps y destacando comparaciones con animaciones mejoradas
-    function animateAlgorithmSteps(steps, delayMs, algorithmType) {
-      if (currentScene !== "algorithms") {
-        console.warn("animateAlgorithmSteps: escena de algoritmos inactiva, se cancela la animación.");
-        return;
-      }
-
-      // Asegurar que no queden temporizadores pendientes de ejecuciones previas
-      stopAlgorithmAnimations();
-
-      // Marcar estado de ejecución para evitar reentradas
-      isSorting = true;
-      console.log(
-        "animateAlgorithmSteps: iniciando ejecución de",
-        steps.length,
-        "pasos para",
-        algorithmType
-      );
-      const parent = document.getElementById("algo-surface");
-      const cubes = Array.from(parent.querySelectorAll(".algo-cube"));
-      const cameraEl = document.getElementById("mainCamera");
-
-      // Helper robusto para leer posición (A-Frame puede devolver string o objeto)
-      function readPos(el) {
-        if (!el) return [0, 0, 0];
-        const p = el.getAttribute("position");
-        if (!p) return [0, 0, 0];
-        if (typeof p === "string") {
-          const parts = p.split(" ").map(x => parseFloat(x));
-          return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
-        }
-        // objeto {x,y,z}
-        return [p.x || 0, p.y || 0, p.z || 0];
-      }
-
-      // Helper para leer un atributo numérico (ej. height) de forma segura
-      function readNumberAttr(el, name, fallback = 0) {
-        if (!el) return fallback;
-        const v = el.getAttribute(name);
-        const n = Number(v);
-        return isFinite(n) ? n : fallback;
-      }
-
-      // Mostrar estado inicial del array
-      updateArrayDisplay();
-
-      // Variables para tracking del progreso del algoritmo
-      let currentPass = 0;
-      let sortedElements = new Set();
-      let pivotIndex = -1;
-
-      // Crear indicador de progreso visual
-      const progressIndicator = document.createElement("a-entity");
-      progressIndicator.setAttribute("id", "progress-indicator");
-      parent.appendChild(progressIndicator);
-
-      // Helper para obtener el cubo actual por data-index (consulta dinámica del DOM)
-      function findCubeByIndex(idx) {
-        return parent.querySelector(`.algo-cube[data-index="${idx}"]`);
-      }
-
-      // Realizar swap visual + metadata entre dos índices (A-FRAME NATIVO)
-      function performSwap(i, j, durationMs = 800, algorithmTypeLocal) {
-        const aEl = findCubeByIndex(i);
-        const bEl = findCubeByIndex(j);
-        if (!aEl || !bEl) {
-          console.warn(`performSwap: cubos no encontrados ${i}, ${j}`);
-          return;
-        }
-
-        console.log(`performSwap: ${i} ↔ ${j}`);
-
-        const posA = readPos(aEl);
-        const posB = readPos(bEl);
-        const valA = parseInt(aEl.getAttribute("data-value"));
-        const valB = parseInt(bEl.getAttribute("data-value"));
-
-        // Usar animaciones A-Frame nativas (más confiables)
-        const easing = "easeInOutQuad";
-        const dur = durationMs;
-
-        // Animar elemento A a posición de B
-        aEl.setAttribute("animation__swap", {
-          property: "position",
-          to: `${posB[0]} ${posA[1]} ${posA[2]}`,
-          dur: dur,
-          easing: easing,
-          loop: false
-        });
-
-        // Animar elemento B a posición de A
-        bEl.setAttribute("animation__swap", {
-          property: "position",
-          to: `${posA[0]} ${posB[1]} ${posB[2]}`,
-          dur: dur,
-          easing: easing,
-          loop: false
-        });
-
-        // Cambiar colores
-        const bodyA = aEl.querySelector(".cube-body");
-        const bodyB = bEl.querySelector(".cube-body");
-        if (bodyA) bodyA.setAttribute("color", "#FF9800");
-        if (bodyB) bodyB.setAttribute("color", "#FF9800");
-
-        // AL TERMINAR LA ANIMACIÓN, actualizar datos
-        setTimeout(() => {
-          const indexA = aEl.getAttribute("data-index");
-          const indexB = bEl.getAttribute("data-index");
-
-          // Intercambiar data-index
-          aEl.setAttribute("data-index", indexB);
-          bEl.setAttribute("data-index", indexA);
-
-          // Intercambiar valores
-          aEl.setAttribute("data-value", valB);
-          bEl.setAttribute("data-value", valA);
-
-          // Actualizar textos
-          const tA = aEl.querySelector("a-text");
-          const tB = bEl.querySelector("a-text");
-          if (tA) tA.setAttribute("value", String(valB));
-          if (tB) tB.setAttribute("value", String(valA));
-
-          // Actualizar posiciones en atributos
-          aEl.setAttribute("position", `${posB[0]} ${posA[1]} ${posA[2]}`);
-          bEl.setAttribute("position", `${posA[0]} ${posB[1]} ${posB[2]}`);
-
-          // Cambiar a verde
-          if (bodyA) bodyA.setAttribute("color", "#8BC34A");
-          if (bodyB) bodyB.setAttribute("color", "#8BC34A");
-
-          // Remover animación
-          aEl.removeAttribute("animation__swap");
-          bEl.removeAttribute("animation__swap");
-
-          console.log(`performSwap completado: ${indexB}=${valB}, ${indexA}=${valA}`);
-        }, durationMs);
-      }
-
-      // Función para crear efecto de "burbuja" para Bubble Sort usando GSAP (SIMPLIFICADO)
-      function createBubbleEffect(cube, direction) {
-        if (!cube) return;
-        const pos = readPos(cube);
-        const bubble = document.createElement("a-sphere");
-        bubble.setAttribute("radius", 0.06);
-        bubble.setAttribute("color", "#81C784");
-        bubble.setAttribute("opacity", 0.5);
-        bubble.setAttribute("position", `${pos[0]} ${pos[1] + 0.2} ${pos[2]}`);
-        parent.appendChild(bubble);
-
-        gsap.to(bubble.object3D.position, {
-          y: pos[1] + 0.4,
-          duration: 0.6,
-          ease: "power2.out",
-          onComplete: () => {
-            if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
-          }
-        });
-      }
-
-      // Función para crear efecto de "inserción" para Insertion Sort (SIMPLIFICADO)
-      function createInsertionEffect(fromCube, toCube) {
-        if (!fromCube || !toCube) return;
-        // Solo un efecto visual simple: no crear más objetos
-      }
-
-      // Función para resaltar el pivote en Quick Sort (SIMPLIFICADO)
-      function highlightPivot(index) {
-        const pivotCube = findCubeByIndex(index);
-        if (pivotCube) {
-          const pivotBody = pivotCube.querySelector(".cube-body");
-          if (pivotBody) {
-            gsap.to(pivotBody, {
-              duration: 0.3,
-              onUpdate: () => {
-                pivotBody.setAttribute("color", "#9C27B0");
-              },
-              ease: "power2.inOut"
-            });
-          }
-        }
-      }
-
-      // Función para animar movimiento suave de un cubo (NO USADA - SIMPLIFICACIÓN)
-      function animateBarMovement(cube, targetX, duration = 800) {
-        // Función NO usada; swap ya lo maneja performSwap
-      }
-
-      // Función para mostrar información educativa
-      function showEducationalInfo(step, algorithmType) {
-        const existingInfo = document.getElementById("educational-info");
-        if (existingInfo) {
-          if (existingInfo.parentNode) existingInfo.parentNode.removeChild(existingInfo);
-        }
-
-        const infoEntity = document.createElement("a-entity");
-        infoEntity.setAttribute("id", "educational-info");
-        infoEntity.setAttribute("position", "0 2.5 -2");
-
-        let infoText = "";
-        if (step.type === "compare") {
-          infoText = `Comparando elementos ${step.i} y ${step.j}`;
-        } else if (step.type === "swap") {
-          infoText = `Intercambiando ${step.i} ↔ ${step.j}`;
-        } else if (step.type === "pivot") {
-          infoText = `Pivote: elemento ${step.index}`;
-        }
-
-        if (infoText) {
-          const textEntity = document.createElement("a-text");
-          textEntity.setAttribute("value", infoText);
-          textEntity.setAttribute("align", "center");
-          textEntity.setAttribute("color", "#FFEB3B");
-          textEntity.setAttribute("width", 5);
-          textEntity.setAttribute("font-size", "0.12");
-          infoEntity.appendChild(textEntity);
-          parent.appendChild(infoEntity);
-
-          // Remover después de 0.8s
-          scheduleAlgorithmTimeout(() => {
-            if (infoEntity.parentNode) infoEntity.parentNode.removeChild(infoEntity);
-          }, 800);
-        }
-      }
-      function highlightElements(indices, color = "#FFC107", duration = 0.4) {
-        indices.forEach(index => {
-          const cube = findCubeByIndex(index);
-          if (cube) {
-            const cubeBody = cube.querySelector(".cube-body");
-            if (cubeBody) {
-              gsap.to(cubeBody, {
-                duration: duration,
-                onUpdate: () => {
-                  cubeBody.setAttribute("color", color);
-                },
-                ease: "power2.inOut"
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facultad Virtual VR</title>
+
+    <!-- A-Frame Core -->
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+
+    <!-- A-Frame Environment Component -->
+    <script src="https://unpkg.com/aframe-environment-component@1.3.3/dist/aframe-environment-component.min.js"></script>
+
+    <!-- A-Frame Teleport Controls (navegación VR) -->
+    <script src="https://unpkg.com/aframe-teleport-controls@1.0.4/dist/aframe-teleport-controls.min.js"></script>
+
+    <!-- GSAP para animaciones de algoritmos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+      // ============================================
+      // COMPONENTE BTN-ACTION
+      // Maneja clicks en botones interactivos.
+      // Funciona con cursor de PC, gaze VR y
+      // controllers VR (Oculus/Quest).
+      // ============================================
+      AFRAME.registerComponent("btn-action", {
+        schema: { type: "string" },
+        init: function () {
+          var self = this;
+          var el = this.el;
+
+          // El raycaster intersecta geometría (a-box hijo), así que
+          // necesitamos escuchar click tanto en el parent como en hijos
+          el.addEventListener("click", function () {
+            self.handleClick();
+          });
+
+          // También poner class clickable y listener en el a-box hijo
+          // para que el raycaster lo detecte directamente
+          el.addEventListener("loaded", function () {
+            var box = el.querySelector("a-box");
+            if (box) {
+              box.classList.add("clickable");
+              box.addEventListener("click", function (evt) {
+                evt.stopPropagation();
+                self.handleClick();
+              });
+              box.addEventListener("mouseenter", function () {
+                box.setAttribute("scale", "1.15 1.15 1.15");
+              });
+              box.addEventListener("mouseleave", function () {
+                box.setAttribute("scale", "1 1 1");
               });
             }
-          }
-        });
-      }
+          });
+        },
+        handleClick: function () {
+          var action = this.data;
+          console.log("🔘 Boton:", action);
+          var mathMenu = document.getElementById("math-menu");
+          var functionDisplay = document.getElementById("function-display");
+          var algMenu = document.getElementById("alg-menu");
+          var algDisplay = document.getElementById("algorithm-display");
+          var mathMenuVisible =
+            mathMenu && mathMenu.getAttribute("visible") !== false;
+          var functionDisplayVisible =
+            functionDisplay && functionDisplay.getAttribute("visible") !== false;
+          var algMenuVisible = algMenu && algMenu.getAttribute("visible") !== false;
+          var algDisplayVisible =
+            algDisplay && algDisplay.getAttribute("visible") !== false;
 
-      function updateArrayDisplay() {
-        const existingDisplay = document.getElementById("array-display");
-        if (existingDisplay && existingDisplay.parentNode) {
-          existingDisplay.parentNode.removeChild(existingDisplay);
-        }
+          if (action.indexOf("func") === 0 && !mathMenuVisible) return;
+          if (action === "back-math" && !functionDisplayVisible) return;
+          if (action.indexOf("algo-") === 0 && !algMenuVisible) return;
 
-        const arrayDisplay = document.createElement("a-entity");
-        arrayDisplay.setAttribute("id", "array-display");
-        arrayDisplay.setAttribute("position", "0 2.8 -2.5");
-
-        // Obtener valores ordenados por position visual (data-index)
-        const nodes = Array.from(parent.querySelectorAll('.algo-cube'));
-        nodes.sort((x, y) => Number(x.getAttribute('data-index')) - Number(y.getAttribute('data-index')));
-        const currentValues = nodes.map(cube => cube.getAttribute("data-value")).join(", ");
-
-        // Mostrar array visual
-        const displayText = `[${currentValues}]`;
-
-        const textEntity = document.createElement("a-text");
-        textEntity.setAttribute("value", displayText);
-        textEntity.setAttribute("align", "center");
-        textEntity.setAttribute("color", "#ffffff");
-        textEntity.setAttribute("width", 8);
-        textEntity.setAttribute("font-size", "0.13");
-        arrayDisplay.appendChild(textEntity);
-        parent.appendChild(arrayDisplay);
-
-        // Log para verificación
-        console.log("Array display:", displayText);
-      }
-
-      function updateProgressIndicator(currentStep, totalSteps) {
-        while (progressIndicator.firstChild) {
-          progressIndicator.removeChild(progressIndicator.firstChild);
-        }
-
-        const progress = currentStep / totalSteps;
-        const progressBar = document.createElement("a-plane");
-        progressBar.setAttribute("width", Math.max(0.1, progress * 5));
-        progressBar.setAttribute("height", 0.04);
-        progressBar.setAttribute("color", "#4CAF50");
-        progressBar.setAttribute("position", `${-2.5 + (progress * 2.5)} -1 0`);
-        progressIndicator.appendChild(progressBar);
-
-        const progressText = document.createElement("a-text");
-        progressText.setAttribute("value", `${currentStep}/${totalSteps}`);
-        progressText.setAttribute("position", "0 -0.8 0");
-        progressText.setAttribute("align", "center");
-        progressText.setAttribute("color", "#fff");
-        progressText.setAttribute("width", 3);
-        progressText.setAttribute("font-size", "0.11");
-        progressIndicator.appendChild(progressText);
-      }
-
-      function rotateCameraForAlgorithm(stepIndex, algoType) {
-        // SIMPLIFICADO: no rotar cámara, mantenerla fija
-      }
-
-      steps.forEach((step, idx) => {
-        scheduleAlgorithmTimeout(() => {
-          if (!isSorting || currentScene !== "algorithms") {
+          if (
+            (action === "back-algo" ||
+              action === "restart-algo" ||
+              action === "pause-algo" ||
+              action === "back-step-algo" ||
+              action === "slow-algo") &&
+            !algDisplayVisible
+          ) {
             return;
           }
 
-          // Actualizar indicador de progreso
-          updateProgressIndicator(idx + 1, steps.length);
-
-          // Mostrar información educativa
-          showEducationalInfo(step, algorithmType);
-
-          if (step.type === "compare") {
-            // Resaltar elementos siendo comparados
-            highlightElements([step.i, step.j], "#FFEB3B", 0.3);
-
-          } else if (step.type === "swap") {
-            // EJECUTAR EL SWAP REAL CON A-FRAME
-            performSwap(step.i, step.j, 600, algorithmType);
-
-            // Actualizar display después del swap
-            scheduleAlgorithmTimeout(() => {
-              updateArrayDisplay();
-            }, 650);
-
-          } else if (step.type === "pivot") {
-            // Resaltar pivote
-            pivotIndex = step.index;
-            highlightPivot(step.index);
+          switch (action) {
+            case "func1":
+              showFunction("func1");
+              break;
+            case "func2":
+              showFunction("func2");
+              break;
+            case "func3":
+              showFunction("func3");
+              break;
+            case "func4":
+              showFunction("func4");
+              break;
+            case "func5":
+              showFunction("func5");
+              break;
+            case "back-math":
+              showMathMenu();
+              break;
+            case "algo-bubble":
+              showAlgorithm("bubble");
+              break;
+            case "algo-insertion":
+              showAlgorithm("insertion");
+              break;
+            case "algo-quick":
+              showAlgorithm("quick");
+              break;
+            case "algo-baraja":
+              showAlgorithm("baraja");
+              break;
+            case "algo-intercambio":
+              showAlgorithm("intercambio");
+              break;
+            case "back-algo":
+              stopAlgorithmAnimations({ resetDisplay: true });
+              break;
+            case "restart-algo":
+              if (currentAlgorithm) showAlgorithm(currentAlgorithm);
+              break;
+            case "pause-algo":
+              toggleAlgorithmPause();
+              break;
+            case "back-step-algo":
+              stepAlgorithmBack();
+              break;
+            case "slow-algo":
+              slowAlgorithm();
+              break;
           }
-
-          // Al terminar todos los pasos
-          if (idx === steps.length - 1) {
-            scheduleAlgorithmTimeout(() => {
-              if (!isSorting || currentScene !== "algorithms") {
-                return;
-              }
-
-              // Colorear todos en verde
-              const allCubes = Array.from(document.querySelectorAll(".algo-cube"));
-              allCubes.forEach((cube) => {
-                const body = cube.querySelector(".cube-body");
-                if (body) body.setAttribute("color", "#8BC34A");
-              });
-
-              // Animación de celebración
-              allCubes.forEach((cube) => {
-                cube.setAttribute("animation__celebrate", {
-                  property: "position",
-                  from: cube.getAttribute("position"),
-                  to: (pos => {
-                    const p = readPos(cube);
-                    return `${p[0]} ${p[1] + 0.2} ${p[2]}`;
-                  })(),
-                  dur: 300,
-                  easing: "easeOutQuad",
-                  direction: "alternate",
-                  repeat: 1,
-                  loop: false
-                });
-              });
-
-              // Actualizar display final
-              updateArrayDisplay();
-
-              // Resetear cámara
-              if (cameraEl) {
-                cameraEl.setAttribute("animation__resetRotate", {
-                  property: "rotation",
-                  to: "0 0 0",
-                  dur: 800,
-                  easing: "easeInOutQuad"
-                });
-              }
-
-              isSorting = false;
-              console.log("Algoritmo completado correctamente");
-            }, 700);
-          }
-        }, idx * delayMs);
+        },
       });
-    }
 
-    // Función de fallback para representación simple en VR
-    function createSimpleVRRepresentation(parent, func) {
-      // Limpiar superficie
-      while (parent.firstChild) {
-        parent.removeChild(parent.firstChild);
+      // ============================================
+      // COMPONENTE PLAYER-MOVEMENT
+      // WASD + colisión + gravedad en un solo componente.
+      // Calcula bounding boxes manualmente para evitar
+      // errores de setFromObject con entidades anidadas.
+      // Compatible con VR (teleport sigue funcionando).
+      // ============================================
+      AFRAME.registerComponent("player-movement", {
+        schema: {
+          speed: { type: "number", default: 4 },
+          radius: { type: "number", default: 0.35 },
+        },
+
+        init: function () {
+          this.keys = {};
+          this.wallBoxes = [];
+          this.forward = new THREE.Vector3();
+          this.rightDir = new THREE.Vector3();
+          this.tempBox = new THREE.Box3();
+          this.ready = false;
+
+          // Escuchar teclas
+          this.onKeyDown = function (e) {
+            this.keys[e.code] = true;
+          }.bind(this);
+          this.onKeyUp = function (e) {
+            this.keys[e.code] = false;
+          }.bind(this);
+          window.addEventListener("keydown", this.onKeyDown);
+          window.addEventListener("keyup", this.onKeyUp);
+
+          // Esperar a que la escena renderice un frame para que
+          // las matrices de mundo estén actualizadas
+          var self = this;
+          this.el.sceneEl.addEventListener("loaded", function () {
+            setTimeout(function () {
+              self.buildCollisionBoxes();
+              self.ready = true;
+            }, 500);
+          });
+        },
+
+        // Construir bounding boxes MANUALMENTE desde atributos
+        // (no usa setFromObject que puede fallar con grupos anidados)
+        buildCollisionBoxes: function () {
+          var walls = document.querySelectorAll("a-box");
+          var self = this;
+
+          walls.forEach(function (wall) {
+            // Leer dimensiones desde los atributos HTML
+            var h = parseFloat(wall.getAttribute("height") || 1);
+
+            // FILTRO: solo paredes estructurales (height >= 1m)
+            // Esto ignora botones de menú (height 0.3-0.4m)
+            if (h < 1.0) return;
+
+            // Forzar actualización de la matriz de mundo
+            wall.object3D.updateWorldMatrix(true, false);
+
+            // Obtener posición en el MUNDO (no local)
+            var worldPos = new THREE.Vector3();
+            wall.object3D.getWorldPosition(worldPos);
+
+            var w = parseFloat(wall.getAttribute("width") || 1) / 2;
+            h = h / 2;
+            var d = parseFloat(wall.getAttribute("depth") || 1) / 2;
+
+            var box = new THREE.Box3(
+              new THREE.Vector3(worldPos.x - w, worldPos.y - h, worldPos.z - d),
+              new THREE.Vector3(worldPos.x + w, worldPos.y + h, worldPos.z + d),
+            );
+
+            self.wallBoxes.push(box);
+          });
+
+          console.log("🧱 Colisión lista:", this.wallBoxes.length, "paredes");
+
+          // Debug: mostrar las cajas que bloquean la zona del pasillo
+          var debugCount = 0;
+          for (var i = 0; i < this.wallBoxes.length; i++) {
+            var b = this.wallBoxes[i];
+            // Si la caja está cerca del centro del pasillo
+            if (b.min.x < 1 && b.max.x > -1 && b.min.z < 7 && b.max.z > 5) {
+              console.log(
+                "⚠️ Caja cerca del spawn:",
+                i,
+                "X[" + b.min.x.toFixed(1) + "," + b.max.x.toFixed(1) + "]",
+                "Y[" + b.min.y.toFixed(1) + "," + b.max.y.toFixed(1) + "]",
+                "Z[" + b.min.z.toFixed(1) + "," + b.max.z.toFixed(1) + "]",
+              );
+              debugCount++;
+            }
+          }
+          if (debugCount === 0) {
+            console.log("✅ Ninguna caja bloquea la zona de spawn");
+          }
+        },
+
+        // Verificar si posición (x, z) colisiona con alguna pared
+        checkCollision: function (x, z) {
+          var r = this.data.radius;
+          // Solo verificar colisión en la franja de altura del jugador (0.2 a 1.5m)
+          this.tempBox.min.set(x - r, 0.2, z - r);
+          this.tempBox.max.set(x + r, 1.5, z + r);
+          for (var i = 0; i < this.wallBoxes.length; i++) {
+            if (this.wallBoxes[i].intersectsBox(this.tempBox)) {
+              return true;
+            }
+          }
+          return false;
+        },
+
+        tick: function (time, delta) {
+          if (!this.ready || !delta || delta > 200) return;
+
+          var pos = this.el.object3D.position;
+
+          // GRAVEDAD: rig siempre a nivel del suelo
+          pos.y = 0;
+
+          // Solo procesar movimiento si hay teclas presionadas
+          var anyKey =
+            this.keys["KeyW"] ||
+            this.keys["KeyS"] ||
+            this.keys["KeyA"] ||
+            this.keys["KeyD"] ||
+            this.keys["ArrowUp"] ||
+            this.keys["ArrowDown"] ||
+            this.keys["ArrowLeft"] ||
+            this.keys["ArrowRight"];
+          if (!anyKey) return;
+
+          var speed = this.data.speed;
+          var dt = delta / 1000;
+
+          // Obtener cámara para dirección de mirada
+          var cam = this.el.querySelector("[camera]");
+          if (!cam) return;
+
+          // Vector "adelante" (sin componente Y)
+          this.forward.set(0, 0, -1);
+          this.forward.applyQuaternion(cam.object3D.quaternion);
+          this.forward.y = 0;
+          if (this.forward.length() > 0.001) this.forward.normalize();
+
+          // Vector "derecha" (sin componente Y)
+          this.rightDir.set(1, 0, 0);
+          this.rightDir.applyQuaternion(cam.object3D.quaternion);
+          this.rightDir.y = 0;
+          if (this.rightDir.length() > 0.001) this.rightDir.normalize();
+
+          // Calcular dirección según teclas
+          var moveX = 0,
+            moveZ = 0;
+
+          if (this.keys["KeyW"] || this.keys["ArrowUp"]) {
+            moveX += this.forward.x;
+            moveZ += this.forward.z;
+          }
+          if (this.keys["KeyS"] || this.keys["ArrowDown"]) {
+            moveX -= this.forward.x;
+            moveZ -= this.forward.z;
+          }
+          if (this.keys["KeyA"] || this.keys["ArrowLeft"]) {
+            moveX -= this.rightDir.x;
+            moveZ -= this.rightDir.z;
+          }
+          if (this.keys["KeyD"] || this.keys["ArrowRight"]) {
+            moveX += this.rightDir.x;
+            moveZ += this.rightDir.z;
+          }
+
+          // Normalizar diagonal
+          var len = Math.sqrt(moveX * moveX + moveZ * moveZ);
+          if (len < 0.01) return;
+          moveX = (moveX / len) * speed * dt;
+          moveZ = (moveZ / len) * speed * dt;
+
+          var newX = pos.x + moveX;
+          var newZ = pos.z + moveZ;
+
+          // SLIDING: verificar cada eje por separado
+          var xBlocked = this.checkCollision(newX, pos.z);
+          var zBlocked = this.checkCollision(pos.x, newZ);
+
+          if (!xBlocked) pos.x = newX;
+          if (!zBlocked) pos.z = newZ;
+        },
+
+        remove: function () {
+          window.removeEventListener("keydown", this.onKeyDown);
+          window.removeEventListener("keyup", this.onKeyUp);
+        },
+      });
+
+      // ============================================
+      // COMPONENTE THUMBSTICK-LOCOMOTION
+      // Locomoción suave con joystick del Quest.
+      // Respeta la colisión del player-movement.
+      // ============================================
+      AFRAME.registerComponent("thumbstick-locomotion", {
+        schema: {
+          rig: { type: "selector" },
+          camera: { type: "selector" },
+          speed: { type: "number", default: 3 },
+          deadzone: { type: "number", default: 0.15 },
+        },
+
+        init: function () {
+          this.axis = { x: 0, y: 0 };
+          this.forward = new THREE.Vector3();
+          this.rightDir = new THREE.Vector3();
+
+          var self = this;
+          this.onAxisMove = function (evt) {
+            var a = evt.detail.axis;
+            // xr-standard: [0,1]=touchpad, [2,3]=thumbstick
+            if (a && a.length >= 4) {
+              self.axis.x = a[2];
+              self.axis.y = a[3];
+            } else if (a && a.length >= 2) {
+              self.axis.x = a[0];
+              self.axis.y = a[1];
+            }
+          };
+          this.el.addEventListener("axismove", this.onAxisMove);
+        },
+
+        tick: function (time, delta) {
+          if (!delta || delta > 200) return;
+          var dz = this.data.deadzone;
+          var ax = Math.abs(this.axis.x) < dz ? 0 : this.axis.x;
+          var ay = Math.abs(this.axis.y) < dz ? 0 : this.axis.y;
+          if (ax === 0 && ay === 0) return;
+
+          var rig = this.data.rig;
+          var cam = this.data.camera;
+          if (!rig || !cam) return;
+
+          // Dirección según la cámara (HMD)
+          this.forward.set(0, 0, -1).applyQuaternion(cam.object3D.quaternion);
+          this.forward.y = 0;
+          if (this.forward.length() > 0.001) this.forward.normalize();
+          this.rightDir.set(1, 0, 0).applyQuaternion(cam.object3D.quaternion);
+          this.rightDir.y = 0;
+          if (this.rightDir.length() > 0.001) this.rightDir.normalize();
+
+          // ay es adelante/atrás (negativo = adelante), ax es lateral
+          var moveX = this.rightDir.x * ax - this.forward.x * ay;
+          var moveZ = this.rightDir.z * ax - this.forward.z * ay;
+
+          var len = Math.sqrt(moveX * moveX + moveZ * moveZ);
+          if (len < 0.01) return;
+          var dt = delta / 1000;
+          var mag = Math.min(Math.sqrt(ax * ax + ay * ay), 1);
+          moveX = (moveX / len) * this.data.speed * dt * mag;
+          moveZ = (moveZ / len) * this.data.speed * dt * mag;
+
+          var pos = rig.object3D.position;
+          var pm = rig.components["player-movement"];
+          var newX = pos.x + moveX;
+          var newZ = pos.z + moveZ;
+
+          // Reutilizar colisión de player-movement si está lista
+          if (pm && pm.ready) {
+            if (!pm.checkCollision(newX, pos.z)) pos.x = newX;
+            if (!pm.checkCollision(pos.x, newZ)) pos.z = newZ;
+          } else {
+            pos.x = newX;
+            pos.z = newZ;
+          }
+        },
+
+        remove: function () {
+          this.el.removeEventListener("axismove", this.onAxisMove);
+        },
+      });
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      .info-panel {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(20, 20, 40, 0.9);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 12px;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        font-size: 14px;
+        z-index: 998;
+        border: 1px solid rgba(100, 126, 234, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        max-width: 280px;
+      }
+      .info-panel h3 {
+        margin: 0 0 12px 0;
+        color: #8b9cff;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .info-panel p {
+        margin: 6px 0;
+        color: #b8c4ff;
+      }
+      .info-panel strong {
+        color: #ffffff;
+      }
+      .info-panel .location {
+        margin-top: 15px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(100, 126, 234, 0.3);
+        font-size: 12px;
+        color: #7a8adb;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Panel de información -->
+    <div class="info-panel">
+      <h3>🏛️ Facultad Virtual VR</h3>
+      <p><strong>PC:</strong> WASD para moverse, Mouse para mirar</p>
+      <p><strong>VR:</strong> Gatillo para teletransportarte</p>
+      <div class="location">
+        <p>📍 Pasillo Principal</p>
+        <p>🚪 Aula 1 (Izquierda) | Aula 2 (Derecha)</p>
+      </div>
+    </div>
+
+    <a-scene
+      vr-mode-ui="enabled: true"
+      webxr="referenceSpaceType: local-floor; optionalFeatures: bounded-floor, hand-tracking"
+      renderer="antialias: true; colorManagement: true; sortTransparentObjects: true; physicallyCorrectLights: true"
+      shadow="type: pcfsoft"
+    >
+      <!-- ========================================== -->
+      <!-- ASSETS - Precarga de todos los recursos   -->
+      <!-- ========================================== -->
+      <a-assets timeout="30000">
+        <!-- Texturas -->
+        <img id="textura-pared" src="pared.jpg" crossorigin="anonymous" />
+        <img id="textura-suelo" src="suelo.jpg" crossorigin="anonymous" />
+
+        <!-- Modelos 3D -->
+        <a-asset-item id="modelo-pizarra" src="pizarra.glb"></a-asset-item>
+        <a-asset-item
+          id="modelo-puerta"
+          src="marco_en_madera_puerta.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="modelo-pupitre"
+          src="silla_pupitre_disgraf_8b.glb"
+        ></a-asset-item>
+        <a-asset-item id="modelo-logo" src="Iso.gltf"></a-asset-item>
+        <img id="textura-logo" src="logo.png" crossorigin="anonymous" />
+      </a-assets>
+
+      <!-- ========================================== -->
+      <!-- ENTORNO EXTERIOR                          -->
+      <!-- ========================================== -->
+      <a-entity
+        environment="preset: forest; dressingAmount: 50; ground: flat; groundColor: #3a5a3a; groundColor2: #2a4a2a; skyType: gradient; skyColor: #87CEEB; horizonColor: #FFFFFF; fog: 0.6"
+      ></a-entity>
+
+      <!-- ################################################################## -->
+      <!-- GRUPO: PASILLO PRINCIPAL (4m ancho x 15m largo x 3.5m alto)       -->
+      <!-- Centrado en X=0, desde Z=-7.5 hasta Z=7.5                         -->
+      <!-- ################################################################## -->
+      <a-entity id="pasillo" position="0 0 0">
+        <!-- SUELO DEL PASILLO -->
+        <a-plane
+          id="pasillo-suelo"
+          class="navegable"
+          width="4"
+          height="15"
+          rotation="-90 0 0"
+          position="0 0.01 0"
+          material="src: #textura-suelo; repeat: 2 8; roughness: 0.7"
+          shadow="receive: true"
+        ></a-plane>
+
+        <!-- TECHO DEL PASILLO -->
+        <a-plane
+          id="techo-pasillo"
+          width="4"
+          height="15"
+          rotation="90 0 0"
+          position="0 3.5 0"
+          material="color: #e8e4dc; roughness: 0.9"
+        ></a-plane>
+
+        <!-- PARED IZQUIERDA DEL PASILLO (con hueco para Aula 1) -->
+        <!-- Sección trasera (desde Z=-7.5 hasta Z=-3) -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="4.5"
+          position="-2 1.75 -5.25"
+          material="src: #textura-pared; repeat: 2.25 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Sección frontal (desde Z=1 hasta Z=7.5) -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="6.5"
+          position="-2 1.75 4.25"
+          material="src: #textura-pared; repeat: 3.25 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Dintel sobre puerta Aula 1 -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="1.2"
+          depth="4"
+          position="-2 2.9 -1"
+          material="src: #textura-pared; repeat: 2 0.6; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <!-- Relleno izquierdo puerta Aula 1 -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="-2 1.15 -2.4"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <!-- Relleno derecho puerta Aula 1 -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="-2 1.15 0.4"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- PARED DERECHA DEL PASILLO (con hueco para Aula 2) -->
+        <!-- Sección trasera -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="4.5"
+          position="2 1.75 -5.25"
+          material="src: #textura-pared; repeat: 2.25 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Sección frontal -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="6.5"
+          position="2 1.75 4.25"
+          material="src: #textura-pared; repeat: 3.25 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Dintel sobre puerta Aula 2 -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="1.2"
+          depth="4"
+          position="2 2.9 -1"
+          material="src: #textura-pared; repeat: 2 0.6; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <!-- Relleno izquierdo puerta Aula 2 -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="2 1.15 -2.4"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <!-- Relleno derecho puerta Aula 2 -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="2 1.15 0.4"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- PARED TRASERA DEL PASILLO (fondo) -->
+        <a-box
+          src="#textura-pared"
+          width="4"
+          height="3.5"
+          depth="0.2"
+          position="0 1.75 -7.5"
+          material="src: #textura-pared; repeat: 2 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- ENTRADA PRINCIPAL (Arco doble al frente Z=7.5) -->
+        <!-- Columna izquierda -->
+        <a-box
+          width="0.5"
+          height="3.5"
+          depth="0.5"
+          position="-1.75 1.75 7.5"
+          material="color: #8b7355; roughness: 0.7"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Columna derecha -->
+        <a-box
+          width="0.5"
+          height="3.5"
+          depth="0.5"
+          position="1.75 1.75 7.5"
+          material="color: #8b7355; roughness: 0.7"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Dintel de entrada -->
+        <a-box
+          width="4"
+          height="0.5"
+          depth="0.6"
+          position="0 3.25 7.5"
+          material="color: #6b5344; roughness: 0.7"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <!-- Relleno izquierdo entrada principal -->
+        <a-box
+          src="#textura-pared"
+          width="0.6"
+          height="3"
+          depth="0.2"
+          position="-1.5 1.5 7.5"
+          material="src: #textura-pared; repeat: 0.3 1.5; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <!-- Relleno derecho entrada principal -->
+        <a-box
+          src="#textura-pared"
+          width="0.6"
+          height="3"
+          depth="0.2"
+          position="1.5 1.5 7.5"
+          material="src: #textura-pared; repeat: 0.3 1.5; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <!-- Relleno arriba de las puertas entrada -->
+        <a-box
+          src="#textura-pared"
+          width="2.4"
+          height="0.5"
+          depth="0.2"
+          position="0 2.75 7.5"
+          material="src: #textura-pared; repeat: 1.2 0.25; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Marco de puerta principal (entrada doble) -->
+        <a-entity
+          gltf-model="#modelo-puerta"
+          position="-0.7 0 7.3"
+          rotation="0 180 0"
+          scale="2 2 2"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+        <a-entity
+          gltf-model="#modelo-puerta"
+          position="0.7 0 7.3"
+          rotation="0 180 0"
+          scale="2 2 2"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+
+        <!-- LOGO 3D GIRANDO al fondo del pasillo -->
+        <a-entity
+          id="logo-pasillo"
+          position="0 2 -6.5"
+          scale="3 3 3"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear"
+        >
+          <a-gltf-model src="#modelo-logo"></a-gltf-model>
+        </a-entity>
+        <!-- Luz puntual que ilumina el logo -->
+        <a-light
+          type="point"
+          color="#FFFFFF"
+          intensity="1"
+          position="0 3.2 -6.5"
+          distance="5"
+          decay="1"
+        ></a-light>
+
+        <!-- ILUMINACIÓN DEL PASILLO -->
+        <a-light
+          type="point"
+          color="#FFF8DC"
+          intensity="0.6"
+          position="0 3.2 -4"
+          distance="8"
+          decay="2"
+        ></a-light>
+        <a-light
+          type="point"
+          color="#FFF8DC"
+          intensity="0.6"
+          position="0 3.2 0"
+          distance="8"
+          decay="2"
+        ></a-light>
+        <a-light
+          type="point"
+          color="#FFF8DC"
+          intensity="0.6"
+          position="0 3.2 4"
+          distance="8"
+          decay="2"
+        ></a-light>
+      </a-entity>
+
+      <!-- ################################################################## -->
+      <!-- GRUPO: AULA 1 (Izquierda del pasillo)                             -->
+      <!-- Dimensiones: 8m ancho (X) x 6m largo (Z) x 3.5m alto              -->
+      <!-- Conecta al pasillo en X=-2, Z=-3 a Z=1                            -->
+      <!-- ################################################################## -->
+      <a-entity id="aula1" position="-6 0 -1">
+        <!-- SUELO DEL AULA 1 -->
+        <a-plane
+          id="aula1-suelo"
+          class="navegable"
+          width="8"
+          height="6"
+          rotation="-90 0 0"
+          position="0 0.01 0"
+          material="src: #textura-suelo; repeat: 4 3; roughness: 0.7"
+          shadow="receive: true"
+        ></a-plane>
+
+        <!-- TECHO DEL AULA 1 -->
+        <a-plane
+          width="8"
+          height="6"
+          rotation="90 0 0"
+          position="0 3.5 0"
+          material="color: #f0ece4; roughness: 0.9"
+        ></a-plane>
+
+        <!-- PARED FRONTAL (donde está el pizarrón, X negativo) -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="6"
+          position="-4 1.75 0"
+          material="src: #textura-pared; repeat: 3 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- PARED TRASERA (hacia el pasillo, X positivo) - tiene hueco puerta -->
+        <!-- Ya conecta con el pasillo, el hueco está abierto -->
+
+        <!-- PARED LATERAL IZQUIERDA (Z negativo) -->
+        <a-box
+          src="#textura-pared"
+          width="8"
+          height="3.5"
+          depth="0.2"
+          position="0 1.75 -3"
+          material="src: #textura-pared; repeat: 4 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- PARED LATERAL DERECHA (Z positivo) -->
+        <a-box
+          src="#textura-pared"
+          width="8"
+          height="3.5"
+          depth="0.2"
+          position="0 1.75 3"
+          material="src: #textura-pared; repeat: 4 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Sección de pared hacia pasillo (arriba del hueco) -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="1.2"
+          depth="6"
+          position="4 2.9 0"
+          material="src: #textura-pared; repeat: 3 0.6; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Marco de puerta del Aula 1 -->
+        <a-entity
+          gltf-model="#modelo-puerta"
+          position="3.9 0 0"
+          rotation="0 -90 0"
+          scale="2 2 2"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+
+        <!-- PIZARRÓN AULA 1 (en pared -X, mira hacia +X) -->
+        <a-entity
+          gltf-model="#modelo-pizarra"
+          position="-3.5 1.3 0"
+          rotation="0 90 0"
+          scale="0.5 0.5 0.5"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+
+        <!-- PUPITRES AULA 1 (6 pupitres en 2 filas de 3) -->
+        <!-- rotation="0 -90 0" = miran hacia -X = hacia el pizarrón -->
+        <!-- Fila 1 (más cerca del pizarrón) -->
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="-1.5 0 -1.5"
+          rotation="0 -90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="-1.5 0 0"
+          rotation="0 -90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="-1.5 0 1.5"
+          rotation="0 -90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+
+        <!-- Fila 2 (más lejos del pizarrón) -->
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="1 0 -1.5"
+          rotation="0 -90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="1 0 0"
+          rotation="0 -90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="1 0 1.5"
+          rotation="0 -90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+
+        <!-- ILUMINACIÓN AULA 1 -->
+        <a-light
+          type="point"
+          color="#FFFFFF"
+          intensity="0.7"
+          position="0 3.2 0"
+          distance="10"
+          decay="2"
+        ></a-light>
+        <a-light
+          type="point"
+          color="#FFFACD"
+          intensity="0.4"
+          position="-3 2.5 0"
+          distance="5"
+          decay="2"
+        ></a-light>
+
+        <!-- ============================================ -->
+        <!-- CONTENIDO INTERACTIVO: ANÁLISIS MATEMÁTICO   -->
+        <!-- Menú en la pared del pizarrón, visualización -->
+        <!-- en el centro del aula                        -->
+        <!-- ============================================ -->
+
+        <!-- Menú de funciones (en la pared del pizarrón, facing +X) -->
+        <a-entity id="math-menu" position="-3.2 2.2 0" rotation="0 90 0">
+          <a-text
+            value="Analisis Matematico I"
+            position="0 0.8 0"
+            align="center"
+            color="#4CAF50"
+            width="6"
+          ></a-text>
+          <a-text
+            value="Selecciona una funcion:"
+            position="0 0.5 0"
+            align="center"
+            color="#fff"
+            width="4"
+          ></a-text>
+
+          <!-- Fila 1 -->
+          <a-entity
+            id="btn-func1"
+            position="-1.2 0 0"
+            class="clickable"
+            btn-action="func1"
+          >
+            <a-box
+              width="0.9"
+              height="0.3"
+              depth="0.05"
+              color="#FF6B6B"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="sin(x)*cos(y)"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+          <a-entity
+            id="btn-func2"
+            position="0 0 0"
+            class="clickable"
+            btn-action="func2"
+          >
+            <a-box
+              width="0.9"
+              height="0.3"
+              depth="0.05"
+              color="#4ECDC4"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="x² + y²"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+          <a-entity
+            id="btn-func3"
+            position="1.2 0 0"
+            class="clickable"
+            btn-action="func3"
+          >
+            <a-box
+              width="0.9"
+              height="0.3"
+              depth="0.05"
+              color="#45B7D1"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="sin(sqrt(x²+y²))"
+              align="center"
+              color="#fff"
+              width="2.2"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+
+          <!-- Fila 2 -->
+          <a-entity
+            id="btn-func4"
+            position="-0.6 -0.5 0"
+            class="clickable"
+            btn-action="func4"
+          >
+            <a-box
+              width="0.9"
+              height="0.3"
+              depth="0.05"
+              color="#96CEB4"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="cos(x)*sin(y)"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+          <a-entity
+            id="btn-func5"
+            position="0.6 -0.5 0"
+            class="clickable"
+            btn-action="func5"
+          >
+            <a-box
+              width="0.9"
+              height="0.3"
+              depth="0.05"
+              color="#FFEAA7"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="e^(-(x²+y²))"
+              align="center"
+              color="#333"
+              width="2.5"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+        </a-entity>
+
+        <!-- Área de visualización de funciones (centro del aula) -->
+        <a-entity id="function-display" visible="false" position="0 0 0">
+          <a-text
+            id="current-function-title"
+            value=""
+            position="-2 3 0"
+            rotation="0 90 0"
+            align="center"
+            color="#4CAF50"
+            width="6"
+          ></a-text>
+
+          <!-- Superficie matemática 3D -->
+          <a-entity
+            id="math-surface"
+            position="0 1.5 0"
+            scale="0.65 0.65 0.65"
+          ></a-entity>
+
+          <!-- Ejes de coordenadas -->
+          <a-cylinder
+            position="0 1.5 0"
+            rotation="0 0 90"
+            height="2.6"
+            radius="0.011"
+            color="red"
+          ></a-cylinder>
+          <a-text value="X" position="1.5 1.5 0" color="red" width="2"></a-text>
+          <a-cylinder
+            position="0 1.5 0"
+            height="2.6"
+            radius="0.011"
+            color="green"
+          ></a-cylinder>
+          <a-text value="Y" position="0 2.95 0" color="green" width="2"></a-text>
+          <a-cylinder
+            position="0 1.5 0"
+            rotation="90 0 0"
+            height="2.6"
+            radius="0.011"
+            color="blue"
+          ></a-cylinder>
+          <a-text
+            value="Z"
+            position="0 1.5 1.5"
+            color="blue"
+            width="2"
+          ></a-text>
+
+          <!-- Botón volver al menú -->
+          <a-entity
+            id="btn-back-to-menu"
+            position="-3.2 1 0"
+            rotation="0 90 0"
+            class="clickable"
+            btn-action="back-math"
+          >
+            <a-box
+              width="0.9"
+              height="0.25"
+              depth="0.06"
+              color="#9B59B6"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="<- Menu Funciones"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.04"
+            ></a-text>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+
+      <!-- ################################################################## -->
+      <!-- GRUPO: AULA 2 (Derecha del pasillo)                               -->
+      <!-- Dimensiones: 8m ancho x 6m largo x 3.5m alto                      -->
+      <!-- Pupitres en semicírculo mirando al pizarrón                       -->
+      <!-- ################################################################## -->
+      <a-entity id="aula2" position="6 0 -1">
+        <!-- SUELO DEL AULA 2 -->
+        <a-plane
+          id="aula2-suelo"
+          class="navegable"
+          width="8"
+          height="6"
+          rotation="-90 0 0"
+          position="0 0.01 0"
+          material="src: #textura-suelo; repeat: 4 3; roughness: 0.7"
+          shadow="receive: true"
+        ></a-plane>
+
+        <!-- TECHO DEL AULA 2 -->
+        <a-plane
+          width="8"
+          height="6"
+          rotation="90 0 0"
+          position="0 3.5 0"
+          material="color: #f0ece4; roughness: 0.9"
+        ></a-plane>
+
+        <!-- PARED FRONTAL (donde está el pizarrón, X positivo) -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="6"
+          position="4 1.75 0"
+          material="src: #textura-pared; repeat: 3 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- PARED LATERAL IZQUIERDA (Z negativo) -->
+        <a-box
+          src="#textura-pared"
+          width="8"
+          height="3.5"
+          depth="0.2"
+          position="0 1.75 -3"
+          material="src: #textura-pared; repeat: 4 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- PARED LATERAL DERECHA (Z positivo) -->
+        <a-box
+          src="#textura-pared"
+          width="8"
+          height="3.5"
+          depth="0.2"
+          position="0 1.75 3"
+          material="src: #textura-pared; repeat: 4 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Sección de pared hacia pasillo (arriba del hueco) -->
+        <a-box
+          src="#textura-pared"
+          width="0.2"
+          height="1.2"
+          depth="6"
+          position="-4 2.9 0"
+          material="src: #textura-pared; repeat: 3 0.6; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Marco de puerta del Aula 2 -->
+        <a-entity
+          gltf-model="#modelo-puerta"
+          position="-3.9 0 0"
+          rotation="0 90 0"
+          scale="2 2 2"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+
+        <!-- PIZARRÓN AULA 2 (en pared +X, mira hacia -X) -->
+        <a-entity
+          gltf-model="#modelo-pizarra"
+          position="3.5 1.3 0"
+          rotation="0 -90 0"
+          scale="0.5 0.5 0.5"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+
+        <!-- PUPITRES AULA 2 (6 pupitres en 2 filas de 3) -->
+        <!-- rotation="0 90 0" = miran hacia +X = hacia el pizarrón -->
+
+        <!-- Fila 1 (más cerca del pizarrón) -->
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="1.5 0 -1.5"
+          rotation="0 90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="1.5 0 0"
+          rotation="0 90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="1.5 0 1.5"
+          rotation="0 90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+
+        <!-- Fila 2 (más lejos del pizarrón) -->
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="-1 0 -1.5"
+          rotation="0 90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="-1 0 0"
+          rotation="0 90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+        <a-entity
+          class="pupitre"
+          gltf-model="#modelo-pupitre"
+          position="-1 0 1.5"
+          rotation="0 90 0"
+          scale="0.3 0.3 0.3"
+          shadow="cast: true; receive: true"
+        ></a-entity>
+
+        <!-- ILUMINACIÓN AULA 2 -->
+        <a-light
+          type="point"
+          color="#FFFFFF"
+          intensity="0.7"
+          position="0 3.2 0"
+          distance="10"
+          decay="2"
+        ></a-light>
+        <a-light
+          type="point"
+          color="#FFFACD"
+          intensity="0.4"
+          position="3 2.5 0"
+          distance="5"
+          decay="2"
+        ></a-light>
+
+        <!-- ============================================ -->
+        <!-- CONTENIDO INTERACTIVO: ALGORITMOS            -->
+        <!-- Menú en la pared del pizarrón, visualización -->
+        <!-- en el centro del aula                        -->
+        <!-- ============================================ -->
+
+        <!-- Menú de algoritmos (en la pared del pizarrón, facing -X) -->
+        <a-entity id="alg-menu" position="3.2 2.2 0" rotation="0 -90 0">
+          <a-text
+            value="Algoritmos de Ordenamiento"
+            position="0 0.8 0"
+            align="center"
+            color="#2196F3"
+            width="6"
+          ></a-text>
+          <a-text
+            value="Selecciona un algoritmo:"
+            position="0 0.5 0"
+            align="center"
+            color="#fff"
+            width="4"
+          ></a-text>
+
+          <a-entity
+            id="btn-algo1"
+            position="-1.1 0.05 0"
+            class="clickable"
+            btn-action="algo-bubble"
+          >
+            <a-box
+              width="0.9"
+              height="0.3"
+              depth="0.05"
+              color="#FF6B6B"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="Bubble Sort"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+          <a-entity
+            id="btn-algo2"
+            position="0 0.05 0"
+            class="clickable"
+            btn-action="algo-insertion"
+          >
+            <a-box
+              width="0.9"
+              height="0.3"
+              depth="0.05"
+              color="#4ECDC4"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="Insertion Sort"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+          <a-entity
+            id="btn-algo3"
+            position="1.1 0.05 0"
+            class="clickable"
+            btn-action="algo-quick"
+          >
+            <a-box
+              width="0.9"
+              height="0.3"
+              depth="0.05"
+              color="#45B7D1"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="Quick Sort"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+          <a-entity
+            id="btn-algo4"
+            position="-0.75 -0.4 0"
+            class="clickable"
+            btn-action="algo-baraja"
+          >
+            <a-box
+              width="1.35"
+              height="0.3"
+              depth="0.05"
+              color="#8BC34A"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="Baraja"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+          <a-entity
+            id="btn-algo5"
+            position="0.75 -0.4 0"
+            class="clickable"
+            btn-action="algo-intercambio"
+          >
+            <a-box
+              width="1.35"
+              height="0.3"
+              depth="0.05"
+              color="#FF9800"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="Intercambio Directo"
+              align="center"
+              color="#fff"
+              width="2.4"
+              position="0 0 0.03"
+            ></a-text>
+          </a-entity>
+        </a-entity>
+
+        <!-- Área de visualización de algoritmos (centro del aula) -->
+        <a-entity id="algorithm-display" visible="false" position="0 0 0">
+          <a-text
+            id="current-algo-title"
+            value=""
+            position="3.2 2.8 0"
+            rotation="0 -90 0"
+            align="center"
+            color="#2196F3"
+            width="6"
+          ></a-text>
+
+          <!-- Contenedor de cubos del array (pegado a la pared del pizarrón) -->
+          <a-entity
+            id="algo-surface"
+            position="3.2 1.65 0"
+            rotation="0 -90 0"
+          ></a-entity>
+
+          <!-- Botón volver al menú -->
+          <a-entity
+            id="btn-back-to-alg-menu"
+            position="3.2 1.2 -0.8"
+            rotation="0 -90 0"
+            class="clickable"
+            btn-action="back-algo"
+          >
+            <a-box
+              width="0.9"
+              height="0.25"
+              depth="0.06"
+              color="#9B59B6"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="<- Menu Algoritmos"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.04"
+            ></a-text>
+          </a-entity>
+
+          <!-- Botón reiniciar -->
+          <a-entity
+            id="btn-restart-algo"
+            position="3.2 1.2 0.8"
+            rotation="0 -90 0"
+            class="clickable"
+            btn-action="restart-algo"
+          >
+            <a-box
+              width="0.9"
+              height="0.25"
+              depth="0.06"
+              color="#FF9800"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="Reiniciar"
+              align="center"
+              color="#fff"
+              width="2.5"
+              position="0 0 0.04"
+            ></a-text>
+          </a-entity>
+
+          <!-- Controles de reproduccion de la animacion -->
+          <a-entity
+            id="btn-pause-algo"
+            position="3.2 0.85 -0.95"
+            rotation="0 -90 0"
+            class="clickable"
+            btn-action="pause-algo"
+          >
+            <a-box
+              width="0.85"
+              height="0.24"
+              depth="0.06"
+              color="#2196F3"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              id="pause-algo-label"
+              value="Pausar"
+              align="center"
+              color="#fff"
+              width="2.1"
+              position="0 0 0.04"
+            ></a-text>
+          </a-entity>
+
+          <a-entity
+            id="btn-back-step-algo"
+            position="3.2 0.85 0"
+            rotation="0 -90 0"
+            class="clickable"
+            btn-action="back-step-algo"
+          >
+            <a-box
+              width="0.85"
+              height="0.24"
+              depth="0.06"
+              color="#607D8B"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              value="Atras"
+              align="center"
+              color="#fff"
+              width="2.1"
+              position="0 0 0.04"
+            ></a-text>
+          </a-entity>
+
+          <a-entity
+            id="btn-slow-algo"
+            position="3.2 0.85 0.95"
+            rotation="0 -90 0"
+            class="clickable"
+            btn-action="slow-algo"
+          >
+            <a-box
+              width="0.85"
+              height="0.24"
+              depth="0.06"
+              color="#795548"
+              opacity="0.9"
+              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
+              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
+            ></a-box>
+            <a-text
+              id="slow-algo-label"
+              value="Vel 1x"
+              align="center"
+              color="#fff"
+              width="2.1"
+              position="0 0 0.04"
+            ></a-text>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+
+      <!-- ========================================== -->
+      <!-- ILUMINACIÓN GLOBAL                        -->
+      <!-- ========================================== -->
+
+      <!-- Luz ambiental general -->
+      <a-light type="ambient" color="#FFFFFF" intensity="0.35"></a-light>
+
+      <!-- Luz direccional principal (sol) -->
+      <a-light
+        type="directional"
+        color="#FFF8E7"
+        intensity="0.5"
+        position="5 8 3"
+        castShadow="true"
+        shadow-map-height="2048"
+        shadow-map-width="2048"
+        shadow-camera-left="-20"
+        shadow-camera-right="20"
+        shadow-camera-top="20"
+        shadow-camera-bottom="-20"
+      ></a-light>
+
+      <!-- ========================================== -->
+      <!-- CÁMARA Y CONTROLES VR                     -->
+      <!-- ========================================== -->
+
+      <!-- Rig de cámara - inicia en la entrada del pasillo -->
+      <!-- player-movement: WASD + colisión + gravedad, todo en uno -->
+      <a-entity
+        id="rig"
+        position="0 0 6"
+        player-movement="speed: 4; radius: 0.4"
+      >
+        <!-- Cámara: solo look-controls, wasd DESACTIVADO -->
+        <a-camera
+          id="camera"
+          position="0 1.6 0"
+          look-controls="pointerLockEnabled: false"
+          wasd-controls="enabled: false"
+        >
+          <!-- Cursor: gaze (2s) + click para PC y VR -->
+          <a-cursor
+            color="#FFFFFF"
+            fuse="true"
+            fuse-timeout="1500"
+            raycaster="objects: .clickable; far: 50; recursive: true"
+            geometry="primitive: ring; radiusInner: 0.008; radiusOuter: 0.015"
+            material="color: white; shader: flat"
+            animation__fusing="property: scale; startEvents: fusing; from: 1 1 1; to: 0.1 0.1 0.1; dur: 1500"
+            animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 150"
+          ></a-cursor>
+        </a-camera>
+
+        <!-- Controlador izquierdo: locomoción con thumbstick + teleport (grip) + laser -->
+        <a-entity
+          id="leftHand"
+          laser-controls="hand: left"
+          raycaster="objects: .clickable; far: 50; recursive: true"
+          thumbstick-locomotion="rig: #rig; camera: #camera; speed: 3"
+          teleport-controls="
+            cameraRig: #rig;
+            teleportOrigin: #camera;
+            type: parabolic;
+            button: grip;
+            collisionEntities: #pasillo-suelo, #aula1-suelo, #aula2-suelo;
+            curveHitColor: #4CAF50;
+            curveMissColor: #FF5722;
+            hitCylinderColor: #4CAF50;
+            hitCylinderRadius: 0.3;
+            curveShootingSpeed: 10;
+            landingMaxAngle: 45"
+        ></a-entity>
+
+        <!-- Controlador derecho: teleport (grip) + laser -->
+        <a-entity
+          id="rightHand"
+          laser-controls="hand: right"
+          raycaster="objects: .clickable; far: 50; recursive: true"
+          teleport-controls="
+            cameraRig: #rig;
+            teleportOrigin: #camera;
+            type: parabolic;
+            button: grip;
+            collisionEntities: #pasillo-suelo, #aula1-suelo, #aula2-suelo;
+            curveHitColor: #4CAF50;
+            curveMissColor: #FF5722;
+            hitCylinderColor: #4CAF50;
+            hitCylinderRadius: 0.3;
+            curveShootingSpeed: 10;
+            landingMaxAngle: 45"
+        ></a-entity>
+      </a-entity>
+    </a-scene>
+
+    <!-- HUD para información de funciones/algoritmos -->
+    <div
+      id="mathHUD"
+      class="info-panel"
+      style="display: none; top: auto; bottom: 20px; left: 20px"
+    >
+      <h3
+        id="functionTitle"
+        style="color: #4caf50; margin: 0 0 8px 0; font-size: 16px"
+      ></h3>
+      <p id="functionDescription" style="margin: 4px 0; font-size: 13px"></p>
+      <p
+        id="functionDomain"
+        style="margin: 4px 0; font-size: 12px; color: #7a8adb"
+      ></p>
+    </div>
+
+    <script>
+      // ============================================
+      // SISTEMA INTERACTIVO DE LA FACULTAD VR
+      // AM1 (Aula 1) + Algoritmos (Aula 2)
+      // ============================================
+
+      // Variables globales
+      var algorithmTimeouts = [];
+      var currentFunction = null;
+      var currentAlgorithm = null;
+      var isSorting = false;
+      var algorithmState = null;
+      var algorithmSpeedOptions = [
+        { label: "Vel 1x", factor: 1 },
+        { label: "Lento", factor: 1.6 },
+        { label: "Muy lento", factor: 2.4 },
+      ];
+      var lastRenderTime = 0;
+      var isRenderingFunction = false;
+
+      // Definición de funciones matemáticas
+      var mathFunctions = {
+        func1: {
+          name: "f(x,y) = sin(x) * cos(y)",
+          description: "Funcion trigonometrica que crea ondas entrecruzadas",
+          domain: "Dominio: x e [-pi, pi], y e [-pi, pi]",
+          formula: function (x, z) {
+            return Math.sin(x) * Math.cos(z);
+          },
+        },
+        func2: {
+          name: "f(x,y) = x² + y²",
+          description: "Paraboloide circular - forma de cuenco",
+          domain: "Dominio: x e [-2, 2], y e [-2, 2]",
+          formula: function (x, z) {
+            return (x * x + z * z) * 0.3;
+          },
+        },
+        func3: {
+          name: "f(x,y) = sin(sqrt(x²+y²))",
+          description: "Ondas circulares concentricas",
+          domain: "Dominio: x e [-3pi, 3pi], y e [-3pi, 3pi]",
+          formula: function (x, z) {
+            return Math.sin(Math.sqrt(x * x + z * z));
+          },
+        },
+        func4: {
+          name: "f(x,y) = cos(x) * sin(y)",
+          description: "Ondas trigonometricas perpendiculares",
+          domain: "Dominio: x e [-pi, pi], y e [-pi, pi]",
+          formula: function (x, z) {
+            return Math.cos(x) * Math.sin(z);
+          },
+        },
+        func5: {
+          name: "f(x,y) = e^(-(x²+y²))",
+          description: "Distribucion gaussiana - campana 3D",
+          domain: "Dominio: x e [-2, 2], y e [-2, 2]",
+          formula: function (x, z) {
+            return Math.exp(-(x * x + z * z));
+          },
+        },
+      };
+
+      // ===== FUNCIONES MATEMÁTICAS (AULA 1) =====
+
+      function showMathMenu() {
+        document.getElementById("math-menu").setAttribute("visible", true);
+        document
+          .getElementById("function-display")
+          .setAttribute("visible", false);
+        document.getElementById("mathHUD").style.display = "none";
       }
 
-      // Crear una representación más simple usando planos con textura de gradiente
-      const plane = document.createElement("a-plane");
-      plane.setAttribute("width", 5);
-      plane.setAttribute("height", 5);
-      plane.setAttribute("rotation", "-90 0 0");
-      plane.setAttribute("material", {
-        color: "#4285F4",
-        opacity: 0.8,
-        transparent: true,
-        shader: "flat"
-      });
-      parent.appendChild(plane);
+      function showFunction(functionKey) {
+        var now = Date.now();
+        if (now - lastRenderTime < 1000 || isRenderingFunction) return;
+        isRenderingFunction = true;
+        lastRenderTime = now;
+        currentFunction = functionKey;
 
-      // Añadir texto 3D que representa la fórmula
-      const formulaText = document.createElement("a-text");
-      formulaText.setAttribute("value", func.name);
-      formulaText.setAttribute("position", "0 0.1 0");
-      formulaText.setAttribute("rotation", "-90 0 0");
-      formulaText.setAttribute("align", "center");
-      formulaText.setAttribute("color", "white");
-      formulaText.setAttribute("width", 4);
-      parent.appendChild(formulaText);
-    }
+        document.getElementById("math-menu").setAttribute("visible", false);
+        document
+          .getElementById("function-display")
+          .setAttribute("visible", true);
 
-    // Función para actualizar el HUD con información de la función
-    function updateMathHUD(func) {
-      document.getElementById("functionTitle").textContent = func.name;
-      document.getElementById("functionDescription").textContent =
-        func.description;
-      document.getElementById("functionDomain").textContent = func.domain;
-      document
-        .getElementById("current-function-title")
-        .setAttribute("value", func.name);
-    }
+        var hud = document.getElementById("mathHUD");
+        hud.style.display = "block";
+        document.getElementById("functionTitle").textContent = "Cargando...";
 
-    // Función auxiliar para crear triángulos (optimizada)
-    function createTriangle(parent, v1, v2, v3, avgHeight) {
-      const triangle = document.createElement("a-triangle");
+        setTimeout(function () {
+          generateMathSurface(functionKey);
+          isRenderingFunction = false;
+        }, 100);
+      }
 
-      // Configurar los vértices del triángulo
-      triangle.setAttribute("geometry", {
-        primitive: "triangle",
-        vertexA: `${v1[0]} ${v1[1]} ${v1[2]}`,
-        vertexB: `${v2[0]} ${v2[1]} ${v2[2]}`,
-        vertexC: `${v3[0]} ${v3[1]} ${v3[2]}`,
-      });
-
-      // Color basado en la altura promedio
-      const normalizedY = (avgHeight + 1) / 2; // Normalizar entre 0 y 1
-      const color = `hsl(${240 + normalizedY * 120}, 70%, 60%)`;
-
-      // Configurar material una sola vez (más eficiente)
-      triangle.setAttribute("material", {
-        color: color,
-        side: "double",
-        transparent: true,
-        opacity: 0.8,
-        shader: "flat" // Shader más simple para mejor rendimiento
-      });
-
-      parent.appendChild(triangle);
-    }
-
-    // Event listeners para los botones
-    document.addEventListener("DOMContentLoaded", function () {
-      // Mostrar escena inicial
-      showScene("home");
-
-      // Boton Analisis Matematico
-      document
-        .getElementById("btn-scene1")
-        .addEventListener("click", function () {
-          showScene("math");
-        });
-
-      // Botón Escena 2 (placeholder)
-      document
-        .getElementById("btn-scene2")
-        .addEventListener("click", function () {
-          showScene("algorithms");
-        });
-
-      // Botones y lógica para la escena de Algoritmos
-      document.getElementById("btn-algo1").addEventListener("click", function () {
-        showAlgorithm("bubble");
-      });
-      document.getElementById("btn-algo2").addEventListener("click", function () {
-        showAlgorithm("insertion");
-      });
-      document.getElementById("btn-algo3").addEventListener("click", function () {
-        showAlgorithm("quick");
-      });
-
-      document.getElementById("btn-back-alg").addEventListener("click", function () {
-        showScene("home");
-      });
-
-      document.getElementById("btn-back-to-alg-menu").addEventListener("click", function () {
-        // volver al menu de algoritmos
-        stopAlgorithmAnimations({ resetDisplay: true });
-        document.getElementById("alg-menu").setAttribute("visible", true);
-        document.getElementById("algorithm-display").setAttribute("visible", false);
-      });
-
-      document.getElementById("btn-restart-algo").addEventListener("click", function () {
-        // reiniciar el algoritmo actual
-        if (currentAlgorithm) {
-          showAlgorithm(currentAlgorithm);
+      function generateMathSurface(functionKey) {
+        var surface = document.getElementById("math-surface");
+        while (surface.firstChild) {
+          surface.removeChild(surface.firstChild);
         }
-      });
+        if (!mathFunctions[functionKey]) return;
+        var func = mathFunctions[functionKey];
+        var step = 0.25;
+        var range = 2.5;
 
-      // Botón Escena 3 (placeholder)
-      document
-        .getElementById("btn-scene3")
-        .addEventListener("click", function () {
-          alert("Escena 3 - Proximamente disponible");
-        });
-
-      // Boton regresar al menu principal
-      document
-        .getElementById("btn-back")
-        .addEventListener("click", function () {
-          showScene("home");
-        });
-
-      // Botones de funciones matemáticas
-      document
-        .getElementById("btn-func1")
-        .addEventListener("click", function () {
-          showFunction("func1");
-        });
-
-      document
-        .getElementById("btn-func2")
-        .addEventListener("click", function () {
-          showFunction("func2");
-        });
-
-      document
-        .getElementById("btn-func3")
-        .addEventListener("click", function () {
-          showFunction("func3");
-        });
-
-      document
-        .getElementById("btn-func4")
-        .addEventListener("click", function () {
-          showFunction("func4");
-        });
-
-      document
-        .getElementById("btn-func5")
-        .addEventListener("click", function () {
-          showFunction("func5");
-        });
-
-      // Boton regresar al menu de funciones
-      document
-        .getElementById("btn-back-to-menu")
-        .addEventListener("click", function () {
-          showMathMenu();
-        });
-    });
-
-    // Agregar interactividad con el cursor de VR
-    document.querySelector("a-scene").addEventListener("loaded", function () {
-      const clickables = document.querySelectorAll(".clickable");
-      clickables.forEach((element) => {
-        // Evitar bucle infinito: solo redisparamos el evento si no viene marcado
-        element.addEventListener("mouseenter", function (ev) {
-          if (ev && ev.detail && ev.detail._afGenerated) return;
-          const e = new CustomEvent("mouseenter", { detail: { _afGenerated: true } });
-          this.dispatchEvent(e);
-        });
-
-        element.addEventListener("mouseleave", function (ev) {
-          if (ev && ev.detail && ev.detail._afGenerated) return;
-          const e = new CustomEvent("mouseleave", { detail: { _afGenerated: true } });
-          this.dispatchEvent(e);
-        });
-      });
-    });
-
-    // =========================
-    // Performance tweaks for VR headsets
-    // =========================
-    (function () {
-      const sceneEl = document.querySelector('a-scene');
-      if (!sceneEl) return;
-
-      // When entering VR, reduce pixel ratio and use framebufferScaleFactor when available
-      sceneEl.addEventListener('enter-vr', function () {
         try {
-          // Access renderer (A-Frame attaches Three renderer to sceneEl.renderer after loaded)
-          const renderer = sceneEl.renderer || (sceneEl.systems && sceneEl.systems.renderer && sceneEl.systems.renderer.renderer);
-          if (!renderer) return;
+          var positions = [];
+          var colors = [];
+          var triangleCount = 0;
 
-          // Force a lower pixel ratio to reduce GPU load on standalone headsets
-          renderer.setPixelRatio(Math.min(1, window.devicePixelRatio || 1));
+          for (var x = -range; x < range; x += step) {
+            for (var z = -range; z < range; z += step) {
+              var x1 = x,
+                x2 = x + step,
+                z1 = z,
+                z2 = z + step;
+              var y1 = func.formula(x1, z1);
+              var y2 = func.formula(x2, z1);
+              var y3 = func.formula(x1, z2);
+              var y4 = func.formula(x2, z2);
+              if (
+                !isFinite(y1) ||
+                !isFinite(y2) ||
+                !isFinite(y3) ||
+                !isFinite(y4)
+              )
+                continue;
 
-          // If WebXR framebuffer scaling is supported, reduce internal resolution
-          if (renderer.xr && typeof renderer.xr.setFramebufferScaleFactor === 'function') {
-            // 0.6 is a good tradeoff; adjust down if necessary (0.5, 0.4)
-            renderer.xr.setFramebufferScaleFactor(0.6);
+              positions.push(x1, y1, z1, x2, y2, z1, x1, y3, z2);
+              var avg1 = (y1 + y2 + y3) / 3;
+              var n1 = Math.max(0, Math.min(1, (avg1 + 1) / 2));
+              var c1 = hslToRgb(240 + n1 * 120, 0.7, 0.6);
+              colors.push(c1.r, c1.g, c1.b, c1.r, c1.g, c1.b, c1.r, c1.g, c1.b);
+
+              positions.push(x2, y2, z1, x2, y4, z2, x1, y3, z2);
+              var avg2 = (y2 + y4 + y3) / 3;
+              var n2 = Math.max(0, Math.min(1, (avg2 + 1) / 2));
+              var c2 = hslToRgb(240 + n2 * 120, 0.7, 0.6);
+              colors.push(c2.r, c2.g, c2.b, c2.r, c2.g, c2.b, c2.r, c2.g, c2.b);
+              triangleCount += 2;
+              if (triangleCount > 8000) break;
+            }
+            if (triangleCount > 8000) break;
           }
-          console.log('VR performance: lowered pixelRatio and framebuffer scale');
-        } catch (err) {
-          console.warn('enter-vr performance tweak failed', err);
-        }
-      });
 
-      // Restore pixel ratio on exit
-      sceneEl.addEventListener('exit-vr', function () {
-        try {
-          const renderer = sceneEl.renderer || (sceneEl.systems && sceneEl.systems.renderer && sceneEl.systems.renderer.renderer);
-          if (!renderer) return;
-          renderer.setPixelRatio(window.devicePixelRatio || 1);
-          // No need to explicitly reset framebufferScaleFactor; leaving it is fine or set to 1 if needed
-          if (renderer.xr && typeof renderer.xr.setFramebufferScaleFactor === 'function') {
-            renderer.xr.setFramebufferScaleFactor(1.0);
+          var geometry = new THREE.BufferGeometry();
+          geometry.setAttribute(
+            "position",
+            new THREE.BufferAttribute(new Float32Array(positions), 3),
+          );
+          geometry.setAttribute(
+            "color",
+            new THREE.BufferAttribute(new Float32Array(colors), 3),
+          );
+          geometry.computeVertexNormals();
+          var material = new THREE.MeshBasicMaterial({
+            vertexColors: true,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.88,
+          });
+          var mesh = new THREE.Mesh(geometry, material);
+          var meshEl = document.createElement("a-entity");
+          meshEl.object3D.add(mesh);
+          surface.appendChild(meshEl);
+        } catch (error) {
+          console.error("Error generando superficie:", error);
+        }
+
+        document.getElementById("functionTitle").textContent = func.name;
+        document.getElementById("functionDescription").textContent =
+          func.description;
+        document.getElementById("functionDomain").textContent = func.domain;
+        document
+          .getElementById("current-function-title")
+          .setAttribute("value", func.name);
+      }
+
+      function hslToRgb(h, s, l) {
+        h = h / 360;
+        var r, g, b;
+        if (s === 0) {
+          r = g = b = l;
+        } else {
+          var hue2rgb = function (p, q, t) {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+          };
+          var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+          var p = 2 * l - q;
+          r = hue2rgb(p, q, h + 1 / 3);
+          g = hue2rgb(p, q, h);
+          b = hue2rgb(p, q, h - 1 / 3);
+        }
+        return { r: r, g: g, b: b };
+      }
+
+      // ===== ALGORITMOS DE ORDENAMIENTO (AULA 2) =====
+
+      function stopAlgorithmAnimations(opts) {
+        opts = opts || {};
+        algorithmTimeouts.forEach(clearTimeout);
+        algorithmTimeouts = [];
+        isSorting = false;
+        algorithmState = null;
+        var pi = document.getElementById("progress-indicator");
+        if (pi && pi.parentNode) pi.parentNode.removeChild(pi);
+        var ad = document.getElementById("array-display");
+        if (ad && ad.parentNode) ad.parentNode.removeChild(ad);
+        if (opts.resetDisplay) {
+          var algDisp = document.getElementById("algorithm-display");
+          var algMenu = document.getElementById("alg-menu");
+          if (algDisp) algDisp.setAttribute("visible", false);
+          if (algMenu) algMenu.setAttribute("visible", true);
+          currentAlgorithm = null;
+          document.getElementById("mathHUD").style.display = "none";
+        }
+      }
+
+      function scheduleAlgorithmTimeout(cb, delay) {
+        var id = setTimeout(function () {
+          algorithmTimeouts = algorithmTimeouts.filter(function (t) {
+            return t !== id;
+          });
+          cb();
+        }, delay);
+        algorithmTimeouts.push(id);
+        return id;
+      }
+
+      function updateAlgorithmControlLabels() {
+        var pauseLabel = document.getElementById("pause-algo-label");
+        var slowLabel = document.getElementById("slow-algo-label");
+        if (pauseLabel) {
+          pauseLabel.setAttribute(
+            "value",
+            algorithmState && algorithmState.paused ? "Reanudar" : "Pausar",
+          );
+        }
+        if (slowLabel) {
+          var speedIndex = algorithmState ? algorithmState.speedIndex : 0;
+          slowLabel.setAttribute(
+            "value",
+            algorithmSpeedOptions[speedIndex].label,
+          );
+        }
+      }
+
+      function resetAlgorithmCubeColors(parent) {
+        if (!parent) return;
+        var all = parent.querySelectorAll(".algo-cube");
+        all.forEach(function (c) {
+          var b = c.querySelector(".cube-body");
+          if (b) b.setAttribute("color", "#8BC34A");
+        });
+      }
+
+      function showAlgorithm(algoKey) {
+        stopAlgorithmAnimations();
+        currentAlgorithm = algoKey;
+        document.getElementById("alg-menu").setAttribute("visible", false);
+        document
+          .getElementById("algorithm-display")
+          .setAttribute("visible", true);
+        var title =
+          {
+            bubble: "Bubble Sort",
+            insertion: "Insertion Sort",
+            quick: "Quick Sort",
+            baraja: "Baraja",
+            intercambio: "Intercambio Directo",
+          }[algoKey] || "Algoritmo";
+        document
+          .getElementById("current-algo-title")
+          .setAttribute("value", title);
+        var hud = document.getElementById("mathHUD");
+        hud.style.display = "block";
+        document.getElementById("functionTitle").textContent = title;
+        var descs = {
+          bubble:
+            "Compara elementos adyacentes e intercambia si estan en orden incorrecto.",
+          insertion: "Toma elementos e inserta en la posicion correcta.",
+          quick: "Selecciona un pivote y reorganiza los elementos.",
+          baraja: "Ordena como una baraja: toma cada elemento y lo inserta donde corresponde.",
+          intercambio:
+            "Compara pares vecinos e intercambia directamente cuando estan invertidos.",
+        };
+        document.getElementById("functionDescription").textContent =
+          descs[algoKey] || "";
+        document.getElementById("functionDomain").textContent =
+          "Observa las comparaciones y movimientos";
+
+        var arr = generateRandomArray();
+        generateAlgorithmBars(arr);
+        var steps = getSortingSteps(algoKey, arr.slice());
+        animateAlgorithmSteps(steps, 800, algoKey);
+      }
+
+      function generateRandomArray() {
+        var numbers = [1, 2, 3, 4, 5, 6, 7];
+        for (var i = numbers.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var temp = numbers[i];
+          numbers[i] = numbers[j];
+          numbers[j] = temp;
+        }
+        return numbers;
+      }
+
+      function generateAlgorithmBars(array) {
+        var parent = document.getElementById("algo-surface");
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+        var spacing = 0.55;
+        var totalWidth = (array.length - 1) * spacing;
+        var cubeSize = 0.45;
+
+        for (var i = 0; i < array.length; i++) {
+          var val = array[i];
+          var x = -totalWidth / 2 + i * spacing;
+          var cc = document.createElement("a-entity");
+          cc.setAttribute("position", x + " " + cubeSize / 2 + " 0");
+          cc.setAttribute("class", "algo-cube");
+          cc.setAttribute("data-index", i);
+          cc.setAttribute("data-value", val);
+
+          var cube = document.createElement("a-box");
+          cube.setAttribute("width", cubeSize);
+          cube.setAttribute("height", cubeSize);
+          cube.setAttribute("depth", cubeSize);
+          cube.setAttribute("color", "#4CAF50");
+          cube.setAttribute("class", "cube-body");
+          cc.appendChild(cube);
+
+          var text = document.createElement("a-text");
+          text.setAttribute("value", val.toString());
+          text.setAttribute("align", "center");
+          text.setAttribute("color", "#ffffff");
+          text.setAttribute("width", 2.5);
+          text.setAttribute("position", "0 0 " + (cubeSize / 2 + 0.01));
+          cc.appendChild(text);
+
+          parent.appendChild(cc);
+        }
+      }
+
+      function getSortingSteps(algo, arr) {
+        var steps = [];
+        if (algo === "bubble" || algo === "intercambio") {
+          for (var i = 0; i < arr.length - 1; i++) {
+            for (var j = 0; j < arr.length - 1 - i; j++) {
+              steps.push({ type: "compare", i: j, j: j + 1 });
+              if (arr[j] > arr[j + 1]) {
+                var t = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = t;
+                steps.push({ type: "swap", i: j, j: j + 1 });
+              }
+            }
           }
-          console.log('Exited VR: restored pixelRatio');
-        } catch (err) {
-          console.warn('exit-vr performance tweak failed', err);
+        } else if (algo === "insertion" || algo === "baraja") {
+          for (var i2 = 1; i2 < arr.length; i2++) {
+            var j2 = i2;
+            while (j2 > 0) {
+              steps.push({ type: "compare", i: j2 - 1, j: j2 });
+              if (arr[j2 - 1] > arr[j2]) {
+                var t2 = arr[j2 - 1];
+                arr[j2 - 1] = arr[j2];
+                arr[j2] = t2;
+                steps.push({ type: "swap", i: j2 - 1, j: j2 });
+              } else break;
+              j2--;
+            }
+          }
+        } else if (algo === "quick") {
+          (function qsort(a, lo, hi) {
+            if (lo >= hi) return;
+            var pivot = a[hi],
+              p = lo;
+            steps.push({ type: "pivot", index: hi });
+            for (var k = lo; k < hi; k++) {
+              steps.push({ type: "compare", i: k, j: hi });
+              if (a[k] < pivot) {
+                var tmp = a[k];
+                a[k] = a[p];
+                a[p] = tmp;
+                steps.push({ type: "swap", i: k, j: p });
+                p++;
+              }
+            }
+            var tmp2 = a[p];
+            a[p] = a[hi];
+            a[hi] = tmp2;
+            steps.push({ type: "swap", i: p, j: hi });
+            qsort(a, lo, p - 1);
+            qsort(a, p + 1, hi);
+          })(arr, 0, arr.length - 1);
         }
-      });
-    })();
-  </script>
-</body>
+        return steps;
+      }
 
+      function animateAlgorithmSteps(steps, delayMs, algorithmType) {
+        isSorting = true;
+        algorithmState = {
+          steps: steps,
+          stepIndex: 0,
+          baseDelay: delayMs,
+          speedIndex: 0,
+          paused: false,
+          locked: false,
+          finished: false,
+          parent: document.getElementById("algo-surface"),
+          algorithmType: algorithmType,
+        };
+        updateAlgorithmControlLabels();
+        scheduleNextAlgorithmStep(300);
+      }
+
+      function getAlgorithmDelay() {
+        if (!algorithmState) return 800;
+        return (
+          algorithmState.baseDelay *
+          algorithmSpeedOptions[algorithmState.speedIndex].factor
+        );
+      }
+
+      function findAlgorithmCube(idx) {
+        if (!algorithmState || !algorithmState.parent) return null;
+        return algorithmState.parent.querySelector(
+          '.algo-cube[data-index="' + idx + '"]',
+        );
+      }
+
+      function readAlgorithmCubePos(el) {
+        if (!el) return [0, 0, 0];
+        var p = el.getAttribute("position");
+        if (!p) return [0, 0, 0];
+        if (typeof p === "string") {
+          var pp = p.split(" ").map(parseFloat);
+          return [pp[0] || 0, pp[1] || 0, pp[2] || 0];
+        }
+        return [p.x || 0, p.y || 0, p.z || 0];
+      }
+
+      function performAlgorithmSwap(i, j, dur, cb) {
+        var aEl = findAlgorithmCube(i);
+        var bEl = findAlgorithmCube(j);
+        if (!aEl || !bEl) {
+          if (cb) cb();
+          return;
+        }
+
+        var posA = readAlgorithmCubePos(aEl);
+        var posB = readAlgorithmCubePos(bEl);
+
+        aEl.setAttribute("animation__swap", {
+          property: "position",
+          to: posB[0] + " " + posA[1] + " " + posA[2],
+          dur: dur,
+          easing: "easeInOutQuad",
+        });
+        bEl.setAttribute("animation__swap", {
+          property: "position",
+          to: posA[0] + " " + posB[1] + " " + posB[2],
+          dur: dur,
+          easing: "easeInOutQuad",
+        });
+
+        var bodyA = aEl.querySelector(".cube-body");
+        var bodyB = bEl.querySelector(".cube-body");
+        if (bodyA) bodyA.setAttribute("color", "#FF9800");
+        if (bodyB) bodyB.setAttribute("color", "#FF9800");
+
+        scheduleAlgorithmTimeout(function () {
+          var idxA = aEl.getAttribute("data-index");
+          var idxB = bEl.getAttribute("data-index");
+          aEl.setAttribute("data-index", idxB);
+          bEl.setAttribute("data-index", idxA);
+          aEl.setAttribute(
+            "position",
+            posB[0] + " " + posA[1] + " " + posA[2],
+          );
+          bEl.setAttribute(
+            "position",
+            posA[0] + " " + posB[1] + " " + posB[2],
+          );
+          if (bodyA) bodyA.setAttribute("color", "#8BC34A");
+          if (bodyB) bodyB.setAttribute("color", "#8BC34A");
+          aEl.removeAttribute("animation__swap");
+          bEl.removeAttribute("animation__swap");
+          if (cb) cb();
+        }, dur);
+      }
+
+      function applyAlgorithmStep(step, cb) {
+        if (!algorithmState) {
+          if (cb) cb();
+          return;
+        }
+        var parent = algorithmState.parent;
+        var factor = algorithmSpeedOptions[algorithmState.speedIndex].factor;
+        resetAlgorithmCubeColors(parent);
+
+        if (step.type === "compare") {
+          var cA = findAlgorithmCube(step.i);
+          var cB = findAlgorithmCube(step.j);
+          if (cA) {
+            var b = cA.querySelector(".cube-body");
+            if (b) b.setAttribute("color", "#FFEB3B");
+          }
+          if (cB) {
+            var b2 = cB.querySelector(".cube-body");
+            if (b2) b2.setAttribute("color", "#FFEB3B");
+          }
+          scheduleAlgorithmTimeout(function () {
+            if (cb) cb();
+          }, 280 * factor);
+        } else if (step.type === "swap") {
+          performAlgorithmSwap(step.i, step.j, 600 * factor, cb);
+        } else if (step.type === "pivot") {
+          var pv = findAlgorithmCube(step.index);
+          if (pv) {
+            var pb = pv.querySelector(".cube-body");
+            if (pb) pb.setAttribute("color", "#9C27B0");
+          }
+          scheduleAlgorithmTimeout(function () {
+            if (cb) cb();
+          }, 350 * factor);
+        } else if (cb) {
+          cb();
+        }
+      }
+
+      function scheduleNextAlgorithmStep(delayOverride) {
+        if (
+          !algorithmState ||
+          algorithmState.paused ||
+          algorithmState.locked ||
+          algorithmState.finished
+        ) {
+          return;
+        }
+        var delay =
+          typeof delayOverride === "number" ? delayOverride : getAlgorithmDelay();
+        scheduleAlgorithmTimeout(function () {
+          runNextAlgorithmStep();
+        }, delay);
+      }
+
+      function runNextAlgorithmStep() {
+        if (
+          !algorithmState ||
+          algorithmState.paused ||
+          algorithmState.locked ||
+          algorithmState.finished
+        ) {
+          return;
+        }
+        if (algorithmState.stepIndex >= algorithmState.steps.length) {
+          finishAlgorithmAnimation();
+          return;
+        }
+
+        var step = algorithmState.steps[algorithmState.stepIndex];
+        algorithmState.locked = true;
+        applyAlgorithmStep(step, function () {
+          if (!algorithmState) return;
+          algorithmState.stepIndex++;
+          algorithmState.locked = false;
+          if (algorithmState.stepIndex >= algorithmState.steps.length) {
+            finishAlgorithmAnimation();
+          } else {
+            scheduleNextAlgorithmStep();
+          }
+        });
+      }
+
+      function finishAlgorithmAnimation() {
+        if (!algorithmState) return;
+        resetAlgorithmCubeColors(algorithmState.parent);
+        algorithmState.finished = true;
+        algorithmState.paused = false;
+        isSorting = false;
+        updateAlgorithmControlLabels();
+        document.getElementById("functionDomain").textContent =
+          "Ordenamiento completado!";
+      }
+
+      function toggleAlgorithmPause() {
+        if (!algorithmState || algorithmState.finished) return;
+        algorithmState.paused = !algorithmState.paused;
+        if (algorithmState.paused) {
+          if (!algorithmState.locked) {
+            algorithmTimeouts.forEach(clearTimeout);
+            algorithmTimeouts = [];
+          }
+          document.getElementById("functionDomain").textContent =
+            "Animacion pausada";
+        } else {
+          isSorting = true;
+          document.getElementById("functionDomain").textContent =
+            "Animacion reanudada";
+          scheduleNextAlgorithmStep(250);
+        }
+        updateAlgorithmControlLabels();
+      }
+
+      function stepAlgorithmBack() {
+        if (!algorithmState || algorithmState.locked) return;
+        algorithmTimeouts.forEach(clearTimeout);
+        algorithmTimeouts = [];
+        algorithmState.paused = true;
+        algorithmState.finished = false;
+        isSorting = true;
+        updateAlgorithmControlLabels();
+
+        var previousSwap = null;
+        while (algorithmState.stepIndex > 0) {
+          algorithmState.stepIndex--;
+          var step = algorithmState.steps[algorithmState.stepIndex];
+          if (step.type === "swap") {
+            previousSwap = step;
+            break;
+          }
+        }
+
+        if (!previousSwap) {
+          resetAlgorithmCubeColors(algorithmState.parent);
+          document.getElementById("functionDomain").textContent =
+            "Ya estas al inicio del ordenamiento";
+          return;
+        }
+
+        algorithmState.locked = true;
+        document.getElementById("functionDomain").textContent =
+          "Retrocediendo un intercambio";
+        applyAlgorithmStep(previousSwap, function () {
+          if (!algorithmState) return;
+          algorithmState.locked = false;
+          resetAlgorithmCubeColors(algorithmState.parent);
+        });
+      }
+
+      function slowAlgorithm() {
+        if (!algorithmState) return;
+        algorithmState.speedIndex =
+          (algorithmState.speedIndex + 1) % algorithmSpeedOptions.length;
+        updateAlgorithmControlLabels();
+        document.getElementById("functionDomain").textContent =
+          "Velocidad: " + algorithmSpeedOptions[algorithmState.speedIndex].label;
+        if (
+          !algorithmState.paused &&
+          !algorithmState.locked &&
+          !algorithmState.finished
+        ) {
+          algorithmTimeouts.forEach(clearTimeout);
+          algorithmTimeouts = [];
+          scheduleNextAlgorithmStep(250);
+        }
+      }
+
+      // ===== EVENT LISTENERS =====
+      // Los botones se manejan via componente btn-action (registrado arriba)
+      // Solo queda el manejo de VR enter/exit
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var scene = document.querySelector("a-scene");
+
+        scene.addEventListener("loaded", function () {
+          console.log("🏛️ Facultad Virtual VR cargada correctamente");
+          console.log("📍 Aula 1: Análisis Matemático | Aula 2: Algoritmos");
+        });
+
+        scene.addEventListener("enter-vr", function () {
+          document.querySelector(".info-panel").style.display = "none";
+          var hud = document.getElementById("mathHUD");
+          if (hud) hud.style.display = "none";
+          // Ocultar cursor gaze en VR (se usan laser-controls de los controladores)
+          var cursor = document.querySelector("a-cursor");
+          if (cursor) cursor.setAttribute("visible", false);
+        });
+        scene.addEventListener("exit-vr", function () {
+          document.querySelector(".info-panel").style.display = "block";
+          // Restaurar cursor gaze para modo escritorio
+          var cursor = document.querySelector("a-cursor");
+          if (cursor) cursor.setAttribute("visible", true);
+        });
+      });
+    </script>
+  </body>
 </html>
