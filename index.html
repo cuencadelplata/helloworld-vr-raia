@@ -134,6 +134,18 @@
             case "slow-algo":
               slowAlgorithm();
               break;
+            case "show-mru":
+              showMRUPlaceholder();
+              break;
+            case "show-mruv":
+              showMRUVExercise();
+              break;
+            case "simulate-mruv":
+              simulateMRUV();
+              break;
+            case "back-fisica":
+              backToFisicaMenu();
+              break;
           }
         },
       });
@@ -618,28 +630,276 @@
       }
 
       function buildPlaceholderContent(parent, id, tipo, posicionXYZ) {
+        if (tipo === "fisica") {
+          buildFisicaContent(parent, id, posicionXYZ);
+        } else {
+          // CPU o placeholder genérico
+          var side = getAulaSide(posicionXYZ);
+          var title = "Simulador de CPU";
+          var accent = "#42A5F5";
+          var root = appendEl(parent, "a-entity", {
+            id: id + "-sim-root",
+            position: side * 3.2 + " 2.2 0",
+            rotation: "0 " + -side * 90 + " 0",
+          });
+          addText(root, {
+            value: title,
+            position: "0 0.45 0",
+            align: "center",
+            color: accent,
+            width: "5.5",
+          });
+          addText(root, {
+            id: id + "-placeholder",
+            value: "Espacio listo para montar contenido interactivo",
+            position: "0 0.05 0",
+            align: "center",
+            color: "#fff",
+            width: "4.2",
+          });
+        }
+      }
+
+      function buildFisicaContent(parent, id, posicionXYZ) {
         var side = getAulaSide(posicionXYZ);
-        var title = tipo === "fisica" ? "Simulador de Fisica" : "Simulador de CPU";
-        var accent = tipo === "fisica" ? "#4CAF50" : "#42A5F5";
-        var root = appendEl(parent, "a-entity", {
-          id: id + "-sim-root",
+        var menu = appendEl(parent, "a-entity", {
+          id: id + "-fisica-menu",
           position: side * 3.2 + " 2.2 0",
           rotation: "0 " + -side * 90 + " 0",
         });
-        addText(root, {
-          value: title,
-          position: "0 0.45 0",
+        addText(menu, {
+          value: "Simulador de Física",
+          position: "0 0.8 0",
           align: "center",
-          color: accent,
-          width: "5.5",
+          color: "#4CAF50",
+          width: "6",
         });
-        addText(root, {
-          id: id + "-placeholder",
-          value: "Espacio listo para montar contenido interactivo",
-          position: "0 0.05 0",
+        addText(menu, {
+          value: "Selecciona un tipo de movimiento:",
+          position: "0 0.5 0",
           align: "center",
           color: "#fff",
-          width: "4.2",
+          width: "4",
+        });
+
+        // Botón MRU
+        addButton(menu, {
+          id: "btn-mru",
+          position: "-0.7 0 0",
+          action: "show-mru",
+          color: "#2196F3",
+          label: "MRU",
+          textColor: "#fff",
+          textWidth: "2.5",
+        });
+
+        // Botón MRUV
+        addButton(menu, {
+          id: "btn-mruv",
+          position: "0.7 0 0",
+          action: "show-mruv",
+          color: "#FF9800",
+          label: "MRUV",
+          textColor: "#fff",
+          textWidth: "2.5",
+        });
+
+        // Entidad para mostrar el ejercicio MRUV
+        var mruvDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mruv-display",
+          visible: false,
+          position: side * 3.0 + " 2.6 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        addText(mruvDisplay, {
+          id: "mruv-title",
+          value: "Ejercicio 2: MRUV",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#FF9800",
+          width: "5.5",
+          scale: "1.0 1.0 1.0",
+        });
+
+        addText(mruvDisplay, {
+          id: "mruv-enunciado",
+          value: "Un auto esta detenido frente a un semaforo en rojo.\nCuando la luz cambia a verde, el conductor acelera\nen linea recta por la avenida. El auto parte del\nreposo con una aceleracion constante de 2,5 m/s²\ndurante un tiempo de 4 segundos. Calcula:",
+          position: "-1 -0.3 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addText(mruvDisplay, {
+          id: "mruv-pregunta",
+          value: "1. ¿Que velocidad alcanza?\n2. ¿Que distancia recorre?",
+          position: "-1 -1.05 0",
+          align: "left",
+          color: "#FFEB3B",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addButton(mruvDisplay, {
+          id: "btn-simular-mruv",
+          position: "0 -1.4 0",
+          action: "simulate-mruv",
+          color: "#4CAF50",
+          label: "▶ SIMULAR",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        addButton(mruvDisplay, {
+          id: "btn-back-mruv",
+          position: "0 -1.9 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        // Entidad para la simulación (auto animado)
+        var simulationArea = appendEl(parent, "a-entity", {
+          id: id + "-mruv-simulation",
+          visible: false,
+          position: side * 3.2 + " 1.3 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        // Auto (representado como un cubo + cilindro)
+        var car = appendEl(simulationArea, "a-entity", {
+          id: "mruv-car",
+          position: "-1.5 0 0",
+        });
+
+        appendEl(car, "a-box", {
+          width: "0.4",
+          height: "0.25",
+          depth: "0.8",
+          color: "#E53935",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "-0.15 -0.15 -0.25",
+          rotation: "90 0 0",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "0.15 -0.15 -0.25",
+          rotation: "90 0 0",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "-0.15 -0.15 0.25",
+          rotation: "90 0 0",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "0.15 -0.15 0.25",
+          rotation: "90 0 0",
+        });
+
+        // Línea de referencia en el suelo
+        appendEl(simulationArea, "a-plane", {
+          width: "5",
+          height: "0.02",
+          color: "#666",
+          position: "0 -0.3 0",
+          rotation: "-90 0 0",
+        });
+
+        // Marcas de distancia
+        for (var i = 0; i <= 5; i++) {
+          appendEl(simulationArea, "a-box", {
+            width: "0.1",
+            height: "0.2",
+            depth: "0.02",
+            color: "#666",
+            position: (-2 + i) + " -0.25 0",
+          });
+          addText(simulationArea, {
+            value: (i * 4) + "m",
+            position: (-2 + i) + " 0.1 0",
+            align: "center",
+            color: "#888",
+            width: "1.5",
+            scale: "0.35 0.35 0.35",
+          });
+        }
+
+        // Texto de información durante la simulación
+        addText(simulationArea, {
+          id: "mruv-sim-info",
+          value: "Presionando...",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#FFEB3B",
+          width: "4.5",
+          scale: "0.75 0.75 0.75",
+        });
+
+        // Entidad para mostrar resultados
+        var resultsDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mruv-results",
+          visible: false,
+          position: "0 0 0",
+        });
+
+        addText(resultsDisplay, {
+          id: "results-title",
+          value: "Resultados de la Simulación",
+          position: side * 3.8+ " 3 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "center",
+          color: "#4CAF50",
+          width: "6",
+        });
+
+        addText(resultsDisplay, {
+          id: "results-content",
+          value: "",
+          position: side * 3.8 + " 2.2 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.75 0.75 0.75",
+        });
+
+        addButton(resultsDisplay, {
+          id: "btn-back-results",
+          position: side * 3.8 + " 0.4 0",
+          rotation: "0 " + -side * 90 + " 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "0.9",
         });
       }
 
@@ -2223,6 +2483,171 @@
         }
       }
 
+      // ===== FUNCIONES DE FÍSICA/MRUV =====
+
+      function backToFisicaMenu() {
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var menu = aula4.querySelector("#aula4-fisica-menu");
+        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
+        var simulation = aula4.querySelector("#aula4-mruv-simulation");
+        var results = aula4.querySelector("#aula4-mruv-results");
+
+        if (menu) menu.setAttribute("visible", true);
+        if (mruvDisplay) mruvDisplay.setAttribute("visible", false);
+        if (simulation) simulation.setAttribute("visible", false);
+        if (results) results.setAttribute("visible", false);
+      }
+
+      function showMRUPlaceholder() {
+        console.log("📚 MRU (Movimiento Rectilíneo Uniforme) - Próximamente");
+        // Placeholder para futuro desarrollo de MRU
+      }
+
+      function showMRUVExercise() {
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var menu = aula4.querySelector("#aula4-fisica-menu");
+        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
+
+        if (menu) menu.setAttribute("visible", false);
+        if (mruvDisplay) mruvDisplay.setAttribute("visible", true);
+      }
+
+      var mruvSimulationRunning = false;
+      var mruvSimulationStartTime = 0;
+      var mruvAnimationId = null;
+
+      function simulateMRUV() {
+        if (mruvSimulationRunning) return;
+
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
+        var simulation = aula4.querySelector("#aula4-mruv-simulation");
+        var results = aula4.querySelector("#aula4-mruv-results");
+        var car = aula4.querySelector("#mruv-car");
+        var simInfo = aula4.querySelector("#mruv-sim-info");
+
+        if (!simulation || !car) return;
+
+        // Ocultar pantalla de ejercicio y mostrar simulación
+        if (mruvDisplay) mruvDisplay.setAttribute("visible", false);
+        if (simulation) simulation.setAttribute("visible", true);
+
+        // Parámetros de la simulación (según el ejercicio)
+        var v0 = 0; // velocidad inicial en m/s
+        var a = 2.5; // aceleración en m/s²
+        var t_total = 4; // tiempo total en segundos
+        var scale = 0.20; // escala de posición en la escena (1 metro = 0.20 unidades)
+
+        // Posición inicial del auto
+        var initialX = -2;
+
+        // Función de movimiento: x(t) = x0 + v0*t + 0.5*a*t²
+        function getMRUVPosition(t) {
+          return initialX + v0 * t + 0.5 * a * t * t * scale;
+        }
+
+        // Función para actualizar la información
+        function updateMRUVInfo(t) {
+          var v = v0 + a * t; // velocidad actual
+          var x = v0 * t + 0.5 * a * t * t; // distancia recorrida
+          var info =
+            "Tiempo: " +
+            t.toFixed(2) +
+            "s | Velocidad: " +
+            v.toFixed(2) +
+            "m/s | Distancia: " +
+            x.toFixed(2) +
+            "m";
+          if (simInfo) simInfo.setAttribute("value", info);
+        }
+
+        // Función de animación
+        function animateMRUV(currentTime) {
+          if (!mruvSimulationRunning) return;
+
+          if (mruvSimulationStartTime === 0) {
+            mruvSimulationStartTime = currentTime;
+          }
+
+          var elapsed = (currentTime - mruvSimulationStartTime) / 1000; // convertir a segundos
+
+          if (elapsed <= t_total) {
+            var newX = getMRUVPosition(elapsed);
+            car.setAttribute("position", newX + " 0 0");
+            updateMRUVInfo(elapsed);
+            mruvAnimationId = requestAnimationFrame(animateMRUV);
+          } else {
+            // Simulación completada
+            mruvSimulationRunning = false;
+            car.setAttribute("position", getMRUVPosition(t_total) + " 0 0");
+            updateMRUVInfo(t_total);
+
+            // Mostrar resultados
+            setTimeout(function () {
+              showMRUVResults();
+            }, 1000);
+          }
+        }
+
+        mruvSimulationRunning = true;
+        mruvSimulationStartTime = 0;
+        car.setAttribute("position", initialX + " 0 0");
+        updateMRUVInfo(0);
+
+        // Iniciar animación
+        if (mruvAnimationId) cancelAnimationFrame(mruvAnimationId);
+        mruvAnimationId = requestAnimationFrame(animateMRUV);
+      }
+
+      function showMRUVResults() {
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var simulation = aula4.querySelector("#aula4-mruv-simulation");
+        var results = aula4.querySelector("#aula4-mruv-results");
+        var resultsContent = aula4.querySelector("#results-content");
+
+        if (simulation) simulation.setAttribute("visible", false);
+        if (results) results.setAttribute("visible", true);
+
+        // Parámetros del ejercicio
+        var v0 = 0;
+        var a = 2.5;
+        var t = 4;
+
+        // Cálculos
+        var vf = v0 + a * t; // velocidad final
+        var x = v0 * t + 0.5 * a * t * t; // distancia recorrida
+        var vfKmh = vf * 3.6; // convertir a km/h
+
+        // Formular respuestas
+        var resultsText =
+          "RESPUESTAS:\n\n" +
+          "1. Velocidad final:\n" +
+          "   vf = v0 + a·t\n" +
+          "   vf = 0 + 2,5 × 4\n" +
+          "   vf = " +
+          vf.toFixed(2) +
+          " m/s (" +
+          vfKmh.toFixed(2) +
+          " km/h)\n\n" +
+          "2. Distancia recorrida:\n" +
+          "   x = v0·t + ½·a·t²\n" +
+          "   x = 0 + ½ × 2,5 × 4²\n" +
+          "   x = ½ × 2,5 × 16\n" +
+          "   x = " +
+          x.toFixed(2) +
+          " metros";
+
+        if (resultsContent) resultsContent.setAttribute("value", resultsText);
+      }
+
       // ===== EVENT LISTENERS =====
       // Los botones se manejan via componente btn-action (registrado arriba)
       // Solo queda el manejo de VR enter/exit
@@ -2233,6 +2658,7 @@
         scene.addEventListener("loaded", function () {
           console.log("🏛️ Facultad Virtual VR cargada correctamente");
           console.log("📍 Aula 1: Análisis Matemático | Aula 2: Algoritmos");
+          console.log("🔬 Aula 4: Física (MRUV)");
         });
 
         scene.addEventListener("enter-vr", function () {
