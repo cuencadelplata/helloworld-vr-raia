@@ -134,6 +134,46 @@
             case "slow-algo":
               slowAlgorithm();
               break;
+            case "show-mru":
+              showMRUPlaceholder();
+              break;
+            case "show-mruv":
+              showMRUVExercise();
+              break;
+            case "simulate-mruv":
+              simulateMRUV();
+              break;
+            case "back-fisica":
+              backToFisicaMenu();
+              break;
+
+            case "cpu-fcfs":
+              selectCpuAlgorithm("fcfs");
+              break;
+            case "cpu-sjf":
+              selectCpuAlgorithm("sjf");
+              break;
+            case "cpu-srtf":
+              selectCpuAlgorithm("srtf");
+              break;
+            case "cpu-rr":
+              selectCpuAlgorithm("rr");
+              break;
+            case "cpu-start":
+              startCpuScheduler();
+              break;
+            case "cpu-pause":
+              toggleCpuPause();
+              break;
+            case "cpu-reset":
+              resetCpuScheduler();
+              break;
+            case "cpu-quantum-plus":
+              changeCpuQuantum(1);
+              break;
+            case "cpu-quantum-minus":
+              changeCpuQuantum(-1);
+              break;
           }
         },
       });
@@ -617,173 +657,27 @@
         });
       }
 
-      function buildCpuSchedulerContent(parent, id, posicionXYZ) {
-        var side = getAulaSide(posicionXYZ);
-        var root = appendEl(parent, "a-entity", {
-          id: "cpu-lab",
-          position: "0 0.03 0",
-        });
-
-        addText(root, {
-          value: "Laboratorio de Planificacion de CPU",
-          position: side * 3.45 + " 2.85 -1.9",
-          rotation: "0 " + -side * 90 + " 0",
-          align: "center",
-          color: "#42A5F5",
-          width: "5.2",
-        });
-
-        appendEl(root, "a-box", {
-          id: "cpu-machine",
-          position: "0 0.85 0",
-          width: "1.2",
-          height: "1.25",
-          depth: "1.2",
-          color: "#263238",
-          metalness: "0.25",
-          roughness: "0.45",
-          shadow: "cast: true; receive: true",
-        });
-        appendEl(root, "a-box", {
-          position: "0 1.52 0.02",
-          width: "1.0",
-          height: "0.08",
-          depth: "1.0",
-          color: "#4FC3F7",
-          opacity: "0.65",
-        });
-        addText(root, {
-          value: "CPU",
-          position: "0 1.58 0.64",
-          align: "center",
-          color: "#E1F5FE",
-          width: "3",
-        });
-
-        [
-          ["Cola de Listos", "-2.6 0.08 -1.6", "#1E88E5"],
-          ["Nuevo", "-2.7 0.08 1.6", "#9E9E9E"],
-          ["E/S", "2.45 0.08 -1.45", "#FDD835"],
-          ["Terminados", "2.55 0.08 1.55", "#E53935"],
-        ].forEach(function (zone) {
-          appendEl(root, "a-plane", {
-            position: zone[1],
-            rotation: "-90 0 0",
-            width: "2.0",
-            height: "0.9",
-            color: zone[2],
-            opacity: "0.28",
+      function buildPlaceholderContent(parent, id, tipo, posicionXYZ) {
+        if (tipo === "fisica") {
+          buildFisicaContent(parent, id, posicionXYZ);
+        } else if (tipo === "cpu") {
+          buildCpuSchedulerContent(parent, id, posicionXYZ);
+        } else {
+          var side = getAulaSide(posicionXYZ);
+          var title = "Simulador de CPU";
+          var root = appendEl(parent, "a-entity", {
+            id: id + "-sim-root",
+            position: side * 3.2 + " 2.2 0",
+            rotation: "0 " + -side * 90 + " 0",
           });
           addText(root, {
-            value: zone[0],
-            position: zone[1].split(" ")[0] + " 0.16 " + zone[1].split(" ")[2],
-            rotation: "-90 0 0",
+            value: title,
+            position: "0 0.45 0",
             align: "center",
-            color: "#ffffff",
-            width: "3.5",
+            color: "#42A5F5",
+            width: "5.5",
           });
-        });
-
-        var controlPanel = appendEl(root, "a-entity", {
-          id: "cpu-controls",
-          position: side * 3.45 + " 1.8 0",
-          rotation: "0 " + -side * 90 + " 0",
-        });
-        addText(controlPanel, {
-          value: "Planificador",
-          position: "0 0.95 0",
-          align: "center",
-          color: "#BBDEFB",
-          width: "4",
-        });
-        [
-          ["cpu-btn-fcfs", "-1.15 0.55 0", "cpu-fcfs", "#1565C0", "FCFS"],
-          ["cpu-btn-sjf", "-0.38 0.55 0", "cpu-sjf", "#00897B", "SJF"],
-          ["cpu-btn-srtf", "0.38 0.55 0", "cpu-srtf", "#7B1FA2", "SRTF"],
-          ["cpu-btn-rr", "1.15 0.55 0", "cpu-rr", "#EF6C00", "RR"],
-          ["cpu-btn-start", "-1.15 0.12 0", "cpu-start", "#2E7D32", "Iniciar"],
-          ["cpu-btn-pause", "-0.38 0.12 0", "cpu-pause", "#1976D2", "Pausar"],
-          ["cpu-btn-reset", "0.38 0.12 0", "cpu-reset", "#C62828", "Reset"],
-          ["cpu-btn-qminus", "-0.38 -0.3 0", "cpu-quantum-minus", "#455A64", "Q -"],
-          ["cpu-btn-qplus", "0.38 -0.3 0", "cpu-quantum-plus", "#455A64", "Q +"],
-        ].forEach(function (btn) {
-          addButton(controlPanel, {
-            id: btn[0],
-            position: btn[1],
-            action: btn[2],
-            color: btn[3],
-            label: btn[4],
-            width: "0.68",
-            height: "0.26",
-            depth: "0.06",
-            textWidth: "2.1",
-            textPosition: "0 0 0.04",
-          });
-        });
-
-        var metrics = appendEl(root, "a-entity", {
-          id: "cpu-metrics-panel",
-          position: side * 3.45 + " 1.85 1.65",
-          rotation: "0 " + -side * 90 + " 0",
-        });
-        appendEl(metrics, "a-plane", {
-          width: "2.35",
-          height: "1.5",
-          color: "#102027",
-          opacity: "0.82",
-        });
-        addText(metrics, {
-          value: "Metricas",
-          position: "0 0.58 0.02",
-          align: "center",
-          color: "#80DEEA",
-          width: "3",
-        });
-        addText(metrics, {
-          id: "cpu-metrics-text",
-          value: "",
-          position: "-1.05 0.32 0.03",
-          align: "left",
-          color: "#ffffff",
-          width: "2.45",
-        });
-
-        var gantt = appendEl(root, "a-entity", {
-          id: "cpu-gantt-panel",
-          position: side * 3.45 + " 0.95 -1.45",
-          rotation: "0 " + -side * 90 + " 0",
-        });
-        appendEl(gantt, "a-plane", {
-          width: "2.65",
-          height: "1.05",
-          color: "#1A237E",
-          opacity: "0.72",
-        });
-        addText(gantt, {
-          value: "Diagrama de Gantt",
-          position: "0 0.42 0.02",
-          align: "center",
-          color: "#E8EAF6",
-          width: "3.2",
-        });
-        appendEl(gantt, "a-entity", {
-          id: "cpu-gantt-blocks",
-          position: "-1.15 -0.02 0.04",
-        });
-
-        addText(root, {
-          id: "cpu-status-text",
-          value: "Elegí un algoritmo y pulsa Iniciar",
-          position: "0 2.25 -2.35",
-          align: "center",
-          color: "#E3F2FD",
-          width: "5.5",
-        });
-
-        appendEl(root, "a-entity", { id: "cpu-processes" });
-        setTimeout(function () {
-          resetCpuScheduler();
-        }, 0);
+        }
       }
 
       function buildCpuSchedulerContent(parent, id, posicionXYZ) {
@@ -1117,29 +1011,249 @@
         }, 0);
       }
 
-      function buildPlaceholderContent(parent, id, tipo, posicionXYZ) {
+
+
+
+      function buildFisicaContent(parent, id, posicionXYZ) {
         var side = getAulaSide(posicionXYZ);
-        var title = tipo === "fisica" ? "Simulador de Fisica" : "Simulador de CPU";
-        var accent = tipo === "fisica" ? "#4CAF50" : "#42A5F5";
-        var root = appendEl(parent, "a-entity", {
-          id: id + "-sim-root",
+        var menu = appendEl(parent, "a-entity", {
+          id: id + "-fisica-menu",
           position: side * 3.2 + " 2.2 0",
           rotation: "0 " + -side * 90 + " 0",
         });
-        addText(root, {
-          value: title,
-          position: "0 0.45 0",
+        addText(menu, {
+          value: "Simulador de Física",
+          position: "0 0.8 0",
           align: "center",
-          color: accent,
-          width: "5.5",
+          color: "#4CAF50",
+          width: "6",
         });
-        addText(root, {
-          id: id + "-placeholder",
-          value: "Espacio listo para montar contenido interactivo",
-          position: "0 0.05 0",
+        addText(menu, {
+          value: "Selecciona un tipo de movimiento:",
+          position: "0 0.5 0",
           align: "center",
           color: "#fff",
-          width: "4.2",
+          width: "4",
+        });
+
+        // Botón MRU
+        addButton(menu, {
+          id: "btn-mru",
+          position: "-0.7 0 0",
+          action: "show-mru",
+          color: "#2196F3",
+          label: "MRU",
+          textColor: "#fff",
+          textWidth: "2.5",
+        });
+
+        // Botón MRUV
+        addButton(menu, {
+          id: "btn-mruv",
+          position: "0.7 0 0",
+          action: "show-mruv",
+          color: "#FF9800",
+          label: "MRUV",
+          textColor: "#fff",
+          textWidth: "2.5",
+        });
+
+        // Entidad para mostrar el ejercicio MRUV
+        var mruvDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mruv-display",
+          visible: false,
+          position: side * 3.0 + " 2.6 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        addText(mruvDisplay, {
+          id: "mruv-title",
+          value: "Ejercicio 2: MRUV",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#FF9800",
+          width: "5.5",
+          scale: "1.0 1.0 1.0",
+        });
+
+        addText(mruvDisplay, {
+          id: "mruv-enunciado",
+          value: "Un auto esta detenido frente a un semaforo en rojo.\nCuando la luz cambia a verde, el conductor acelera\nen linea recta por la avenida. El auto parte del\nreposo con una aceleracion constante de 2,5 m/s²\ndurante un tiempo de 4 segundos. Calcula:",
+          position: "-1 -0.3 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addText(mruvDisplay, {
+          id: "mruv-pregunta",
+          value: "1. ¿Que velocidad alcanza?\n2. ¿Que distancia recorre?",
+          position: "-1 -1.05 0",
+          align: "left",
+          color: "#FFEB3B",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addButton(mruvDisplay, {
+          id: "btn-simular-mruv",
+          position: "0 -1.4 0",
+          action: "simulate-mruv",
+          color: "#4CAF50",
+          label: "▶ SIMULAR",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        addButton(mruvDisplay, {
+          id: "btn-back-mruv",
+          position: "0 -1.9 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        // Entidad para la simulación (auto animado)
+        var simulationArea = appendEl(parent, "a-entity", {
+          id: id + "-mruv-simulation",
+          visible: false,
+          position: side * 3.2 + " 1.3 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        // Auto (representado como un cubo + cilindro)
+        var car = appendEl(simulationArea, "a-entity", {
+          id: "mruv-car",
+          position: "-1.5 0 0",
+        });
+
+        appendEl(car, "a-box", {
+          width: "0.4",
+          height: "0.25",
+          depth: "0.8",
+          color: "#E53935",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "-0.15 -0.15 -0.25",
+          rotation: "90 0 0",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "0.15 -0.15 -0.25",
+          rotation: "90 0 0",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "-0.15 -0.15 0.25",
+          rotation: "90 0 0",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "0.15 -0.15 0.25",
+          rotation: "90 0 0",
+        });
+
+        // Línea de referencia en el suelo
+        appendEl(simulationArea, "a-plane", {
+          width: "5",
+          height: "0.02",
+          color: "#666",
+          position: "0 -0.3 0",
+          rotation: "-90 0 0",
+        });
+
+        // Marcas de distancia
+        for (var i = 0; i <= 5; i++) {
+          appendEl(simulationArea, "a-box", {
+            width: "0.1",
+            height: "0.2",
+            depth: "0.02",
+            color: "#666",
+            position: (-2 + i) + " -0.25 0",
+          });
+          addText(simulationArea, {
+            value: (i * 4) + "m",
+            position: (-2 + i) + " 0.1 0",
+            align: "center",
+            color: "#888",
+            width: "1.5",
+            scale: "0.35 0.35 0.35",
+          });
+        }
+
+        // Texto de información durante la simulación
+        addText(simulationArea, {
+          id: "mruv-sim-info",
+          value: "Presionando...",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#FFEB3B",
+          width: "4.5",
+          scale: "0.75 0.75 0.75",
+        });
+
+        // Entidad para mostrar resultados
+        var resultsDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mruv-results",
+          visible: false,
+          position: "0 0 0",
+        });
+
+        addText(resultsDisplay, {
+          id: "results-title",
+          value: "Resultados de la Simulación",
+          position: side * 3.8+ " 3 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "center",
+          color: "#4CAF50",
+          width: "6",
+        });
+
+        addText(resultsDisplay, {
+          id: "results-content",
+          value: "",
+          position: side * 3.8 + " 2.2 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.75 0.75 0.75",
+        });
+
+        addButton(resultsDisplay, {
+          id: "btn-back-results",
+          position: side * 3.8 + " 0.4 0",
+          rotation: "0 " + -side * 90 + " 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "0.9",
         });
       }
 
@@ -2721,6 +2835,740 @@
           algorithmTimeouts = [];
           scheduleNextAlgorithmStep(250);
         }
+      }
+
+      // ===== CPU SCHEDULER VR LAB (AULA 3) =====
+
+      var cpuTimeouts = [];
+      var cpuSchedulerState = null;
+      var cpuColors = {
+        new: "#9E9E9E",
+        ready: "#1E88E5",
+        running: "#43A047",
+        waiting: "#FDD835",
+        terminated: "#E53935",
+      };
+      var cpuAlgorithmNames = {
+        fcfs: "FCFS",
+        sjf: "SJF no preemptivo",
+        srtf: "SRTF preemptivo",
+        rr: "Round Robin",
+      };
+
+      var cpuProcessTemplate = [
+        { id: "P1", arrivalTime: 0, burstTime: 8, ioStart: 3, ioDuration: 2 },
+        { id: "P2", arrivalTime: 1, burstTime: 4, ioStart: null, ioDuration: 0 },
+        { id: "P3", arrivalTime: 2, burstTime: 9, ioStart: 4, ioDuration: 3 },
+        { id: "P4", arrivalTime: 3, burstTime: 5, ioStart: null, ioDuration: 0 },
+      ];
+
+      function cloneCpuProcesses() {
+        return cpuProcessTemplate.map(function (p) {
+          return {
+            id: p.id,
+            arrivalTime: p.arrivalTime,
+            burstTime: p.burstTime,
+            ioStart: p.ioStart,
+            ioDuration: p.ioDuration,
+            remainingTime: p.burstTime,
+            executedTime: 0,
+            ioRemaining: 0,
+            ioDone: false,
+            state: "new",
+            startTime: null,
+            completionTime: null,
+            waitingTime: 0,
+            responseTime: null,
+            entity: null,
+          };
+        });
+      }
+
+      function ensureCpuState() {
+        if (cpuSchedulerState) return cpuSchedulerState;
+        cpuSchedulerState = {
+          algorithm: "fcfs",
+          quantum: 2,
+          time: 0,
+          readyQueue: [],
+          waitingList: [],
+          current: null,
+          currentQuantum: 0,
+          processes: cloneCpuProcesses(),
+          gantt: [],
+          running: false,
+          paused: false,
+          finished: false,
+          busyTicks: 0,
+        };
+        return cpuSchedulerState;
+      }
+
+      function clearCpuTimeouts() {
+        cpuTimeouts.forEach(clearTimeout);
+        cpuTimeouts = [];
+      }
+
+      function scheduleCpuTimeout(cb, delay) {
+        var id = setTimeout(function () {
+          cpuTimeouts = cpuTimeouts.filter(function (t) {
+            return t !== id;
+          });
+          cb();
+        }, delay);
+        cpuTimeouts.push(id);
+      }
+
+      function cpuZonePosition(state, index) {
+        var map = {
+          new: [-3.0 + index * 0.35, 0.34, 1.55],
+          ready: [-2.75 + index * 0.35, 0.34, -1.45],
+          running: [0, 1.18, 0.03],
+          waiting: [1.85 + index * 0.35, 0.34, -1.45],
+          terminated: [2.3 + index * 0.35, 0.34, 1.55],
+        };
+        return map[state] || [0, 0.36, 0];
+      }
+
+      function createCpuProcessEntity(proc, index) {
+        var parent = document.getElementById("cpu-processes");
+        if (!parent) return null;
+        var pos = cpuZonePosition("new", index);
+        var el = document.createElement("a-entity");
+        el.setAttribute("id", "cpu-proc-" + proc.id);
+        el.setAttribute("position", pos.join(" "));
+        el.setAttribute("class", "cpu-process");
+
+        var body = document.createElement("a-box");
+        body.setAttribute("class", "cpu-process-body");
+        body.setAttribute("width", "0.42");
+        body.setAttribute("height", "0.42");
+        body.setAttribute("depth", "0.42");
+        body.setAttribute("color", cpuColors.new);
+        body.setAttribute("shadow", "cast: true; receive: true");
+        el.appendChild(body);
+
+        var text = document.createElement("a-text");
+        text.setAttribute("value", proc.id);
+        text.setAttribute("align", "center");
+        text.setAttribute("color", "#ffffff");
+        text.setAttribute("width", "2");
+        text.setAttribute("position", "0 0 0.23");
+        el.appendChild(text);
+
+        parent.appendChild(el);
+        return el;
+      }
+
+      function moveCpuProcess(proc, state, index, preempted) {
+        if (!proc || !proc.entity) return;
+        proc.state = state;
+        var pos = cpuZonePosition(state, index || 0);
+        var body = proc.entity.querySelector(".cpu-process-body");
+        if (body) body.setAttribute("color", cpuColors[state]);
+        var scalePulse = preempted ? 1.28 : 1;
+        proc.entity.setAttribute("scale", scalePulse + " " + scalePulse + " " + scalePulse);
+        if (window.gsap) {
+          gsap.to(proc.entity.object3D.position, {
+            x: pos[0],
+            y: pos[1],
+            z: pos[2],
+            duration: preempted ? 1.7 : 1.35,
+            ease: "power2.inOut",
+            onComplete: function () {
+              proc.entity.setAttribute("position", pos.join(" "));
+              proc.entity.setAttribute("scale", "1 1 1");
+            },
+          });
+        } else {
+          proc.entity.setAttribute("position", pos.join(" "));
+          proc.entity.setAttribute("scale", "1 1 1");
+        }
+      }
+
+      function layoutCpuQueues() {
+        var s = ensureCpuState();
+        s.processes.forEach(function (p, i) {
+          if (p.state === "new") moveCpuProcess(p, "new", i);
+        });
+        s.readyQueue.forEach(function (p, i) {
+          moveCpuProcess(p, "ready", i);
+        });
+        s.waitingList.forEach(function (p, i) {
+          moveCpuProcess(p, "waiting", i);
+        });
+        s.processes
+          .filter(function (p) {
+            return p.state === "terminated";
+          })
+          .forEach(function (p, i) {
+            moveCpuProcess(p, "terminated", i);
+          });
+        if (s.current) moveCpuProcess(s.current, "running", 0);
+      }
+
+      function updateCpuButtons() {
+        var s = ensureCpuState();
+        var pauseLabel = document.querySelector("#cpu-btn-pause a-text");
+        if (pauseLabel) pauseLabel.setAttribute("value", s.paused ? "Reanudar" : "Pausar");
+        ["fcfs", "sjf", "srtf", "rr"].forEach(function (alg) {
+          var box = document.querySelector("#cpu-btn-" + alg + " a-box");
+          if (box) {
+            box.setAttribute("opacity", s.algorithm === alg ? "1" : "0.72");
+          }
+        });
+      }
+
+      function updateCpuMetrics() {
+        var s = ensureCpuState();
+        var completed = s.processes.filter(function (p) {
+          return p.state === "terminated";
+        });
+        var avg = function (field) {
+          if (!completed.length) return "0.0";
+          var sum = completed.reduce(function (acc, p) {
+            return acc + (p[field] || 0);
+          }, 0);
+          return (sum / completed.length).toFixed(1);
+        };
+        var throughput = s.time > 0 ? (completed.length / s.time).toFixed(2) : "0.00";
+        var utilization = s.time > 0 ? ((s.busyTicks / s.time) * 100).toFixed(0) : "0";
+        var text =
+          "Tiempo actual: " + s.time +
+          "\nAlgoritmo: " + cpuAlgorithmNames[s.algorithm] +
+          "\nQuantum: " + (s.algorithm === "rr" ? s.quantum : "-") +
+          "\nTiempo de espera prom. (WT): " + avg("waitingTime") +
+          "\nTiempo de retorno prom. (TAT): " + avg("turnaroundTime") +
+          "\nTiempo de respuesta prom.: " + avg("responseTime") +
+          "\nProcesos por segundo: " + throughput +
+          "\nUtilizacion de CPU: " + utilization + "%";
+        var metrics = document.getElementById("cpu-metrics-text");
+        if (metrics) metrics.setAttribute("value", text);
+        var status = document.getElementById("cpu-status-text");
+        if (status) {
+          var current = s.current ? "Ejecutando " + s.current.id : "CPU libre";
+          if (s.finished) current = "Simulacion finalizada";
+          status.setAttribute("value", current);
+        }
+        var cpuCurrent = document.getElementById("cpu-current-label");
+        if (cpuCurrent) {
+          cpuCurrent.setAttribute("value", s.current ? s.current.id : "-");
+        }
+        var table = document.getElementById("cpu-process-table-text");
+        if (table) table.setAttribute("value", buildCpuProcessTableText());
+        updateCpuButtons();
+      }
+
+      function getCpuStateLabel(state) {
+        return {
+          new: "Nuevo",
+          ready: "Listo",
+          running: "Ejecutando",
+          waiting: "Espera/E/S",
+          terminated: "Terminado",
+        }[state] || "-";
+      }
+
+      function buildCpuProcessTableText() {
+        var s = ensureCpuState();
+        var lines = ["Proceso | Llegada | Rafaga | E/S ini | E/S dur | Estado"];
+        s.processes.forEach(function (p) {
+          lines.push(
+            p.id +
+              " | " +
+              p.arrivalTime +
+              " | " +
+              p.burstTime +
+              " | " +
+              (p.ioStart === null ? "-" : p.ioStart) +
+              " | " +
+              (p.ioDuration || "-") +
+              " | " +
+              getCpuStateLabel(p.state),
+          );
+        });
+        return lines.join("\n");
+      }
+
+      function resetCpuGantt() {
+        var parent = document.getElementById("cpu-gantt-blocks");
+        if (!parent) return;
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+        renderCpuGanttScale();
+        renderCpuGanttLegend();
+      }
+
+      function renderCpuGanttScale() {
+        var parent = document.getElementById("cpu-gantt-scale");
+        if (!parent) return;
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+        for (var t = 0; t <= 30; t += 5) {
+          var x = t * 0.15;
+          appendEl(parent, "a-box", {
+            width: "0.012",
+            height: "0.12",
+            depth: "0.02",
+            position: x + " -0.07 0",
+            color: "#B0BEC5",
+          });
+          addText(parent, {
+            value: String(t),
+            position: x + " 0.03 0.02",
+            align: "center",
+            color: "#ECEFF1",
+            width: "1.2",
+          });
+        }
+        addText(parent, {
+          value: "Tiempo ->",
+          position: "4.8 0.03 0.02",
+          align: "center",
+          color: "#ECEFF1",
+          width: "1.4",
+        });
+      }
+
+      function renderCpuGanttLegend() {
+        var parent = document.getElementById("cpu-gantt-legend");
+        if (!parent) return;
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+        var colors = getCpuProcessColors();
+        ["P1", "P2", "P3", "P4"].forEach(function (pid, i) {
+          var x = i * 0.5;
+          appendEl(parent, "a-box", {
+            width: "0.12",
+            height: "0.12",
+            depth: "0.03",
+            position: x + " 0 0",
+            color: colors[pid],
+          });
+          addText(parent, {
+            value: pid,
+            position: x + 0.16 + " 0 0.02",
+            align: "left",
+            color: "#E3F2FD",
+            width: "1.4",
+          });
+        });
+      }
+
+      function getCpuProcessColors() {
+        return { P1: "#42A5F5", P2: "#66BB6A", P3: "#AB47BC", P4: "#FFA726" };
+      }
+
+      function addCpuGanttBlock(pid, start, duration) {
+        var parent = document.getElementById("cpu-gantt-blocks");
+        if (!parent) return;
+        var colors = getCpuProcessColors();
+        var scale = 0.15;
+        var width = Math.max(0.11, duration * scale);
+        var x = start * scale + width / 2;
+        var block = document.createElement("a-entity");
+        block.setAttribute("position", x + " 0 0");
+        var box = document.createElement("a-box");
+        box.setAttribute("width", width);
+        box.setAttribute("height", "0.26");
+        box.setAttribute("depth", "0.05");
+        box.setAttribute("color", colors[pid] || "#B0BEC5");
+        block.appendChild(box);
+        var label = document.createElement("a-text");
+        label.setAttribute("value", pid);
+        label.setAttribute("align", "center");
+        label.setAttribute("color", "#ffffff");
+        label.setAttribute("width", "1.6");
+        label.setAttribute("position", "0 0 0.04");
+        block.appendChild(label);
+        parent.appendChild(block);
+      }
+
+      function recordCpuExecution(pid) {
+        var s = ensureCpuState();
+        var last = s.gantt[s.gantt.length - 1];
+        if (last && last.pid === pid && last.start + last.duration === s.time) {
+          last.duration++;
+          resetCpuGantt();
+          s.gantt.forEach(function (b) {
+            addCpuGanttBlock(b.pid, b.start, b.duration);
+          });
+        } else {
+          var block = { pid: pid, start: s.time, duration: 1 };
+          s.gantt.push(block);
+          addCpuGanttBlock(block.pid, block.start, block.duration);
+        }
+      }
+
+      function resetCpuScheduler() {
+        clearCpuTimeouts();
+        cpuSchedulerState = {
+          algorithm: cpuSchedulerState ? cpuSchedulerState.algorithm : "fcfs",
+          quantum: cpuSchedulerState ? cpuSchedulerState.quantum : 2,
+          time: 0,
+          readyQueue: [],
+          waitingList: [],
+          current: null,
+          currentQuantum: 0,
+          processes: cloneCpuProcesses(),
+          gantt: [],
+          running: false,
+          paused: false,
+          finished: false,
+          busyTicks: 0,
+        };
+        resetCpuGantt();
+        var parent = document.getElementById("cpu-processes");
+        if (parent) {
+          while (parent.firstChild) parent.removeChild(parent.firstChild);
+          cpuSchedulerState.processes.forEach(function (p, i) {
+            p.entity = createCpuProcessEntity(p, i);
+          });
+        }
+        layoutCpuQueues();
+        updateCpuMetrics();
+      }
+
+      function selectCpuAlgorithm(algorithm) {
+        var s = ensureCpuState();
+        s.algorithm = algorithm;
+        resetCpuScheduler();
+      }
+
+      function changeCpuQuantum(delta) {
+        var s = ensureCpuState();
+        s.quantum = Math.max(1, Math.min(8, s.quantum + delta));
+        updateCpuMetrics();
+      }
+
+      function startCpuScheduler() {
+        var s = ensureCpuState();
+        if (s.finished) resetCpuScheduler();
+        s = ensureCpuState();
+        if (s.running && !s.paused) return;
+        s.running = true;
+        s.paused = false;
+        updateCpuMetrics();
+        scheduleCpuTimeout(runCpuTick, 500);
+      }
+
+      function toggleCpuPause() {
+        var s = ensureCpuState();
+        if (!s.running || s.finished) return;
+        s.paused = !s.paused;
+        clearCpuTimeouts();
+        updateCpuMetrics();
+        if (!s.paused) scheduleCpuTimeout(runCpuTick, 500);
+      }
+
+      function enqueueCpuReady(proc, preempted) {
+        var s = ensureCpuState();
+        if (s.readyQueue.indexOf(proc) === -1) s.readyQueue.push(proc);
+        moveCpuProcess(proc, "ready", s.readyQueue.indexOf(proc), preempted);
+      }
+
+      function chooseNextCpuProcess() {
+        var s = ensureCpuState();
+        if (!s.readyQueue.length) return null;
+
+        // FCFS y Round Robin toman el primer proceso de la cola visible.
+        if (s.algorithm === "fcfs" || s.algorithm === "rr") {
+          return s.readyQueue.shift();
+        }
+
+        // SJF no preemptivo: al liberarse la CPU elige la menor rafaga restante.
+        // No desaloja al proceso que ya esta ejecutando.
+        var bestIndex = 0;
+        for (var i = 1; i < s.readyQueue.length; i++) {
+          if (s.readyQueue[i].remainingTime < s.readyQueue[bestIndex].remainingTime) {
+            bestIndex = i;
+          }
+        }
+        return s.readyQueue.splice(bestIndex, 1)[0];
+      }
+
+      function applySrtfPreemption() {
+        var s = ensureCpuState();
+        if (s.algorithm !== "srtf" || !s.current || !s.readyQueue.length) return;
+        var shortest = s.readyQueue.reduce(function (best, p) {
+          return p.remainingTime < best.remainingTime ? p : best;
+        }, s.readyQueue[0]);
+        // SRTF preemptivo: si un listo tiene menor tiempo restante, expulsa
+        // visualmente al proceso actual y lo devuelve a la cola de listos.
+        if (shortest.remainingTime < s.current.remainingTime) {
+          s.readyQueue = s.readyQueue.filter(function (p) {
+            return p !== shortest;
+          });
+          enqueueCpuReady(s.current, true);
+          s.current = shortest;
+          s.currentQuantum = 0;
+        }
+      }
+
+      function finishCpuProcess(proc) {
+        var s = ensureCpuState();
+        proc.completionTime = s.time + 1;
+        proc.turnaroundTime = proc.completionTime - proc.arrivalTime;
+        moveCpuProcess(proc, "terminated", 0);
+        s.current = null;
+        s.currentQuantum = 0;
+      }
+
+      function sendCpuProcessToIo(proc) {
+        var s = ensureCpuState();
+        proc.ioDone = true;
+        // La E/S se descuenta al inicio de cada tick; se suma una unidad para
+        // que una duracion de 2 ocupe dos intervalos completos fuera de la CPU.
+        proc.ioRemaining = proc.ioDuration + 1;
+        s.waitingList.push(proc);
+        moveCpuProcess(proc, "waiting", s.waitingList.length - 1);
+        s.current = null;
+        s.currentQuantum = 0;
+      }
+
+      function runCpuTick() {
+        var s = ensureCpuState();
+        if (!s.running || s.paused || s.finished) return;
+
+        s.processes.forEach(function (p) {
+          if (p.state === "new" && p.arrivalTime <= s.time) {
+            enqueueCpuReady(p, false);
+          }
+        });
+
+        s.waitingList.slice().forEach(function (p) {
+          p.ioRemaining--;
+          if (p.ioRemaining <= 0) {
+            s.waitingList = s.waitingList.filter(function (wp) {
+              return wp !== p;
+            });
+            enqueueCpuReady(p, false);
+          }
+        });
+
+        applySrtfPreemption();
+
+        if (!s.current) {
+          s.current = chooseNextCpuProcess();
+          s.currentQuantum = 0;
+        }
+
+        if (s.current) {
+          if (s.current.startTime === null) {
+            s.current.startTime = s.time;
+            s.current.responseTime = s.current.startTime - s.current.arrivalTime;
+          }
+          moveCpuProcess(s.current, "running", 0);
+        }
+
+        s.readyQueue.forEach(function (p) {
+          p.waitingTime++;
+        });
+
+        if (s.current) {
+          s.busyTicks++;
+          s.current.executedTime++;
+          s.current.remainingTime--;
+          s.currentQuantum++;
+          recordCpuExecution(s.current.id);
+
+          if (s.current.remainingTime <= 0) {
+            finishCpuProcess(s.current);
+          } else if (
+            s.current.ioStart !== null &&
+            !s.current.ioDone &&
+            s.current.executedTime === s.current.ioStart
+          ) {
+            sendCpuProcessToIo(s.current);
+          } else if (s.algorithm === "rr" && s.currentQuantum >= s.quantum) {
+            var preempted = s.current;
+            s.current = null;
+            s.currentQuantum = 0;
+            // Round Robin: al consumir quantum sin terminar, vuelve al final
+            // de la cola de listos con una animacion de expulsion.
+            enqueueCpuReady(preempted, true);
+          }
+        }
+
+        s.time++;
+        layoutCpuQueues();
+        updateCpuMetrics();
+
+        if (
+          s.processes.every(function (p) {
+            return p.state === "terminated";
+          })
+        ) {
+          s.finished = true;
+          s.running = false;
+          updateCpuMetrics();
+          return;
+        }
+
+        scheduleCpuTimeout(runCpuTick, 1600);
+      }
+
+
+      // ===== FUNCIONES DE FÍSICA/MRUV =====
+
+      function backToFisicaMenu() {
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var menu = aula4.querySelector("#aula4-fisica-menu");
+        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
+        var simulation = aula4.querySelector("#aula4-mruv-simulation");
+        var results = aula4.querySelector("#aula4-mruv-results");
+
+        if (menu) menu.setAttribute("visible", true);
+        if (mruvDisplay) mruvDisplay.setAttribute("visible", false);
+        if (simulation) simulation.setAttribute("visible", false);
+        if (results) results.setAttribute("visible", false);
+      }
+
+      function showMRUPlaceholder() {
+        console.log("📚 MRU (Movimiento Rectilíneo Uniforme) - Próximamente");
+        // Placeholder para futuro desarrollo de MRU
+      }
+
+      function showMRUVExercise() {
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var menu = aula4.querySelector("#aula4-fisica-menu");
+        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
+
+        if (menu) menu.setAttribute("visible", false);
+        if (mruvDisplay) mruvDisplay.setAttribute("visible", true);
+      }
+
+      var mruvSimulationRunning = false;
+      var mruvSimulationStartTime = 0;
+      var mruvAnimationId = null;
+
+      function simulateMRUV() {
+        if (mruvSimulationRunning) return;
+
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
+        var simulation = aula4.querySelector("#aula4-mruv-simulation");
+        var results = aula4.querySelector("#aula4-mruv-results");
+        var car = aula4.querySelector("#mruv-car");
+        var simInfo = aula4.querySelector("#mruv-sim-info");
+
+        if (!simulation || !car) return;
+
+        // Ocultar pantalla de ejercicio y mostrar simulación
+        if (mruvDisplay) mruvDisplay.setAttribute("visible", false);
+        if (simulation) simulation.setAttribute("visible", true);
+
+        // Parámetros de la simulación (según el ejercicio)
+        var v0 = 0; // velocidad inicial en m/s
+        var a = 2.5; // aceleración en m/s²
+        var t_total = 4; // tiempo total en segundos
+        var scale = 0.20; // escala de posición en la escena (1 metro = 0.20 unidades)
+
+        // Posición inicial del auto
+        var initialX = -2;
+
+        // Función de movimiento: x(t) = x0 + v0*t + 0.5*a*t²
+        function getMRUVPosition(t) {
+          return initialX + v0 * t + 0.5 * a * t * t * scale;
+        }
+
+        // Función para actualizar la información
+        function updateMRUVInfo(t) {
+          var v = v0 + a * t; // velocidad actual
+          var x = v0 * t + 0.5 * a * t * t; // distancia recorrida
+          var info =
+            "Tiempo: " +
+            t.toFixed(2) +
+            "s | Velocidad: " +
+            v.toFixed(2) +
+            "m/s | Distancia: " +
+            x.toFixed(2) +
+            "m";
+          if (simInfo) simInfo.setAttribute("value", info);
+        }
+
+        // Función de animación
+        function animateMRUV(currentTime) {
+          if (!mruvSimulationRunning) return;
+
+          if (mruvSimulationStartTime === 0) {
+            mruvSimulationStartTime = currentTime;
+          }
+
+          var elapsed = (currentTime - mruvSimulationStartTime) / 1000; // convertir a segundos
+
+          if (elapsed <= t_total) {
+            var newX = getMRUVPosition(elapsed);
+            car.setAttribute("position", newX + " 0 0");
+            updateMRUVInfo(elapsed);
+            mruvAnimationId = requestAnimationFrame(animateMRUV);
+          } else {
+            // Simulación completada
+            mruvSimulationRunning = false;
+            car.setAttribute("position", getMRUVPosition(t_total) + " 0 0");
+            updateMRUVInfo(t_total);
+
+            // Mostrar resultados
+            setTimeout(function () {
+              showMRUVResults();
+            }, 1000);
+          }
+        }
+
+        mruvSimulationRunning = true;
+        mruvSimulationStartTime = 0;
+        car.setAttribute("position", initialX + " 0 0");
+        updateMRUVInfo(0);
+
+        // Iniciar animación
+        if (mruvAnimationId) cancelAnimationFrame(mruvAnimationId);
+        mruvAnimationId = requestAnimationFrame(animateMRUV);
+      }
+
+      function showMRUVResults() {
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var simulation = aula4.querySelector("#aula4-mruv-simulation");
+        var results = aula4.querySelector("#aula4-mruv-results");
+        var resultsContent = aula4.querySelector("#results-content");
+
+        if (simulation) simulation.setAttribute("visible", false);
+        if (results) results.setAttribute("visible", true);
+
+        // Parámetros del ejercicio
+        var v0 = 0;
+        var a = 2.5;
+        var t = 4;
+
+        // Cálculos
+        var vf = v0 + a * t; // velocidad final
+        var x = v0 * t + 0.5 * a * t * t; // distancia recorrida
+        var vfKmh = vf * 3.6; // convertir a km/h
+
+        // Formular respuestas
+        var resultsText =
+          "RESPUESTAS:\n\n" +
+          "1. Velocidad final:\n" +
+          "   vf = v0 + a·t\n" +
+          "   vf = 0 + 2,5 × 4\n" +
+          "   vf = " +
+          vf.toFixed(2) +
+          " m/s (" +
+          vfKmh.toFixed(2) +
+          " km/h)\n\n" +
+          "2. Distancia recorrida:\n" +
+          "   x = v0·t + ½·a·t²\n" +
+          "   x = 0 + ½ × 2,5 × 4²\n" +
+          "   x = ½ × 2,5 × 16\n" +
+          "   x = " +
+          x.toFixed(2) +
+          " metros";
+
+        if (resultsContent) resultsContent.setAttribute("value", resultsText);
       }
 
       // ===== EVENT LISTENERS =====
