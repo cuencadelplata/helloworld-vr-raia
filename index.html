@@ -134,18 +134,6 @@
             case "slow-algo":
               slowAlgorithm();
               break;
-            case "show-mru":
-              showMRUPlaceholder();
-              break;
-            case "show-mruv":
-              showMRUVExercise();
-              break;
-            case "simulate-mruv":
-              simulateMRUV();
-              break;
-            case "back-fisica":
-              backToFisicaMenu();
-              break;
           }
         },
       });
@@ -629,277 +617,529 @@
         });
       }
 
-      function buildPlaceholderContent(parent, id, tipo, posicionXYZ) {
-        if (tipo === "fisica") {
-          buildFisicaContent(parent, id, posicionXYZ);
-        } else {
-          // CPU o placeholder genérico
-          var side = getAulaSide(posicionXYZ);
-          var title = "Simulador de CPU";
-          var accent = "#42A5F5";
-          var root = appendEl(parent, "a-entity", {
-            id: id + "-sim-root",
-            position: side * 3.2 + " 2.2 0",
-            rotation: "0 " + -side * 90 + " 0",
+      function buildCpuSchedulerContent(parent, id, posicionXYZ) {
+        var side = getAulaSide(posicionXYZ);
+        var root = appendEl(parent, "a-entity", {
+          id: "cpu-lab",
+          position: "0 0.03 0",
+        });
+
+        addText(root, {
+          value: "Laboratorio de Planificacion de CPU",
+          position: side * 3.45 + " 2.85 -1.9",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "center",
+          color: "#42A5F5",
+          width: "5.2",
+        });
+
+        appendEl(root, "a-box", {
+          id: "cpu-machine",
+          position: "0 0.85 0",
+          width: "1.2",
+          height: "1.25",
+          depth: "1.2",
+          color: "#263238",
+          metalness: "0.25",
+          roughness: "0.45",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(root, "a-box", {
+          position: "0 1.52 0.02",
+          width: "1.0",
+          height: "0.08",
+          depth: "1.0",
+          color: "#4FC3F7",
+          opacity: "0.65",
+        });
+        addText(root, {
+          value: "CPU",
+          position: "0 1.58 0.64",
+          align: "center",
+          color: "#E1F5FE",
+          width: "3",
+        });
+
+        [
+          ["Cola de Listos", "-2.6 0.08 -1.6", "#1E88E5"],
+          ["Nuevo", "-2.7 0.08 1.6", "#9E9E9E"],
+          ["E/S", "2.45 0.08 -1.45", "#FDD835"],
+          ["Terminados", "2.55 0.08 1.55", "#E53935"],
+        ].forEach(function (zone) {
+          appendEl(root, "a-plane", {
+            position: zone[1],
+            rotation: "-90 0 0",
+            width: "2.0",
+            height: "0.9",
+            color: zone[2],
+            opacity: "0.28",
           });
           addText(root, {
-            value: title,
-            position: "0 0.45 0",
+            value: zone[0],
+            position: zone[1].split(" ")[0] + " 0.16 " + zone[1].split(" ")[2],
+            rotation: "-90 0 0",
             align: "center",
-            color: accent,
-            width: "5.5",
+            color: "#ffffff",
+            width: "3.5",
           });
-          addText(root, {
-            id: id + "-placeholder",
-            value: "Espacio listo para montar contenido interactivo",
-            position: "0 0.05 0",
-            align: "center",
-            color: "#fff",
-            width: "4.2",
+        });
+
+        var controlPanel = appendEl(root, "a-entity", {
+          id: "cpu-controls",
+          position: side * 3.45 + " 1.8 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+        addText(controlPanel, {
+          value: "Planificador",
+          position: "0 0.95 0",
+          align: "center",
+          color: "#BBDEFB",
+          width: "4",
+        });
+        [
+          ["cpu-btn-fcfs", "-1.15 0.55 0", "cpu-fcfs", "#1565C0", "FCFS"],
+          ["cpu-btn-sjf", "-0.38 0.55 0", "cpu-sjf", "#00897B", "SJF"],
+          ["cpu-btn-srtf", "0.38 0.55 0", "cpu-srtf", "#7B1FA2", "SRTF"],
+          ["cpu-btn-rr", "1.15 0.55 0", "cpu-rr", "#EF6C00", "RR"],
+          ["cpu-btn-start", "-1.15 0.12 0", "cpu-start", "#2E7D32", "Iniciar"],
+          ["cpu-btn-pause", "-0.38 0.12 0", "cpu-pause", "#1976D2", "Pausar"],
+          ["cpu-btn-reset", "0.38 0.12 0", "cpu-reset", "#C62828", "Reset"],
+          ["cpu-btn-qminus", "-0.38 -0.3 0", "cpu-quantum-minus", "#455A64", "Q -"],
+          ["cpu-btn-qplus", "0.38 -0.3 0", "cpu-quantum-plus", "#455A64", "Q +"],
+        ].forEach(function (btn) {
+          addButton(controlPanel, {
+            id: btn[0],
+            position: btn[1],
+            action: btn[2],
+            color: btn[3],
+            label: btn[4],
+            width: "0.68",
+            height: "0.26",
+            depth: "0.06",
+            textWidth: "2.1",
+            textPosition: "0 0 0.04",
           });
-        }
+        });
+
+        var metrics = appendEl(root, "a-entity", {
+          id: "cpu-metrics-panel",
+          position: side * 3.45 + " 1.85 1.65",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+        appendEl(metrics, "a-plane", {
+          width: "2.35",
+          height: "1.5",
+          color: "#102027",
+          opacity: "0.82",
+        });
+        addText(metrics, {
+          value: "Metricas",
+          position: "0 0.58 0.02",
+          align: "center",
+          color: "#80DEEA",
+          width: "3",
+        });
+        addText(metrics, {
+          id: "cpu-metrics-text",
+          value: "",
+          position: "-1.05 0.32 0.03",
+          align: "left",
+          color: "#ffffff",
+          width: "2.45",
+        });
+
+        var gantt = appendEl(root, "a-entity", {
+          id: "cpu-gantt-panel",
+          position: side * 3.45 + " 0.95 -1.45",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+        appendEl(gantt, "a-plane", {
+          width: "2.65",
+          height: "1.05",
+          color: "#1A237E",
+          opacity: "0.72",
+        });
+        addText(gantt, {
+          value: "Diagrama de Gantt",
+          position: "0 0.42 0.02",
+          align: "center",
+          color: "#E8EAF6",
+          width: "3.2",
+        });
+        appendEl(gantt, "a-entity", {
+          id: "cpu-gantt-blocks",
+          position: "-1.15 -0.02 0.04",
+        });
+
+        addText(root, {
+          id: "cpu-status-text",
+          value: "Elegí un algoritmo y pulsa Iniciar",
+          position: "0 2.25 -2.35",
+          align: "center",
+          color: "#E3F2FD",
+          width: "5.5",
+        });
+
+        appendEl(root, "a-entity", { id: "cpu-processes" });
+        setTimeout(function () {
+          resetCpuScheduler();
+        }, 0);
       }
 
-      function buildFisicaContent(parent, id, posicionXYZ) {
+      function buildCpuSchedulerContent(parent, id, posicionXYZ) {
         var side = getAulaSide(posicionXYZ);
-        var menu = appendEl(parent, "a-entity", {
-          id: id + "-fisica-menu",
+        var frontX = side * 3.86;
+        var frontRot = "0 " + -side * 90 + " 0";
+
+        parent.querySelectorAll(".pupitre").forEach(function (desk, i) {
+          var x = i < 3 ? -side * 3.05 : side * 3.05;
+          var z = [-2.2, 0, 2.2][i % 3];
+          desk.setAttribute("position", x + " 0 " + z);
+          desk.setAttribute("scale", "0.22 0.22 0.22");
+        });
+
+        var root = appendEl(parent, "a-entity", {
+          id: "cpu-lab",
+          position: "0 0.03 0",
+        });
+
+        function addCpuPanel(config) {
+          var panel = appendEl(root, "a-entity", {
+            id: config.id,
+            position: config.position,
+            rotation: config.rotation,
+          });
+          appendEl(panel, "a-plane", {
+            width: config.width,
+            height: config.height,
+            color: config.color || "#0F1720",
+            opacity: config.opacity || "0.88",
+            material: "side: double",
+          });
+          appendEl(panel, "a-plane", {
+            width: config.width,
+            height: "0.025",
+            position: "0 " + (config.height / 2 - 0.04) + " 0.012",
+            color: config.accent || "#42A5F5",
+            opacity: "0.9",
+          });
+          return panel;
+        }
+
+        var frontPanel = addCpuPanel({
+          id: "cpu-front-panel",
+          position: frontX + " 2.0 -0.15",
+          rotation: frontRot,
+          width: 5.8,
+          height: 2.2,
+          accent: "#64B5F6",
+        });
+        addText(frontPanel, {
+          value: "LABORATORIO DE PLANIFICACI\u00d3N DE CPU",
+          position: "0 0.88 0.03",
+          align: "center",
+          color: "#90CAF9",
+          width: "5.2",
+        });
+        addText(frontPanel, {
+          value: "Visualiza como diferentes algoritmos asignan la CPU a los procesos.",
+          position: "0 0.63 0.03",
+          align: "center",
+          color: "#E3F2FD",
+          width: "4.8",
+        });
+        addText(frontPanel, {
+          value: "DIAGRAMA DE GANTT",
+          position: "0 0.34 0.03",
+          align: "center",
+          color: "#BBDEFB",
+          width: "3.5",
+        });
+        appendEl(frontPanel, "a-plane", {
+          width: "5.0",
+          height: "0.55",
+          position: "0 0.02 0.025",
+          color: "#050B12",
+          opacity: "0.82",
+        });
+        appendEl(frontPanel, "a-entity", {
+          id: "cpu-gantt-scale",
+          position: "-2.25 0.28 0.05",
+        });
+        appendEl(frontPanel, "a-entity", {
+          id: "cpu-gantt-blocks",
+          position: "-2.25 -0.03 0.06",
+        });
+        appendEl(frontPanel, "a-entity", {
+          id: "cpu-gantt-legend",
+          position: "-2.2 -0.42 0.05",
+        });
+        addText(frontPanel, {
+          value:
+            "\u00bfQue es el Diagrama de Gantt?\nMuestra en una linea de tiempo que proceso se ejecuta en la CPU. Cada bloque representa un intervalo continuo de ejecucion.",
+          position: "0 -0.78 0.03",
+          align: "center",
+          color: "#CFD8DC",
+          width: "4.8",
+        });
+
+        var leftPanel = addCpuPanel({
+          id: "cpu-left-panel",
+          position: "0 1.85 -2.88",
+          rotation: "0 0 0",
+          width: 3.2,
+          height: 2.35,
+          accent: "#29B6F6",
+        });
+        addText(leftPanel, {
+          value: "ALGORITMOS DE PLANIFICACI\u00d3N",
+          position: "0 0.94 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3.3",
+        });
+        [
+          ["cpu-btn-fcfs", "0 0.58 0", "cpu-fcfs", "#1565C0", "FCFS"],
+          ["cpu-btn-sjf", "0 0.24 0", "cpu-sjf", "#2E7D32", "SJF"],
+          ["cpu-btn-srtf", "0 -0.1 0", "cpu-srtf", "#6A1B9A", "SRTF"],
+          ["cpu-btn-rr", "0 -0.44 0", "cpu-rr", "#EF6C00", "ROUND ROBIN"],
+        ].forEach(function (btn) {
+          addButton(leftPanel, {
+            id: btn[0],
+            position: btn[1],
+            action: btn[2],
+            color: btn[3],
+            label: btn[4],
+            width: "2.55",
+            height: "0.26",
+            depth: "0.06",
+            textWidth: "3.2",
+            textPosition: "0 0 0.04",
+          });
+        });
+
+        var controlPanel = addCpuPanel({
+          id: "cpu-controls",
+          position: "0 0.8 -2.88",
+          rotation: "0 0 0",
+          width: 3.2,
+          height: 0.9,
+          accent: "#81C784",
+        });
+        addText(controlPanel, {
+          value: "CONTROLES",
+          position: "0 0.33 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3",
+        });
+        [
+          ["cpu-btn-start", "-0.92 0.02 0", "cpu-start", "#2E7D32", "INICIAR"],
+          ["cpu-btn-pause", "0 0.02 0", "cpu-pause", "#B8860B", "PAUSAR"],
+          ["cpu-btn-reset", "0.92 0.02 0", "cpu-reset", "#C62828", "REINICIAR"],
+          ["cpu-btn-qminus", "-0.5 -0.28 0", "cpu-quantum-minus", "#1565C0", "QUANTUM -"],
+          ["cpu-btn-qplus", "0.5 -0.28 0", "cpu-quantum-plus", "#1565C0", "QUANTUM +"],
+        ].forEach(function (btn) {
+          addButton(controlPanel, {
+            id: btn[0],
+            position: btn[1],
+            action: btn[2],
+            color: btn[3],
+            label: btn[4],
+            width: "0.82",
+            height: "0.24",
+            depth: "0.06",
+            textWidth: "2.2",
+            textPosition: "0 0 0.04",
+          });
+        });
+
+        var metrics = addCpuPanel({
+          id: "cpu-metrics-panel",
+          position: "0 1.9 2.88",
+          rotation: "0 180 0",
+          width: 3.25,
+          height: 2.05,
+          accent: "#90CAF9",
+        });
+        addText(metrics, {
+          value: "M\u00c9TRICAS",
+          position: "0 0.82 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3",
+        });
+        addText(metrics, {
+          id: "cpu-metrics-text",
+          value: "",
+          position: "-1.45 0.52 0.03",
+          align: "left",
+          color: "#E3F2FD",
+          width: "3.1",
+        });
+
+        var table = addCpuPanel({
+          id: "cpu-process-table-panel",
+          position: "0 0.72 2.88",
+          rotation: "0 180 0",
+          width: 3.25,
+          height: 1.05,
+          accent: "#4FC3F7",
+        });
+        addText(table, {
+          value: "TABLA DE PROCESOS",
+          position: "0 0.39 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3",
+        });
+        addText(table, {
+          id: "cpu-process-table-text",
+          value: "",
+          position: "-1.5 0.18 0.03",
+          align: "left",
+          color: "#E0F7FA",
+          width: "3.15",
+        });
+
+        appendEl(root, "a-box", {
+          id: "cpu-machine",
+          position: "0 0.72 0",
+          width: "1.05",
+          height: "1.0",
+          depth: "1.05",
+          color: "#263238",
+          metalness: "0.25",
+          roughness: "0.45",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(root, "a-box", {
+          position: "0 1.25 0",
+          width: "0.86",
+          height: "0.08",
+          depth: "0.86",
+          color: "#80DEEA",
+          opacity: "0.7",
+        });
+        addText(root, {
+          value: "CPU",
+          position: "0 1.36 0.58",
+          align: "center",
+          color: "#69F0AE",
+          width: "3",
+        });
+        addText(root, {
+          id: "cpu-current-label",
+          value: "-",
+          position: "0 0.82 0.56",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3",
+        });
+        addText(root, {
+          value: "La CPU ejecuta un solo proceso a la vez.",
+          position: "0 0.15 0.75",
+          align: "center",
+          color: "#E8F5E9",
+          width: "3.2",
+        });
+
+        [
+          ["Nuevo", "Procesos que acaban de llegar.", "-2.65 0.04 1.55", "#9E9E9E"],
+          ["Cola de Listos", "Esperan disponibilidad de CPU.", "-2.25 0.04 -1.45", "#1E88E5"],
+          ["Ejecutando / CPU", "Proceso activo en este instante.", "0 0.04 -1.35", "#43A047"],
+          ["Espera / E/S", "Esperan Entrada/Salida.", "2.2 0.04 -1.45", "#FDD835"],
+          ["Terminados", "Procesos finalizados.", "2.65 0.04 1.55", "#E53935"],
+        ].forEach(function (zone) {
+          var parts = zone[2].split(" ");
+          appendEl(root, "a-plane", {
+            position: zone[2],
+            rotation: "-90 0 0",
+            width: "1.85",
+            height: "1.05",
+            color: zone[3],
+            opacity: "0.22",
+          });
+          addText(root, {
+            value: zone[0],
+            position: parts[0] + " 0.12 " + parts[2],
+            rotation: "-90 0 0",
+            align: "center",
+            color: zone[3],
+            width: "3.2",
+          });
+          addText(root, {
+            value: zone[1],
+            position: parts[0] + " 0.11 " + (parseFloat(parts[2]) + 0.34),
+            rotation: "-90 0 0",
+            align: "center",
+            color: "#ECEFF1",
+            width: "2.2",
+          });
+        });
+
+        var flow = addCpuPanel({
+          id: "cpu-flow-panel",
+          position: "0 0.08 2.28",
+          rotation: "-75 180 0",
+          width: 5.4,
+          height: 0.72,
+          accent: "#78909C",
+          opacity: "0.82",
+        });
+        addText(flow, {
+          value: "\u00bfC\u00d3MO FUNCIONA?",
+          position: "0 0.22 0.03",
+          align: "center",
+          color: "#B3E5FC",
+          width: "4",
+        });
+        addText(flow, {
+          value: "1. Llegada  ->  2. Listo  ->  3. Ejecucion  ->  4. E/S si aplica  ->  5. Termina",
+          position: "0 -0.07 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "5.2",
+        });
+
+        addText(root, {
+          id: "cpu-status-text",
+          value: "Elegi un algoritmo y pulsa Iniciar",
+          position: "0 2.92 -2.25",
+          align: "center",
+          color: "#E3F2FD",
+          width: "5.5",
+        });
+
+        appendEl(root, "a-entity", { id: "cpu-processes" });
+        setTimeout(function () {
+          resetCpuScheduler();
+        }, 0);
+      }
+
+      function buildPlaceholderContent(parent, id, tipo, posicionXYZ) {
+        var side = getAulaSide(posicionXYZ);
+        var title = tipo === "fisica" ? "Simulador de Fisica" : "Simulador de CPU";
+        var accent = tipo === "fisica" ? "#4CAF50" : "#42A5F5";
+        var root = appendEl(parent, "a-entity", {
+          id: id + "-sim-root",
           position: side * 3.2 + " 2.2 0",
           rotation: "0 " + -side * 90 + " 0",
         });
-        addText(menu, {
-          value: "Simulador de Física",
-          position: "0 0.8 0",
+        addText(root, {
+          value: title,
+          position: "0 0.45 0",
           align: "center",
-          color: "#4CAF50",
-          width: "6",
-        });
-        addText(menu, {
-          value: "Selecciona un tipo de movimiento:",
-          position: "0 0.5 0",
-          align: "center",
-          color: "#fff",
-          width: "4",
-        });
-
-        // Botón MRU
-        addButton(menu, {
-          id: "btn-mru",
-          position: "-0.7 0 0",
-          action: "show-mru",
-          color: "#2196F3",
-          label: "MRU",
-          textColor: "#fff",
-          textWidth: "2.5",
-        });
-
-        // Botón MRUV
-        addButton(menu, {
-          id: "btn-mruv",
-          position: "0.7 0 0",
-          action: "show-mruv",
-          color: "#FF9800",
-          label: "MRUV",
-          textColor: "#fff",
-          textWidth: "2.5",
-        });
-
-        // Entidad para mostrar el ejercicio MRUV
-        var mruvDisplay = appendEl(parent, "a-entity", {
-          id: id + "-mruv-display",
-          visible: false,
-          position: side * 3.0 + " 2.6 0",
-          rotation: "0 " + -side * 90 + " 0",
-        });
-
-        addText(mruvDisplay, {
-          id: "mruv-title",
-          value: "Ejercicio 2: MRUV",
-          position: "0 0.5 0",
-          align: "center",
-          color: "#FF9800",
+          color: accent,
           width: "5.5",
-          scale: "1.0 1.0 1.0",
         });
-
-        addText(mruvDisplay, {
-          id: "mruv-enunciado",
-          value: "Un auto esta detenido frente a un semaforo en rojo.\nCuando la luz cambia a verde, el conductor acelera\nen linea recta por la avenida. El auto parte del\nreposo con una aceleracion constante de 2,5 m/s²\ndurante un tiempo de 4 segundos. Calcula:",
-          position: "-1 -0.3 0",
-          align: "left",
-          color: "#fff",
-          width: "2.8",
-          wrapCount: "40",
-          scale: "0.85 0.85 0.85",
-        });
-
-        addText(mruvDisplay, {
-          id: "mruv-pregunta",
-          value: "1. ¿Que velocidad alcanza?\n2. ¿Que distancia recorre?",
-          position: "-1 -1.05 0",
-          align: "left",
-          color: "#FFEB3B",
-          width: "2.8",
-          wrapCount: "40",
-          scale: "0.85 0.85 0.85",
-        });
-
-        addButton(mruvDisplay, {
-          id: "btn-simular-mruv",
-          position: "0 -1.4 0",
-          action: "simulate-mruv",
-          color: "#4CAF50",
-          label: "▶ SIMULAR",
-          textColor: "#fff",
-          textWidth: "2.5",
-          height: "0.3",
-          width: "1.0",
-        });
-
-        addButton(mruvDisplay, {
-          id: "btn-back-mruv",
-          position: "0 -1.9 0",
-          action: "back-fisica",
-          color: "#9B59B6",
-          label: "<- Volver",
-          textColor: "#fff",
-          textWidth: "2.5",
-          height: "0.3",
-          width: "1.0",
-        });
-
-        // Entidad para la simulación (auto animado)
-        var simulationArea = appendEl(parent, "a-entity", {
-          id: id + "-mruv-simulation",
-          visible: false,
-          position: side * 3.2 + " 1.3 0",
-          rotation: "0 " + -side * 90 + " 0",
-        });
-
-        // Auto (representado como un cubo + cilindro)
-        var car = appendEl(simulationArea, "a-entity", {
-          id: "mruv-car",
-          position: "-1.5 0 0",
-        });
-
-        appendEl(car, "a-box", {
-          width: "0.4",
-          height: "0.25",
-          depth: "0.8",
-          color: "#E53935",
-        });
-
-        appendEl(car, "a-cylinder", {
-          radius: "0.1",
-          height: "0.05",
-          color: "#333",
-          position: "-0.15 -0.15 -0.25",
-          rotation: "90 0 0",
-        });
-
-        appendEl(car, "a-cylinder", {
-          radius: "0.1",
-          height: "0.05",
-          color: "#333",
-          position: "0.15 -0.15 -0.25",
-          rotation: "90 0 0",
-        });
-
-        appendEl(car, "a-cylinder", {
-          radius: "0.1",
-          height: "0.05",
-          color: "#333",
-          position: "-0.15 -0.15 0.25",
-          rotation: "90 0 0",
-        });
-
-        appendEl(car, "a-cylinder", {
-          radius: "0.1",
-          height: "0.05",
-          color: "#333",
-          position: "0.15 -0.15 0.25",
-          rotation: "90 0 0",
-        });
-
-        // Línea de referencia en el suelo
-        appendEl(simulationArea, "a-plane", {
-          width: "5",
-          height: "0.02",
-          color: "#666",
-          position: "0 -0.3 0",
-          rotation: "-90 0 0",
-        });
-
-        // Marcas de distancia
-        for (var i = 0; i <= 5; i++) {
-          appendEl(simulationArea, "a-box", {
-            width: "0.1",
-            height: "0.2",
-            depth: "0.02",
-            color: "#666",
-            position: (-2 + i) + " -0.25 0",
-          });
-          addText(simulationArea, {
-            value: (i * 4) + "m",
-            position: (-2 + i) + " 0.1 0",
-            align: "center",
-            color: "#888",
-            width: "1.5",
-            scale: "0.35 0.35 0.35",
-          });
-        }
-
-        // Texto de información durante la simulación
-        addText(simulationArea, {
-          id: "mruv-sim-info",
-          value: "Presionando...",
-          position: "0 0.5 0",
+        addText(root, {
+          id: id + "-placeholder",
+          value: "Espacio listo para montar contenido interactivo",
+          position: "0 0.05 0",
           align: "center",
-          color: "#FFEB3B",
-          width: "4.5",
-          scale: "0.75 0.75 0.75",
-        });
-
-        // Entidad para mostrar resultados
-        var resultsDisplay = appendEl(parent, "a-entity", {
-          id: id + "-mruv-results",
-          visible: false,
-          position: "0 0 0",
-        });
-
-        addText(resultsDisplay, {
-          id: "results-title",
-          value: "Resultados de la Simulación",
-          position: side * 3.8+ " 3 0",
-          rotation: "0 " + -side * 90 + " 0",
-          align: "center",
-          color: "#4CAF50",
-          width: "6",
-        });
-
-        addText(resultsDisplay, {
-          id: "results-content",
-          value: "",
-          position: side * 3.8 + " 2.2 0",
-          rotation: "0 " + -side * 90 + " 0",
-          align: "left",
           color: "#fff",
-          width: "2.8",
-          wrapCount: "40",
-          scale: "0.75 0.75 0.75",
-        });
-
-        addButton(resultsDisplay, {
-          id: "btn-back-results",
-          position: side * 3.8 + " 0.4 0",
-          rotation: "0 " + -side * 90 + " 0",
-          action: "back-fisica",
-          color: "#9B59B6",
-          label: "<- Volver",
-          textColor: "#fff",
-          textWidth: "2.5",
-          height: "0.3",
-          width: "0.9",
+          width: "4.2",
         });
       }
 
@@ -2481,171 +2721,6 @@
           algorithmTimeouts = [];
           scheduleNextAlgorithmStep(250);
         }
-      }
-
-      // ===== FUNCIONES DE FÍSICA/MRUV =====
-
-      function backToFisicaMenu() {
-        var aula4 = document.getElementById("aula4");
-        if (!aula4) return;
-
-        var menu = aula4.querySelector("#aula4-fisica-menu");
-        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
-        var simulation = aula4.querySelector("#aula4-mruv-simulation");
-        var results = aula4.querySelector("#aula4-mruv-results");
-
-        if (menu) menu.setAttribute("visible", true);
-        if (mruvDisplay) mruvDisplay.setAttribute("visible", false);
-        if (simulation) simulation.setAttribute("visible", false);
-        if (results) results.setAttribute("visible", false);
-      }
-
-      function showMRUPlaceholder() {
-        console.log("📚 MRU (Movimiento Rectilíneo Uniforme) - Próximamente");
-        // Placeholder para futuro desarrollo de MRU
-      }
-
-      function showMRUVExercise() {
-        var aula4 = document.getElementById("aula4");
-        if (!aula4) return;
-
-        var menu = aula4.querySelector("#aula4-fisica-menu");
-        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
-
-        if (menu) menu.setAttribute("visible", false);
-        if (mruvDisplay) mruvDisplay.setAttribute("visible", true);
-      }
-
-      var mruvSimulationRunning = false;
-      var mruvSimulationStartTime = 0;
-      var mruvAnimationId = null;
-
-      function simulateMRUV() {
-        if (mruvSimulationRunning) return;
-
-        var aula4 = document.getElementById("aula4");
-        if (!aula4) return;
-
-        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
-        var simulation = aula4.querySelector("#aula4-mruv-simulation");
-        var results = aula4.querySelector("#aula4-mruv-results");
-        var car = aula4.querySelector("#mruv-car");
-        var simInfo = aula4.querySelector("#mruv-sim-info");
-
-        if (!simulation || !car) return;
-
-        // Ocultar pantalla de ejercicio y mostrar simulación
-        if (mruvDisplay) mruvDisplay.setAttribute("visible", false);
-        if (simulation) simulation.setAttribute("visible", true);
-
-        // Parámetros de la simulación (según el ejercicio)
-        var v0 = 0; // velocidad inicial en m/s
-        var a = 2.5; // aceleración en m/s²
-        var t_total = 4; // tiempo total en segundos
-        var scale = 0.20; // escala de posición en la escena (1 metro = 0.20 unidades)
-
-        // Posición inicial del auto
-        var initialX = -2;
-
-        // Función de movimiento: x(t) = x0 + v0*t + 0.5*a*t²
-        function getMRUVPosition(t) {
-          return initialX + v0 * t + 0.5 * a * t * t * scale;
-        }
-
-        // Función para actualizar la información
-        function updateMRUVInfo(t) {
-          var v = v0 + a * t; // velocidad actual
-          var x = v0 * t + 0.5 * a * t * t; // distancia recorrida
-          var info =
-            "Tiempo: " +
-            t.toFixed(2) +
-            "s | Velocidad: " +
-            v.toFixed(2) +
-            "m/s | Distancia: " +
-            x.toFixed(2) +
-            "m";
-          if (simInfo) simInfo.setAttribute("value", info);
-        }
-
-        // Función de animación
-        function animateMRUV(currentTime) {
-          if (!mruvSimulationRunning) return;
-
-          if (mruvSimulationStartTime === 0) {
-            mruvSimulationStartTime = currentTime;
-          }
-
-          var elapsed = (currentTime - mruvSimulationStartTime) / 1000; // convertir a segundos
-
-          if (elapsed <= t_total) {
-            var newX = getMRUVPosition(elapsed);
-            car.setAttribute("position", newX + " 0 0");
-            updateMRUVInfo(elapsed);
-            mruvAnimationId = requestAnimationFrame(animateMRUV);
-          } else {
-            // Simulación completada
-            mruvSimulationRunning = false;
-            car.setAttribute("position", getMRUVPosition(t_total) + " 0 0");
-            updateMRUVInfo(t_total);
-
-            // Mostrar resultados
-            setTimeout(function () {
-              showMRUVResults();
-            }, 1000);
-          }
-        }
-
-        mruvSimulationRunning = true;
-        mruvSimulationStartTime = 0;
-        car.setAttribute("position", initialX + " 0 0");
-        updateMRUVInfo(0);
-
-        // Iniciar animación
-        if (mruvAnimationId) cancelAnimationFrame(mruvAnimationId);
-        mruvAnimationId = requestAnimationFrame(animateMRUV);
-      }
-
-      function showMRUVResults() {
-        var aula4 = document.getElementById("aula4");
-        if (!aula4) return;
-
-        var simulation = aula4.querySelector("#aula4-mruv-simulation");
-        var results = aula4.querySelector("#aula4-mruv-results");
-        var resultsContent = aula4.querySelector("#results-content");
-
-        if (simulation) simulation.setAttribute("visible", false);
-        if (results) results.setAttribute("visible", true);
-
-        // Parámetros del ejercicio
-        var v0 = 0;
-        var a = 2.5;
-        var t = 4;
-
-        // Cálculos
-        var vf = v0 + a * t; // velocidad final
-        var x = v0 * t + 0.5 * a * t * t; // distancia recorrida
-        var vfKmh = vf * 3.6; // convertir a km/h
-
-        // Formular respuestas
-        var resultsText =
-          "RESPUESTAS:\n\n" +
-          "1. Velocidad final:\n" +
-          "   vf = v0 + a·t\n" +
-          "   vf = 0 + 2,5 × 4\n" +
-          "   vf = " +
-          vf.toFixed(2) +
-          " m/s (" +
-          vfKmh.toFixed(2) +
-          " km/h)\n\n" +
-          "2. Distancia recorrida:\n" +
-          "   x = v0·t + ½·a·t²\n" +
-          "   x = 0 + ½ × 2,5 × 4²\n" +
-          "   x = ½ × 2,5 × 16\n" +
-          "   x = " +
-          x.toFixed(2) +
-          " metros";
-
-        if (resultsContent) resultsContent.setAttribute("value", resultsText);
       }
 
       // ===== EVENT LISTENERS =====
