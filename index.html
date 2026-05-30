@@ -3674,17 +3674,15 @@
         var aula4 = document.getElementById("aula4");
         if (!aula4) return;
 
-        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
         var simulation = aula4.querySelector("#aula4-mruv-simulation");
-        var results = aula4.querySelector("#aula4-mruv-results");
         var car = aula4.querySelector("#mruv-car");
         var simInfo = aula4.querySelector("#mruv-sim-info");
 
         if (!simulation || !car) return;
 
-        // Ocultar pantalla de ejercicio y mostrar simulación
-        if (mruvDisplay) mruvDisplay.setAttribute("visible", false);
-        if (simulation) simulation.setAttribute("visible", true);
+        // Usar hideFisicaAll() en vez de ocultar las cosas a mano
+        hideFisicaAll();
+        simulation.setAttribute("visible", true);
 
         // Parámetros de la simulación (según el ejercicio)
         var v0 = 0; // velocidad inicial en m/s
@@ -3754,11 +3752,12 @@
         var aula4 = document.getElementById("aula4");
         if (!aula4) return;
 
-        var simulation = aula4.querySelector("#aula4-mruv-simulation");
+        // Limpiamos pantalla
+        hideFisicaAll();
+
         var results = aula4.querySelector("#aula4-mruv-results");
         var resultsContent = aula4.querySelector("#results-content");
 
-        if (simulation) simulation.setAttribute("visible", false);
         if (results) results.setAttribute("visible", true);
 
         // Parámetros del ejercicio
@@ -3860,15 +3859,16 @@
         mruAnimationId = requestAnimationFrame(animateMRU);
       }
 
-      function showMRUResults() {
+     function showMRUResults() {
         var aula4 = document.getElementById("aula4");
         if (!aula4) return;
 
-        var simulation = aula4.querySelector("#aula4-mru-simulation");
+        // ¡ESTO ES CLAVE! Limpiamos toda la pantalla antes de mostrar el resultado
+        hideFisicaAll();
+
         var results = aula4.querySelector("#aula4-mru-results");
         var content = aula4.querySelector("#mru-results-content");
 
-        if (simulation) simulation.setAttribute("visible", false);
         if (results) results.setAttribute("visible", true);
 
         var v = 20;
