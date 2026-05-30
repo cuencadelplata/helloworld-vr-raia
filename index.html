@@ -36,24 +36,29 @@
             self.handleClick();
           });
 
-          // También poner class clickable y listener en el a-box hijo
-          // para que el raycaster lo detecte directamente
-          el.addEventListener("loaded", function () {
+          // Configura el a-box hijo como clickable (hover + click)
+          // Usa hasLoaded para cubrir entidades ya inicializadas al momento
+          // en que se registra el componente (evita perder el evento loaded)
+          function setupBox() {
             var box = el.querySelector("a-box");
-            if (box) {
-              box.classList.add("clickable");
-              box.addEventListener("click", function (evt) {
-                evt.stopPropagation();
-                self.handleClick();
-              });
-              box.addEventListener("mouseenter", function () {
-                box.setAttribute("scale", "1.15 1.15 1.15");
-              });
-              box.addEventListener("mouseleave", function () {
-                box.setAttribute("scale", "1 1 1");
-              });
-            }
-          });
+            if (!box) return;
+            box.classList.add("clickable");
+            box.addEventListener("click", function (evt) {
+              evt.stopPropagation();
+              self.handleClick();
+            });
+            box.addEventListener("mouseenter", function () {
+              box.setAttribute("scale", "1.15 1.15 1.15");
+            });
+            box.addEventListener("mouseleave", function () {
+              box.setAttribute("scale", "1 1 1");
+            });
+          }
+          if (el.hasLoaded) {
+            setupBox();
+          } else {
+            el.addEventListener("loaded", setupBox);
+          }
         },
         handleClick: function () {
           var action = this.data;
@@ -145,6 +150,9 @@
               break;
             case "back-fisica":
               backToFisicaMenu();
+              break;
+            case "simulate-mru":
+              simulateMRU();
               break;
 
             case "cpu-fcfs":
@@ -1245,6 +1253,195 @@
 
         addButton(resultsDisplay, {
           id: "btn-back-results",
+          position: side * 3.8 + " 0.4 0",
+          rotation: "0 " + -side * 90 + " 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "0.9",
+        });
+
+        // ===== ENTIDADES MRU =====
+
+        var mruDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mru-display",
+          visible: false,
+          position: side * 3.0 + " 2.6 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        addText(mruDisplay, {
+          value: "Ejercicio 1: MRU",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#2196F3",
+          width: "5.5",
+        });
+
+        addText(mruDisplay, {
+          value: "Un auto circula a velocidad constante de\n20 m/s (72 km/h) por la autopista\nen linea recta. No acelera ni frena.\nCalcula:",
+          position: "-1 -0.2 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addText(mruDisplay, {
+          value: "1. ¿Que distancia recorre en 4 segundos?\n2. ¿En cuanto tiempo recorre 60 m?",
+          position: "-1 -1.0 0",
+          align: "left",
+          color: "#FFEB3B",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addButton(mruDisplay, {
+          id: "btn-simular-mru",
+          position: "0 -1.4 0",
+          action: "simulate-mru",
+          color: "#2196F3",
+          label: "▶ SIMULAR",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        addButton(mruDisplay, {
+          id: "btn-back-mru",
+          position: "0 -1.9 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        // Simulación MRU
+        var mruSimulation = appendEl(parent, "a-entity", {
+          id: id + "-mru-simulation",
+          visible: false,
+          position: side * 3.2 + " 1.3 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        var mruCar = appendEl(mruSimulation, "a-entity", {
+          id: "mru-car",
+          position: "-2 0 0",
+        });
+
+        appendEl(mruCar, "a-box", {
+          width: "0.4",
+          height: "0.25",
+          depth: "0.8",
+          color: "#1565C0",
+        });
+
+        [[-0.15, -0.15, -0.25], [0.15, -0.15, -0.25],
+         [-0.15, -0.15,  0.25], [0.15, -0.15,  0.25]].forEach(function (pos) {
+          appendEl(mruCar, "a-cylinder", {
+            radius: "0.1",
+            height: "0.05",
+            color: "#333",
+            position: pos.join(" "),
+            rotation: "90 0 0",
+          });
+        });
+
+        // Flecha que indica velocidad constante
+        appendEl(mruCar, "a-box", {
+          width: "0.32",
+          height: "0.04",
+          depth: "0.04",
+          color: "#42A5F5",
+          position: "0 0.22 0",
+        });
+        appendEl(mruCar, "a-box", {
+          width: "0.08",
+          height: "0.08",
+          depth: "0.04",
+          color: "#42A5F5",
+          position: "0.18 0.22 0",
+          rotation: "0 0 45",
+        });
+
+        appendEl(mruSimulation, "a-plane", {
+          width: "5",
+          height: "0.02",
+          color: "#666",
+          position: "0 -0.3 0",
+          rotation: "-90 0 0",
+        });
+
+        // Marcas cada 20 m (escala 0.05: 20 m = 1 unidad de escena)
+        // La marca de 60 m (mi=3) se resalta en naranja — responde pregunta 2
+        for (var mi = 0; mi <= 4; mi++) {
+          var isSixtyM = (mi === 3);
+          appendEl(mruSimulation, "a-box", {
+            width: "0.1",
+            height: isSixtyM ? "0.3" : "0.2",
+            depth: "0.02",
+            color: isSixtyM ? "#FF9800" : "#666",
+            position: (-2 + mi) + " -0.25 0",
+          });
+          addText(mruSimulation, {
+            value: (mi * 20) + "m",
+            position: (-2 + mi) + " 0.1 0",
+            align: "center",
+            color: isSixtyM ? "#FF9800" : "#888",
+            width: "1.5",
+            scale: "0.35 0.35 0.35",
+          });
+        }
+
+        addText(mruSimulation, {
+          id: "mru-sim-info",
+          value: "Listo...",
+          position: "0 0.55 0",
+          align: "center",
+          color: "#42A5F5",
+          width: "4.5",
+          scale: "0.75 0.75 0.75",
+        });
+
+        // Resultados MRU
+        var mruResultsDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mru-results",
+          visible: false,
+          position: "0 0 0",
+        });
+
+        addText(mruResultsDisplay, {
+          value: "Resultados de la Simulacion",
+          position: side * 3.8 + " 3 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "center",
+          color: "#2196F3",
+          width: "6",
+        });
+
+        addText(mruResultsDisplay, {
+          id: "mru-results-content",
+          value: "",
+          position: side * 3.8 + " 2.2 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.75 0.75 0.75",
+        });
+
+        addButton(mruResultsDisplay, {
+          id: "btn-back-mru-results",
           position: side * 3.8 + " 0.4 0",
           rotation: "0 " + -side * 90 + " 0",
           action: "back-fisica",
@@ -3408,35 +3605,63 @@
 
       // ===== FUNCIONES DE FÍSICA/MRUV =====
 
-      function backToFisicaMenu() {
+      var FISICA_SELECTORS = [
+        "#aula4-fisica-menu",
+        "#aula4-mruv-display", "#aula4-mruv-simulation", "#aula4-mruv-results",
+        "#aula4-mru-display",  "#aula4-mru-simulation",  "#aula4-mru-results",
+      ];
+
+      // Timeouts pendientes de mostrar resultados (pueden cancelarse al navegar)
+      var mruvResultsTimeout = null;
+      var mruResultsTimeout = null;
+
+      function hideFisicaAll() {
+        // Cancelar timeouts de resultados pendientes
+        if (mruvResultsTimeout) { clearTimeout(mruvResultsTimeout); mruvResultsTimeout = null; }
+        if (mruResultsTimeout)  { clearTimeout(mruResultsTimeout);  mruResultsTimeout  = null; }
+        // Detener animaciones activas
+        if (typeof mruvSimulationRunning !== "undefined" && mruvSimulationRunning) {
+          mruvSimulationRunning = false;
+          if (mruvAnimationId) { cancelAnimationFrame(mruvAnimationId); mruvAnimationId = null; }
+        }
+        if (typeof mruSimulationRunning !== "undefined" && mruSimulationRunning) {
+          mruSimulationRunning = false;
+          if (mruAnimationId) { cancelAnimationFrame(mruAnimationId); mruAnimationId = null; }
+        }
         var aula4 = document.getElementById("aula4");
         if (!aula4) return;
+        FISICA_SELECTORS.forEach(function (sel) {
+          var el = aula4.querySelector(sel);
+          if (el) el.setAttribute("visible", false);
+        });
+      }
 
+      function backToFisicaMenu() {
+        hideFisicaAll();
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
         var menu = aula4.querySelector("#aula4-fisica-menu");
-        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
-        var simulation = aula4.querySelector("#aula4-mruv-simulation");
-        var results = aula4.querySelector("#aula4-mruv-results");
-
         if (menu) menu.setAttribute("visible", true);
-        if (mruvDisplay) mruvDisplay.setAttribute("visible", false);
-        if (simulation) simulation.setAttribute("visible", false);
-        if (results) results.setAttribute("visible", false);
       }
 
       function showMRUPlaceholder() {
-        console.log("📚 MRU (Movimiento Rectilíneo Uniforme) - Próximamente");
-        // Placeholder para futuro desarrollo de MRU
+        showMRUExercise();
+      }
+
+      function showMRUExercise() {
+        hideFisicaAll();
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+        var el = aula4.querySelector("#aula4-mru-display");
+        if (el) el.setAttribute("visible", true);
       }
 
       function showMRUVExercise() {
+        hideFisicaAll();
         var aula4 = document.getElementById("aula4");
         if (!aula4) return;
-
-        var menu = aula4.querySelector("#aula4-fisica-menu");
-        var mruvDisplay = aula4.querySelector("#aula4-mruv-display");
-
-        if (menu) menu.setAttribute("visible", false);
-        if (mruvDisplay) mruvDisplay.setAttribute("visible", true);
+        var el = aula4.querySelector("#aula4-mruv-display");
+        if (el) el.setAttribute("visible", true);
       }
 
       var mruvSimulationRunning = false;
@@ -3511,10 +3736,7 @@
             car.setAttribute("position", getMRUVPosition(t_total) + " 0 0");
             updateMRUVInfo(t_total);
 
-            // Mostrar resultados
-            setTimeout(function () {
-              showMRUVResults();
-            }, 1000);
+            mruvResultsTimeout = setTimeout(showMRUVResults, 1000);
           }
         }
 
@@ -3569,6 +3791,104 @@
           " metros";
 
         if (resultsContent) resultsContent.setAttribute("value", resultsText);
+      }
+
+      // ===== FUNCIONES DE FÍSICA/MRU =====
+
+      var mruSimulationRunning = false;
+      var mruSimulationStartTime = 0;
+      var mruAnimationId = null;
+
+      function simulateMRU() {
+        if (mruSimulationRunning) return;
+
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var simulation = aula4.querySelector("#aula4-mru-simulation");
+        var car = aula4.querySelector("#mru-car");
+        var simInfo = aula4.querySelector("#mru-sim-info");
+
+        if (!simulation || !car) return;
+
+        // Ocultar todo y mostrar solo la simulación
+        hideFisicaAll();
+        simulation.setAttribute("visible", true);
+
+        // Parámetros: v=20 m/s constante, t_total=4s
+        // Escala: 1 m = 0.05 unidades de escena → 80 m = 4 unidades (de -2 a +2)
+        var v = 20;
+        var t_total = 4;
+        var scale = 0.05;
+        var initialX = -2;
+
+        function getMRUPosition(t) {
+          return initialX + v * t * scale;
+        }
+
+        function updateMRUInfo(t) {
+          var x = v * t;
+          var info =
+            "Tiempo: " + t.toFixed(2) + "s" +
+            " | Velocidad: " + v + " m/s (cte.)" +
+            " | Distancia: " + x.toFixed(1) + " m";
+          if (simInfo) simInfo.setAttribute("value", info);
+        }
+
+        function animateMRU(currentTime) {
+          if (!mruSimulationRunning) return;
+          if (mruSimulationStartTime === 0) mruSimulationStartTime = currentTime;
+          var elapsed = (currentTime - mruSimulationStartTime) / 1000;
+
+          if (elapsed <= t_total) {
+            car.setAttribute("position", getMRUPosition(elapsed) + " 0 0");
+            updateMRUInfo(elapsed);
+            mruAnimationId = requestAnimationFrame(animateMRU);
+          } else {
+            mruSimulationRunning = false;
+            car.setAttribute("position", getMRUPosition(t_total) + " 0 0");
+            updateMRUInfo(t_total);
+            mruResultsTimeout = setTimeout(showMRUResults, 1000);
+          }
+        }
+
+        mruSimulationRunning = true;
+        mruSimulationStartTime = 0;
+        car.setAttribute("position", initialX + " 0 0");
+        updateMRUInfo(0);
+        if (mruAnimationId) cancelAnimationFrame(mruAnimationId);
+        mruAnimationId = requestAnimationFrame(animateMRU);
+      }
+
+      function showMRUResults() {
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var simulation = aula4.querySelector("#aula4-mru-simulation");
+        var results = aula4.querySelector("#aula4-mru-results");
+        var content = aula4.querySelector("#mru-results-content");
+
+        if (simulation) simulation.setAttribute("visible", false);
+        if (results) results.setAttribute("visible", true);
+
+        var v = 20;
+        var t1 = 4;
+        var x1 = v * t1;       // 80 m
+        var x2 = 60;
+        var t2 = x2 / v;       // 3 s
+
+        var text =
+          "RESPUESTAS:\n\n" +
+          "1. Distancia en " + t1 + " segundos:\n" +
+          "   x = v x t\n" +
+          "   x = " + v + " x " + t1 + "\n" +
+          "   x = " + x1 + " metros\n\n" +
+          "2. Tiempo para " + x2 + " metros:\n" +
+          "   t = x / v\n" +
+          "   t = " + x2 + " / " + v + "\n" +
+          "   t = " + t2.toFixed(1) + " segundos";
+
+        if (content) content.setAttribute("value", text);
       }
 
       // ===== EVENT LISTENERS =====
