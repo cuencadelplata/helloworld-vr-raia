@@ -18,6 +18,68 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script>
+      var LUCIDE_ICONS = {
+        landmark: [
+          ["line", { x1: "3", x2: "21", y1: "22", y2: "22" }],
+          ["line", { x1: "6", x2: "6", y1: "18", y2: "11" }],
+          ["line", { x1: "10", x2: "10", y1: "18", y2: "11" }],
+          ["line", { x1: "14", x2: "14", y1: "18", y2: "11" }],
+          ["line", { x1: "18", x2: "18", y1: "18", y2: "11" }],
+          ["polygon", { points: "12 2 20 7 4 7" }],
+        ],
+        "map-pin": [
+          ["path", { d: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" }],
+          ["circle", { cx: "12", cy: "10", r: "3" }],
+        ],
+        "door-open": [
+          ["path", { d: "M13 4h3a2 2 0 0 1 2 2v14" }],
+          ["path", { d: "M2 20h3" }],
+          ["path", { d: "M13 20h9" }],
+          ["path", { d: "M10 12v.01" }],
+          ["path", { d: "M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.562Z" }],
+        ],
+      };
+
+      function createLucideSvg(iconNode) {
+        var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        svg.setAttribute("width", "18");
+        svg.setAttribute("height", "18");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "2");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("aria-hidden", "true");
+
+        iconNode.forEach(function (node) {
+          var child = document.createElementNS("http://www.w3.org/2000/svg", node[0]);
+          Object.keys(node[1] || {}).forEach(function (attr) {
+            child.setAttribute(attr, node[1][attr]);
+          });
+          svg.appendChild(child);
+        });
+        return svg;
+      }
+
+      function renderLucideIcons() {
+        document.querySelectorAll("[data-lucide-icon]").forEach(function (slot) {
+          var icon = LUCIDE_ICONS[slot.getAttribute("data-lucide-icon")];
+          if (!icon) return;
+          slot.textContent = "";
+          slot.appendChild(createLucideSvg(icon));
+        });
+      }
+
+      if (document.readyState === "loading") {
+        window.addEventListener("DOMContentLoaded", renderLucideIcons);
+      } else {
+        renderLucideIcons();
+      }
+    </script>
+
+    <script>
       // ============================================
       // COMPONENTE BTN-ACTION
       // Maneja clicks en botones interactivos.
@@ -62,7 +124,7 @@
         },
         handleClick: function () {
           var action = this.data;
-          console.log("🔘 Boton:", action);
+          console.log("Boton:", action);
           var mathMenu = document.getElementById("math-menu");
           var functionDisplay = document.getElementById("function-display");
           var algMenu = document.getElementById("alg-menu");
@@ -445,6 +507,56 @@
           position: side * 3 + " 2.5 0",
           distance: "5",
           decay: "2",
+        });
+      }
+
+      function getAulaDisplayName(id, tipo) {
+        var names = {
+          matematica: "Analisis Matematico",
+          algoritmos: "Algoritmos",
+          cpu: "Planificacion de CPU",
+          fisica: "Fisica",
+          probabilidad: "Probabilidad",
+          complejidad: "Complejidad Computacional",
+        };
+        var match = String(id || "").match(/\d+/);
+        var number = match ? match[0] : "?";
+        return "Aula " + number + "\n" + (names[tipo] || "Laboratorio");
+      }
+
+      function addAulaSign(parent, id, tipo, posicionXYZ) {
+        var side = getAulaSide(posicionXYZ);
+        var hallX = -side * 4.08;
+        var sign = appendEl(parent, "a-entity", {
+          id: id + "-cartel",
+          position: hallX + " 1.95 -1.9",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        appendEl(sign, "a-box", {
+          width: "1.62",
+          height: "0.72",
+          depth: "0.045",
+          color: "#92400E",
+          opacity: "0.95",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(sign, "a-box", {
+          width: "1.5",
+          height: "0.6",
+          depth: "0.055",
+          position: "0 0 0.02",
+          color: "#111827",
+          opacity: "0.96",
+        });
+        addText(sign, {
+          value: getAulaDisplayName(id, tipo),
+          position: "0 0.01 0.075",
+          align: "center",
+          color: "#FDE68A",
+          width: "2.65",
+          wrapCount: "20",
+          scale: "0.68 0.68 0.68",
         });
       }
 
@@ -2476,6 +2588,7 @@
         aula.setAttribute("data-aula-tipo", tipo);
 
         addBaseClassroom(aula, id, posicionXYZ, colorParedes);
+        addAulaSign(aula, id, tipo, posicionXYZ);
 
         if (tipo === "matematica") {
           buildMathContent(aula);
@@ -2583,7 +2696,7 @@
             self.wallBoxes.push(box);
           });
 
-          console.log("🧱 Colisión lista:", this.wallBoxes.length, "paredes");
+          console.log("Colision lista:", this.wallBoxes.length, "paredes");
 
           // Debug: mostrar las cajas que bloquean la zona del pasillo
           var debugCount = 0;
@@ -2592,7 +2705,7 @@
             // Si la caja está cerca del centro del pasillo
             if (b.min.x < 1 && b.max.x > -1 && b.min.z < 7 && b.max.z > 5) {
               console.log(
-                "⚠️ Caja cerca del spawn:",
+                "Caja cerca del spawn:",
                 i,
                 "X[" + b.min.x.toFixed(1) + "," + b.max.x.toFixed(1) + "]",
                 "Y[" + b.min.y.toFixed(1) + "," + b.max.y.toFixed(1) + "]",
@@ -2602,7 +2715,7 @@
             }
           }
           if (debugCount === 0) {
-            console.log("✅ Ninguna caja bloquea la zona de spawn");
+            console.log("Ninguna caja bloquea la zona de spawn");
           }
         },
 
@@ -2814,6 +2927,32 @@
         font-size: 18px;
         font-weight: 600;
       }
+      .info-panel .panel-title,
+      .info-panel .icon-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .info-panel [data-lucide-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #8b9cff;
+        flex: 0 0 18px;
+        width: 18px;
+        min-width: 18px;
+      }
+      .info-panel .location [data-lucide-icon] {
+        color: #ff6b9d;
+      }
+      .info-panel svg {
+        width: 16px;
+        height: 16px;
+      }
+      .info-panel h3 svg {
+        width: 18px;
+        height: 18px;
+      }
       .info-panel p {
         margin: 6px 0;
         color: #b8c4ff;
@@ -2833,15 +2972,15 @@
   <body>
     <!-- Panel de información -->
     <div class="info-panel">
-      <h3>🏛️ Facultad Virtual VR</h3>
+      <h3 class="panel-title"><span data-lucide-icon="landmark"></span>Facultad Virtual VR</h3>
       <p><strong>PC:</strong> WASD para moverse, Mouse para mirar</p>
       <p><strong>VR:</strong> Gatillo para teletransportarte</p>
       <div class="location">
-        <p>📍 Pasillo Principal</p>
-        <p>🚪 Impar izquierda | Par Derecha</p>
-        <p>🚪 Aula 1 Analisis Matematico | Aula 2 (Programacion)</p>
-        <p>🚪 Aula 3 CPU | Aula 4 Fisica</p>
-        <p>🚪 Aula 5 Probabilidad | Aula 6 Complejidad</p>
+        <p class="icon-row"><span data-lucide-icon="map-pin"></span>Pasillo Principal</p>
+        <p class="icon-row"><span data-lucide-icon="door-open"></span>Impar izquierda | Par derecha</p>
+        <p class="icon-row"><span data-lucide-icon="door-open"></span>1 Analisis Matematico | 2 Programación</p>
+        <p class="icon-row"><span data-lucide-icon="door-open"></span>3 CPU | 4 Fisica</p>
+        <p class="icon-row"><span data-lucide-icon="door-open"></span>5 Probabilidad | 6 Complejidad</p>
       </div>
     </div>
 
@@ -2856,8 +2995,8 @@
       <!-- ========================================== -->
       <a-assets timeout="30000">
         <!-- Texturas -->
-        <img id="textura-pared" src="pared.jpg" crossorigin="anonymous" />
-        <img id="textura-suelo" src="suelo.jpg" crossorigin="anonymous" />
+        <img id="textura-pared" src="pared2.jpg" crossorigin="anonymous" />
+        <img id="textura-suelo" src="piso.jpg" crossorigin="anonymous" />
 
         <!-- Modelos 3D -->
         <a-asset-item id="modelo-pizarra" src="pizarra.glb"></a-asset-item>
@@ -6544,9 +6683,9 @@
         var scene = document.querySelector("a-scene");
 
         scene.addEventListener("loaded", function () {
-          console.log("🏛️ Facultad Virtual VR cargada correctamente");
-          console.log("📍 Aula 1: Análisis Matemático | Aula 2: Algoritmos");
-          console.log("🔬 Aula 4: Física (MRUV)");
+          console.log("Facultad Virtual VR cargada correctamente");
+          console.log("Aula 1: Análisis Matemático | Aula 2: Algoritmos");
+          console.log("Aula 4: Física (MRUV)");
         });
 
         scene.addEventListener("enter-vr", function () {
