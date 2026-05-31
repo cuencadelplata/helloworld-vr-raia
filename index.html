@@ -452,6 +452,56 @@
         });
       }
 
+      function getAulaDisplayName(id, tipo) {
+        var names = {
+          matematica: "Analisis Matematico",
+          algoritmos: "Algoritmos",
+          cpu: "Planificacion de CPU",
+          fisica: "Fisica",
+          probabilidad: "Probabilidad",
+          complejidad: "Complejidad Computacional",
+        };
+        var match = String(id || "").match(/\d+/);
+        var number = match ? match[0] : "?";
+        return "Aula " + number + "\n" + (names[tipo] || "Laboratorio");
+      }
+
+      function addAulaSign(parent, id, tipo, posicionXYZ) {
+        var side = getAulaSide(posicionXYZ);
+        var hallX = -side * 4.08;
+        var sign = appendEl(parent, "a-entity", {
+          id: id + "-cartel",
+          position: hallX + " 1.95 -1.9",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        appendEl(sign, "a-box", {
+          width: "1.62",
+          height: "0.72",
+          depth: "0.045",
+          color: "#92400E",
+          opacity: "0.95",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(sign, "a-box", {
+          width: "1.5",
+          height: "0.6",
+          depth: "0.055",
+          position: "0 0 0.02",
+          color: "#111827",
+          opacity: "0.96",
+        });
+        addText(sign, {
+          value: getAulaDisplayName(id, tipo),
+          position: "0 0.01 0.075",
+          align: "center",
+          color: "#FDE68A",
+          width: "2.65",
+          wrapCount: "20",
+          scale: "0.68 0.68 0.68",
+        });
+      }
+
       function buildMathContent(parent) {
         var menu = appendEl(parent, "a-entity", {
           id: "math-menu",
@@ -2241,6 +2291,7 @@
         aula.setAttribute("data-aula-tipo", tipo);
 
         addBaseClassroom(aula, id, posicionXYZ, colorParedes);
+        addAulaSign(aula, id, tipo, posicionXYZ);
 
         if (tipo === "matematica") {
           buildMathContent(aula);
