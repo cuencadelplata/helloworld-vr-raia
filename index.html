@@ -104,7 +104,7 @@
               showFunction("func4");
               break;
             case "func5":
-              showFunction("func5");
+              showFunction("func5");aw
               break;
             case "back-math":
               showMathMenu();
@@ -164,10 +164,6 @@
             case "prob-station-coin":
             case "prob-station-dice":
             case "prob-station-calls":
-            case "prob-station-wait":
-            case "prob-station-normal":
-            case "prob-station-student":
-            case "prob-station-variance":
             case "prob-run-once":
             case "prob-run-ten":
             case "prob-run-hundred":
@@ -227,10 +223,10 @@
       // para evitar bloques HTML duplicados.
       // ============================================
       var AULA_CONFIG = {
-        width: 8,
-        depth: 6,
-        height: 3.5,
-        wallThickness: 0.2,
+        width: 9,
+        depth: 7,
+        height: 4.5,
+        wallThickness: 0.3,
       };
 
       function vectorToString(value) {
@@ -1498,11 +1494,8 @@
         var frontX = side * 3.82;
         var frontRot = "0 " + -side * 90 + " 0";
 
-        parent.querySelectorAll(".pupitre").forEach(function (desk, i) {
-          var z = [-2.35, 2.35, -1.15, 1.15, -2.35, 2.35][i];
-          var x = i < 4 ? -side * 3.15 : side * 3.15;
-          desk.setAttribute("position", x + " 0 " + z);
-          desk.setAttribute("scale", "0.18 0.18 0.18");
+        parent.querySelectorAll(".pupitre").forEach(function (desk) {
+          desk.parentNode.removeChild(desk);
         });
 
         var root = appendEl(parent, "a-entity", {
@@ -1533,7 +1526,63 @@
           return panel;
         }
 
-        appendEl(root, "a-box", {
+        function expandProbabilityClassroom() {
+          var floor = parent.querySelector("#" + id + "-suelo");
+          if (floor) {
+            floor.setAttribute("width", "9.6");
+            floor.setAttribute("height", "10.8");
+            floor.setAttribute("position", "0.8 0.01 -1.925");
+            floor.setAttribute("material", "src: #textura-suelo; repeat: 4.8 5.4; roughness: 0.7");
+          }
+
+          parent.querySelectorAll(".collidable").forEach(function (wall) {
+            var width = parseFloat(wall.getAttribute("width") || 0);
+            var depth = parseFloat(wall.getAttribute("depth") || 0);
+            var pos = wall.getAttribute("position");
+            var p = typeof pos === "string" ? pos.split(" ").map(parseFloat) : [pos.x, pos.y, pos.z];
+            if (Math.abs(depth - 0.2) < 0.02 && Math.abs(p[2] + 3) < 0.05) {
+              wall.setAttribute("width", "9.6");
+              wall.setAttribute("position", "0.8 1.75 -7.2");
+              wall.setAttribute("material", wallMaterial(colorParedes, "4.8 1.75"));
+            } else if (Math.abs(depth - 0.2) < 0.02 && Math.abs(p[2] - 3) < 0.05) {
+              wall.setAttribute("width", "9.6");
+              wall.setAttribute("position", "0.8 1.75 3.35");
+              wall.setAttribute("material", wallMaterial(colorParedes, "4.8 1.75"));
+            } else if (Math.abs(width - 0.2) < 0.02 && Math.abs(p[0] - side * 4) < 0.1) {
+              wall.setAttribute("depth", "12");
+              wall.setAttribute("position", side * 4 + " 1.75 -1.925");
+              wall.setAttribute("material", wallMaterial(colorParedes, "5.25 1.75"));
+            } else if (Math.abs(width - 0.2) < 0.02 && Math.abs(p[0] + side * 4) < 0.1) {
+              wall.setAttribute("height", "1.2");
+              wall.setAttribute("depth", "10.55");
+              wall.setAttribute("position", -side * 5.6 + " 2.9 -1.925");
+              wall.setAttribute("material", wallMaterial(colorParedes, "5.25 0.6"));
+            }
+          });
+
+          parent.querySelectorAll("a-plane").forEach(function (plane) {
+            var pos = plane.getAttribute("position");
+            var p = typeof pos === "string" ? pos.split(" ").map(parseFloat) : pos ? [pos.x, pos.y, pos.z] : [0, 0, 0];
+            if (Math.abs(p[1] - 3.5) < 0.05) {
+              plane.setAttribute("width", "9.6");
+              plane.setAttribute("height", "10.8");
+              plane.setAttribute("position", "0.8 3.5 -1.925");
+            }
+          });
+
+          var blackboard = parent.querySelector("[gltf-model='#modelo-pizarra']");
+          if (blackboard) blackboard.setAttribute("position", side * 3.5 + " 1.3 0");
+        }
+
+        expandProbabilityClassroom();
+
+        var centerTable = appendEl(root, "a-entity", {
+          id: "prob-center-table-group",
+          position: "0 0 0",
+          rotation: "0 90 0",
+        });
+
+        appendEl(centerTable, "a-box", {
           id: "casino-center-table",
           position: "0 0.38 0",
           width: "2.45",
@@ -1543,7 +1592,7 @@
           material: "roughness: 0.45; metalness: 0.08",
           shadow: "cast: true; receive: true",
         });
-        appendEl(root, "a-box", {
+        appendEl(centerTable, "a-box", {
           position: "0 0.47 0",
           width: "2.25",
           height: "0.035",
@@ -1552,28 +1601,28 @@
           opacity: "0.92",
           shadow: "receive: true",
         });
-        appendEl(root, "a-box", {
+        appendEl(centerTable, "a-box", {
           position: "0 0.515 -0.79",
           width: "2.35",
           height: "0.035",
           depth: "0.045",
           color: "#F59E0B",
         });
-        appendEl(root, "a-box", {
+        appendEl(centerTable, "a-box", {
           position: "0 0.515 0.79",
           width: "2.35",
           height: "0.035",
           depth: "0.045",
           color: "#F59E0B",
         });
-        appendEl(root, "a-box", {
+        appendEl(centerTable, "a-box", {
           position: "-1.18 0.515 0",
           width: "0.045",
           height: "0.035",
           depth: "1.6",
           color: "#F59E0B",
         });
-        appendEl(root, "a-box", {
+        appendEl(centerTable, "a-box", {
           position: "1.18 0.515 0",
           width: "0.045",
           height: "0.035",
@@ -1581,7 +1630,7 @@
           color: "#F59E0B",
         });
 
-        appendEl(root, "a-box", {
+        appendEl(centerTable, "a-box", {
           id: "prob-chart-panel",
           position: "0 1.1 -0.55",
           width: "2.55",
@@ -1591,7 +1640,7 @@
           opacity: "0.92",
           shadow: "cast: true; receive: true",
         });
-        appendEl(root, "a-box", {
+        appendEl(centerTable, "a-box", {
           position: "0 0.48 -0.55",
           width: "0.12",
           height: "0.9",
@@ -1599,22 +1648,23 @@
           color: "#3B2414",
           shadow: "cast: true; receive: true",
         });
-        appendEl(root, "a-entity", {
+        appendEl(centerTable, "a-entity", {
           id: "prob-chart",
           position: "-1.18 0.67 -0.5",
           rotation: "0 0 0",
           scale: "0.49 0.49 0.49",
         });
-        addText(root, {
+        addText(centerTable, {
           id: "prob-title",
           value: "Casino Estadistico",
-          position: "0 2.92 0",
+          position: "0 2.85 0.25",
           rotation: "0 180 0",
           align: "center",
           color: "#FDE68A",
-          width: "5.6",
+          width: "4.6",
+          scale: "0.82 0.82 0.82",
         });
-        addText(root, {
+        addText(centerTable, {
           id: "prob-result",
           value: "",
           position: "-1.08 0.84 0.79",
@@ -1625,7 +1675,7 @@
           wrapCount: "36",
           scale: "0.52 0.52 0.52",
         });
-        addText(root, {
+        addText(centerTable, {
           id: "prob-last-outcome",
           value: "",
           position: "0.12 1.42 -0.47",
@@ -1636,9 +1686,9 @@
           wrapCount: "32",
           scale: "0.64 0.64 0.64",
         });
-        addButton(root, {
+        addButton(centerTable, {
           id: "prob-run-once-main",
-          position: "-0.62 0.62 0.66",
+          position: "-0.84 0.62 0.66",
           rotation: "-62 0 0",
           action: "prob-run-once",
           color: "#16A34A",
@@ -1648,9 +1698,9 @@
           textWidth: "1.8",
           textPosition: "0 0 0.04",
         });
-        addButton(root, {
+        addButton(centerTable, {
           id: "prob-run-ten-main",
-          position: "0.16 0.62 0.66",
+          position: "-0.12 0.62 0.66",
           rotation: "-62 0 0",
           action: "prob-run-ten",
           color: "#D97706",
@@ -1660,9 +1710,21 @@
           textWidth: "1.9",
           textPosition: "0 0 0.04",
         });
-        addButton(root, {
+        addButton(centerTable, {
+          id: "prob-run-hundred-main",
+          position: "0.64 0.62 0.66",
+          rotation: "-62 0 0",
+          action: "prob-run-hundred",
+          color: "#075985",
+          label: "Jugar 100",
+          width: "0.78",
+          height: "0.22",
+          textWidth: "2.05",
+          textPosition: "0 0 0.04",
+        });
+        addButton(centerTable, {
           id: "prob-reset-main",
-          position: "0.88 0.62 0.66",
+          position: "1.36 0.62 0.66",
           rotation: "-62 0 0",
           action: "prob-reset-observed",
           color: "#991B1B",
@@ -1677,27 +1739,28 @@
           id: "prob-board",
           position: frontX + " 2.05 0",
           rotation: frontRot,
-          width: 5.95,
-          height: 1.35,
+          width: 4.6,
+          height: 1.18,
           accent: "#F59E0B",
           color: "#16110A",
         });
         addText(board, {
           value: "Probabilidad teorica vs frecuencia observada",
-          position: "0 0.47 0.03",
+          position: "0 0.4 0.03",
           align: "center",
           color: "#FDE68A",
-          width: "5.6",
+          width: "4.3",
+          scale: "0.78 0.78 0.78",
         });
         addText(board, {
           id: "prob-description",
           value: "",
-          position: "0 0.12 0.03",
+          position: "0 0.06 0.03",
           align: "center",
           color: "#FFEDD5",
-          width: "5.1",
-          wrapCount: "58",
-          scale: "0.72 0.72 0.72",
+          width: "4.1",
+          wrapCount: "50",
+          scale: "0.62 0.62 0.62",
         });
 
         function addMachineBase(config) {
@@ -1774,40 +1837,163 @@
           return machine;
         }
 
-        var coinMachine = addMachineBase({
+        var coinMachine = appendEl(root, "a-entity", {
           id: "prob-coin-machine",
-          position: "-2.65 0 -1.35",
-          rotation: "0 25 0",
-          displayId: "prob-coin-display",
-          buttonId: "prob-coin-select",
-          runButtonId: "prob-coin-run",
-          visualId: "prob-coin-visuals",
-          stationAction: "prob-station-coin",
-          runAction: "prob-run-once",
-          runLabel: "Palanca",
-          accent: "#FACC15",
-          accentDark: "#A16207",
-          bodyColor: "#422006",
+          position: side * 3.15 + " 0 -2.05",
+          rotation: frontRot,
+          scale: "1.08 1.08 1.08",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.18",
+          height: "1.72",
+          depth: "0.56",
+          position: "0 1.05 -0.04",
+          color: "#24150B",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.3",
+          height: "0.18",
+          depth: "0.68",
+          position: "0 0.18 0",
+          color: "#0B3B2E",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.05",
+          height: "0.34",
+          depth: "0.035",
+          position: "0 1.72 0.255",
+          color: "#064E3B",
+          opacity: "0.95",
+        });
+        addText(coinMachine, {
+          value: "MONEDAS / BINOMIAL",
+          position: "0 1.73 0.278",
+          align: "center",
+          color: "#FDE68A",
+          width: "2.15",
+          scale: "0.38 0.38 0.38",
+        });
+        appendEl(coinMachine, "a-plane", {
+          width: "0.98",
+          height: "0.36",
+          position: "0 1.3 0.268",
+          color: "#050505",
+          opacity: "0.96",
+        });
+        for (var reel = 0; reel < 3; reel++) {
+          appendEl(coinMachine, "a-box", {
+            width: "0.25",
+            height: "0.3",
+            depth: "0.035",
+            position: (-0.32 + reel * 0.32) + " 1.3 0.292",
+            color: "#F8FAFC",
+            opacity: "0.98",
+          });
+          addText(coinMachine, {
+            id: "prob-coin-reel-" + reel,
+            value: "?",
+            position: (-0.32 + reel * 0.32) + " 1.3 0.315",
+            align: "center",
+            color: "#7C2D12",
+            width: "0.75",
+            scale: "0.52 0.52 0.52",
+          });
+        }
+        [
+          [-0.58, 1.82], [-0.29, 1.92], [0, 1.94], [0.29, 1.92], [0.58, 1.82],
+          [-0.58, 1.48], [0.58, 1.48], [-0.58, 1.14], [0.58, 1.14],
+        ].forEach(function (lamp, i) {
+          appendEl(coinMachine, "a-sphere", {
+            id: "prob-coin-lamp-" + i,
+            position: lamp[0] + " " + lamp[1] + " 0.305",
+            radius: "0.035",
+            color: i % 2 ? "#F59E0B" : "#DC2626",
+            opacity: "0.9",
+          });
+        });
+        addText(coinMachine, {
+          id: "prob-coin-display",
+          value: "",
+          position: "0 0.98 0.295",
+          align: "center",
+          color: "#FDE68A",
+          width: "2.1",
+          wrapCount: "28",
+          scale: "0.36 0.36 0.36",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "0.8",
+          height: "0.08",
+          depth: "0.08",
+          position: "0 0.74 0.295",
+          color: "#111827",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "0.88",
+          height: "0.14",
+          depth: "0.24",
+          position: "0 0.46 0.19",
+          color: "#0F172A",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "0.82",
+          height: "0.025",
+          depth: "0.2",
+          position: "0 0.54 0.285",
+          color: "#F59E0B",
+        });
+        addButton(coinMachine, {
+          id: "prob-coin-select",
+          position: "-0.27 0.66 0.32",
+          rotation: "-12 0 0",
+          action: "prob-station-coin",
+          color: "#0F766E",
+          label: "Elegir",
+          width: "0.42",
+          height: "0.18",
+          depth: "0.045",
+          textWidth: "1.25",
+          textPosition: "0 0 0.035",
+        });
+        addButton(coinMachine, {
+          id: "prob-coin-run",
+          position: "0.29 0.66 0.32",
+          rotation: "-12 0 0",
+          action: "prob-run-once",
+          color: "#B45309",
+          label: "Palanca",
+          width: "0.5",
+          height: "0.18",
+          depth: "0.045",
+          textWidth: "1.45",
+          textPosition: "0 0 0.035",
         });
         appendEl(coinMachine, "a-cylinder", {
           id: "prob-coin-lever",
-          position: "0.72 0.78 0.16",
-          rotation: "0 0 35",
+          position: "0.74 1.18 0.02",
+          rotation: "0 0 28",
           radius: "0.035",
-          height: "0.55",
+          height: "0.58",
           color: "#D97706",
-          animation__run: "property: rotation; startEvents: casino-run; from: 0 0 35; to: 0 0 105; dur: 260; dir: alternate; loop: 2",
+          animation__run: "property: rotation; startEvents: casino-run; from: 0 0 28; to: 0 0 112; dur: 260; dir: alternate; loop: 2",
         });
         appendEl(coinMachine, "a-sphere", {
-          position: "0.83 1.02 0.16",
-          radius: "0.09",
+          position: "0.86 1.44 0.02",
+          radius: "0.095",
           color: "#FDE68A",
+        });
+        appendEl(coinMachine, "a-entity", {
+          id: "prob-coin-visuals",
+          position: "0 0.43 0.3",
         });
 
         var diceMachine = addMachineBase({
           id: "prob-dice-machine",
-          position: "0 0 -2.25",
-          rotation: "0 0 0",
+          position: side * 3.15 + " 0 0",
+          rotation: frontRot,
           displayId: "prob-dice-display",
           buttonId: "prob-dice-select",
           runButtonId: "prob-dice-run",
@@ -1833,6 +2019,7 @@
           width: "1.55",
           depth: "1.12",
         });
+        diceMachine.setAttribute("scale", "1.08 1.08 1.08");
         addButton(diceMachine, {
           id: "prob-dice-run-ten",
           position: "0.16 0.54 0.43",
@@ -1879,78 +2066,126 @@
           scale: "0.8 0.8 0.8",
         });
 
-        var callsMachine = addMachineBase({
+        var callsMachine = appendEl(root, "a-entity", {
           id: "prob-calls-machine",
-          position: "2.65 0 -1.35",
-          rotation: "0 -25 0",
-          displayId: "prob-calls-display",
-          buttonId: "prob-calls-select",
-          runButtonId: "prob-calls-run",
-          visualId: "prob-calls-visuals",
-          stationAction: "prob-station-calls",
-          runAction: "prob-run-once",
-          runLabel: "Minuto",
-          accent: "#A3E635",
-          accentDark: "#4D7C0F",
-          bodyColor: "#1A2E05",
+          position: side * 3.15 + " 0 2.05",
+          rotation: frontRot,
+          scale: "1.08 1.08 1.08",
+        });
+        appendEl(callsMachine, "a-box", {
+          width: "1.35",
+          height: "1.55",
+          depth: "0.34",
+          position: "0 1.02 -0.04",
+          color: "#102A1B",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(callsMachine, "a-box", {
+          width: "1.48",
+          height: "0.16",
+          depth: "0.48",
+          position: "0 0.18 0",
+          color: "#263238",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(callsMachine, "a-plane", {
+          width: "1.16",
+          height: "0.28",
+          position: "0 1.65 0.145",
+          color: "#06130D",
+          opacity: "0.95",
+        });
+        addText(callsMachine, {
+          value: "LLAMADAS / POISSON",
+          position: "0 1.66 0.17",
+          align: "center",
+          color: "#D9F99D",
+          width: "2.4",
+          scale: "0.38 0.38 0.38",
+        });
+        addText(callsMachine, {
+          id: "prob-calls-display",
+          value: "",
+          position: "0 1.37 0.17",
+          align: "center",
+          color: "#ECFCCB",
+          width: "2.25",
+          wrapCount: "30",
+          scale: "0.4 0.4 0.4",
         });
         appendEl(callsMachine, "a-entity", {
           id: "prob-phone-lights",
-          position: "0 0.68 0.06",
+          position: "0 0.96 0.16",
         });
         for (var phone = 0; phone < 6; phone++) {
+          var phoneX = -0.47 + (phone % 3) * 0.47;
+          var phoneY = 0.18 - Math.floor(phone / 3) * 0.34;
           appendEl(callsMachine.querySelector("#prob-phone-lights"), "a-cylinder", {
             id: "prob-phone-light-" + phone,
-            position: (-0.48 + phone * 0.19) + " 0.08 0",
-            radius: "0.055",
-            height: "0.035",
+            position: phoneX + " " + (phoneY + 0.15) + " 0",
+            radius: "0.045",
+            height: "0.028",
             color: "#365314",
             opacity: "0.85",
           });
-        }
-
-        [
-          ["prob-wait-placeholder", "Tiempo de espera", "prob-station-wait", "-2.7 1.35 2.72", "0 180 0", "#7C3AED"],
-          ["prob-normal-placeholder", "Alturas / notas", "prob-station-normal", "-0.9 1.35 2.72", "0 180 0", "#DB2777"],
-          ["prob-student-placeholder", "t Student", "prob-station-student", "0.9 1.35 2.72", "0 180 0", "#4F46E5"],
-          ["prob-var-placeholder", "Varianzas", "prob-station-variance", "2.7 1.35 2.72", "0 180 0", "#EA580C"],
-        ].forEach(function (item) {
-          var placeholder = appendEl(root, "a-entity", {
-            id: item[0],
-            position: item[3],
-            rotation: item[4],
-          });
-          appendEl(placeholder, "a-box", {
-            width: "1.25",
-            height: "0.55",
-            depth: "0.08",
-            color: "#1F2937",
-            opacity: "0.82",
-          });
-          addText(placeholder, {
-            value: item[1],
-            position: "0 0.12 0.055",
-            align: "center",
+          appendEl(callsMachine, "a-box", {
+            position: phoneX + " " + (phoneY + 0.9) + " 0.17",
+            width: "0.25",
+            height: "0.07",
+            depth: "0.055",
             color: "#E5E7EB",
-            width: "2.2",
-            scale: "0.52 0.52 0.52",
           });
-          addButton(placeholder, {
-            id: item[0] + "-btn",
-            position: "0 -0.16 0.065",
-            action: item[2],
-            color: item[5],
-            label: "Vista previa",
-            width: "0.88",
-            height: "0.2",
-            textWidth: "2.2",
-            textPosition: "0 0 0.035",
+          appendEl(callsMachine, "a-torus", {
+            position: phoneX + " " + (phoneY + 0.82) + " 0.17",
+            rotation: "0 0 0",
+            radius: "0.1",
+            "radius-tubular": "0.013",
+            arc: "180",
+            color: "#94A3B8",
           });
+          appendEl(callsMachine, "a-cylinder", {
+            position: phoneX + " " + (phoneY + 0.7) + " 0.165",
+            rotation: "0 0 0",
+            radius: "0.009",
+            height: "0.23",
+            color: "#475569",
+          });
+        }
+        addButton(callsMachine, {
+          id: "prob-calls-select",
+          position: "-0.33 0.43 0.19",
+          rotation: "-10 0 0",
+          action: "prob-station-calls",
+          color: "#4D7C0F",
+          label: "Elegir",
+          width: "0.44",
+          height: "0.18",
+          depth: "0.045",
+          textWidth: "1.25",
+          textPosition: "0 0 0.035",
+        });
+        addButton(callsMachine, {
+          id: "prob-calls-run",
+          position: "0.29 0.43 0.19",
+          rotation: "-10 0 0",
+          action: "prob-run-once",
+          color: "#84CC16",
+          label: "Minuto",
+          width: "0.5",
+          height: "0.18",
+          depth: "0.045",
+          textColor: "#102A1B",
+          textWidth: "1.45",
+          textPosition: "0 0 0.035",
+        });
+        appendEl(callsMachine, "a-entity", {
+          id: "prob-calls-visuals",
+          position: "0 0.68 0.18",
         });
 
         var controls = addPanel({
           id: "prob-controls",
-          position: "0 2.2 -2.9",
+          position: "0 2.15 -5.03",
           rotation: "0 0 0",
           width: 2.6,
           height: 0.72,
@@ -5064,50 +5299,6 @@
           description: "Poisson: llamadas por minuto.",
           pending: false,
         },
-        {
-          id: "wait",
-          label: "Tiempo de espera",
-          distributionId: "exponential",
-          params: { lambda: 1 },
-          intervalType: "left",
-          a: 2,
-          b: 4,
-          description: "Proxima estacion: tiempos hasta un evento.",
-          pending: true,
-        },
-        {
-          id: "normal",
-          label: "Alturas / notas",
-          distributionId: "normal",
-          params: { mu: 170, sigma: 8 },
-          intervalType: "between",
-          a: 160,
-          b: 180,
-          description: "Proxima estacion: mediciones alrededor de una media.",
-          pending: true,
-        },
-        {
-          id: "student",
-          label: "Muestras pequenas",
-          distributionId: "student",
-          params: { df: 8 },
-          intervalType: "between",
-          a: -2,
-          b: 2,
-          description: "Proxima estacion: t de Student.",
-          pending: true,
-        },
-        {
-          id: "variance",
-          label: "Varianzas",
-          distributionId: "chiSquared",
-          params: { df: 4 },
-          intervalType: "between",
-          a: 1,
-          b: 8,
-          description: "Proxima estacion: chi-cuadrado y F.",
-          pending: true,
-        },
       ];
       var probabilityState = {
         distributionIndex: 0,
@@ -5905,18 +6096,39 @@
           ? Math.round(probabilityState.observedSamples[probabilityState.observedSamples.length - 1])
           : 0;
         var flips = Math.round(probabilityState.parameters.n || 10);
-        for (var i = 0; i < flips; i++) {
+        for (var reel = 0; reel < 3; reel++) {
+          var reelText = lab.querySelector("#prob-coin-reel-" + reel);
+          if (reelText) {
+            var hit = reel < Math.min(last, 3);
+            reelText.setAttribute("value", hit ? "$" : "-");
+            reelText.setAttribute("color", hit ? "#A16207" : "#0F172A");
+            if (probabilityState.machineRunning && probabilityState.activeStation === "coin") {
+              reelText.setAttribute("animation__spin", "property: rotation; from: 0 0 0; to: 360 0 0; dur: 520; easing: easeOutCubic");
+            }
+          }
+        }
+        for (var lamp = 0; lamp < 9; lamp++) {
+          var lampEl = lab.querySelector("#prob-coin-lamp-" + lamp);
+          if (lampEl && probabilityState.machineRunning && probabilityState.activeStation === "coin") {
+            lampEl.setAttribute("animation__blink", "property: opacity; from: 0.35; to: 1; dur: 180; dir: alternate; loop: 6");
+          }
+        }
+        var visibleCoins = Math.min(flips, 15);
+        for (var i = 0; i < visibleCoins; i++) {
+          var row = Math.floor(i / 5);
+          var col = i % 5;
           var coinAttrs = {
-            position: (-0.45 + (i % 5) * 0.22) + " " + (0.07 + Math.floor(i / 5) * 0.09) + " 0.06",
+            position: (-0.42 + col * 0.21) + " " + (0.03 + row * 0.045) + " 0.02",
             rotation: "90 0 0",
-            radius: "0.075",
+            radius: "0.058",
             height: "0.018",
             color: i < last ? "#FACC15" : "#78350F",
           };
           if (probabilityState.machineRunning && probabilityState.activeStation === "coin") {
             coinAttrs.animation__pop =
-              "property: position; dur: 420; dir: alternate; loop: 2; to: " +
-              (-0.45 + (i % 5) * 0.22) + " " + (0.2 + Math.floor(i / 5) * 0.09) + " 0.06";
+              "property: position; dur: 520; delay: " + (i * 22) + "; from: " +
+              (-0.42 + col * 0.21) + " 0.34 0.02; to: " +
+              (-0.42 + col * 0.21) + " " + (0.03 + row * 0.045) + " 0.02; easing: easeOutBounce";
           }
           appendEl(root, "a-cylinder", coinAttrs);
         }
@@ -5947,7 +6159,7 @@
             light.setAttribute("color", i < Math.min(last, 6) ? "#BEF264" : "#365314");
             light.setAttribute("opacity", i < Math.min(last, 6) ? "1" : "0.75");
             if (probabilityState.machineRunning && probabilityState.activeStation === "calls" && i < Math.min(last, 6)) {
-              light.setAttribute("animation__blink", "property: scale; from: 1 1 1; to: 1.35 1.35 1.35; dur: 240; dir: alternate; loop: 4");
+              light.setAttribute("animation__blink", "property: scale; from: 1 1 1; to: 1.45 1.45 1.45; dur: 220; delay: " + (i * 120) + "; dir: alternate; loop: 4");
             }
           }
         }
@@ -5958,9 +6170,9 @@
         var last = probabilityState.observedSamples.length
           ? probabilityState.observedSamples[probabilityState.observedSamples.length - 1]
           : null;
-        setTextIfPresent(lab, "#prob-coin-display", "MONEDAS\nExitos: " + (station.id === "coin" && last !== null ? Math.round(last) : "-") + "\nTotal: " + probabilityState.trialCount);
+        setTextIfPresent(lab, "#prob-coin-display", "Exitos: " + (station.id === "coin" && last !== null ? Math.round(last) : "-") + " / " + Math.round(probabilityState.parameters.n || 10) + "\nTotal: " + probabilityState.trialCount);
         setTextIfPresent(lab, "#prob-dice-display", "DADOS\nUltimo: " + (station.id === "dice" && last !== null ? Math.round(last) : "-") + "\nTiradas: " + probabilityState.trialCount);
-        setTextIfPresent(lab, "#prob-calls-display", "LLAMADAS\nUltimo: " + (station.id === "calls" && last !== null ? Math.round(last) : "-") + "\nMinutos: " + probabilityState.trialCount);
+        setTextIfPresent(lab, "#prob-calls-display", "Llamadas/min: " + (station.id === "calls" && last !== null ? Math.round(last) : "-") + "\nMinutos: " + probabilityState.trialCount);
         renderCoinVisuals(lab);
         renderDiceVisuals(lab);
         renderCallsVisuals(lab);
