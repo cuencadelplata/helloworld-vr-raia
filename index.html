@@ -166,7 +166,7 @@
               showFunction("func4");
               break;
             case "func5":
-              showFunction("func5");aw
+              showFunction("func5");
               break;
             case "back-math":
               showMathMenu();
@@ -1605,6 +1605,9 @@
         var side = getAulaSide(posicionXYZ);
         var frontX = side * 3.82;
         var frontRot = "0 " + -side * 90 + " 0";
+        var rightWallX = -side * 3.82;
+        var rightMachineX = -side * 3.15;
+        var rightWallRot = "0 " + side * 90 + " 0";
 
         parent.querySelectorAll(".pupitre").forEach(function (desk) {
           desk.parentNode.removeChild(desk);
@@ -1688,10 +1691,28 @@
 
         expandProbabilityClassroom();
 
+        [
+          [-1.45, 0, 1.25],
+          [0, 0, 1.25],
+          [1.45, 0, 1.25],
+          [-1.45, 0, 0.25],
+          [0, 0, 0.25],
+          [1.45, 0, 0.25],
+        ].forEach(function (pos) {
+          appendEl(root, "a-entity", {
+            class: "prob-audience-chair",
+            "gltf-model": "#modelo-pupitre",
+            position: pos.join(" "),
+            rotation: "0 -90 0",
+            scale: "0.24 0.24 0.24",
+            shadow: "cast: true; receive: true",
+          });
+        });
+
         var centerTable = appendEl(root, "a-entity", {
           id: "prob-center-table-group",
-          position: "0 0 0",
-          rotation: "0 90 0",
+          position: "0 0 2.25",
+          rotation: "0 180 0",
         });
 
         appendEl(centerTable, "a-box", {
@@ -1701,6 +1722,7 @@
           height: "0.14",
           depth: "1.75",
           color: "#3B2414",
+          visible: "false",
           material: "roughness: 0.45; metalness: 0.08",
           shadow: "cast: true; receive: true",
         });
@@ -1711,6 +1733,7 @@
           depth: "1.55",
           color: "#0F766E",
           opacity: "0.92",
+          visible: "false",
           shadow: "receive: true",
         });
         appendEl(centerTable, "a-box", {
@@ -1719,6 +1742,7 @@
           height: "0.035",
           depth: "0.045",
           color: "#F59E0B",
+          visible: "false",
         });
         appendEl(centerTable, "a-box", {
           position: "0 0.515 0.79",
@@ -1726,6 +1750,7 @@
           height: "0.035",
           depth: "0.045",
           color: "#F59E0B",
+          visible: "false",
         });
         appendEl(centerTable, "a-box", {
           position: "-1.18 0.515 0",
@@ -1733,6 +1758,7 @@
           height: "0.035",
           depth: "1.6",
           color: "#F59E0B",
+          visible: "false",
         });
         appendEl(centerTable, "a-box", {
           position: "1.18 0.515 0",
@@ -1740,16 +1766,49 @@
           height: "0.035",
           depth: "1.6",
           color: "#F59E0B",
+          visible: "false",
         });
 
         appendEl(centerTable, "a-box", {
           id: "prob-chart-panel",
-          position: "0 1.1 -0.55",
-          width: "2.55",
-          height: "1.25",
+          position: "0 1.28 -0.55",
+          width: "4.05",
+          height: "2.15",
           depth: "0.06",
-          color: "#020617",
-          opacity: "0.92",
+          color: "#0B1115",
+          opacity: "0.97",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "0 2.38 -0.51",
+          width: "4.18",
+          height: "0.07",
+          depth: "0.09",
+          color: "#6B3F18",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "0 0.18 -0.51",
+          width: "4.18",
+          height: "0.07",
+          depth: "0.09",
+          color: "#6B3F18",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "-2.06 1.28 -0.51",
+          width: "0.07",
+          height: "2.18",
+          depth: "0.09",
+          color: "#6B3F18",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "2.06 1.28 -0.51",
+          width: "0.07",
+          height: "2.18",
+          depth: "0.09",
+          color: "#6B3F18",
           shadow: "cast: true; receive: true",
         });
         appendEl(centerTable, "a-box", {
@@ -1758,91 +1817,92 @@
           height: "0.9",
           depth: "0.08",
           color: "#3B2414",
+          visible: "false",
           shadow: "cast: true; receive: true",
         });
         appendEl(centerTable, "a-entity", {
           id: "prob-chart",
-          position: "-1.18 0.67 -0.5",
+          position: "-1.65 0.67 -0.49",
           rotation: "0 0 0",
-          scale: "0.49 0.49 0.49",
+          scale: "0.64 0.64 0.64",
         });
         addText(centerTable, {
           id: "prob-title",
-          value: "Casino Estadistico",
-          position: "0 2.85 0.25",
-          rotation: "0 180 0",
+          value: "Distribucion observada",
+          position: "0 2.08 -0.48",
+          rotation: "0 0 0",
           align: "center",
-          color: "#FDE68A",
+          color: "#E5E7EB",
           width: "4.6",
-          scale: "0.82 0.82 0.82",
+          scale: "0.9 0.9 0.9",
         });
         addText(centerTable, {
           id: "prob-result",
           value: "",
-          position: "-1.08 0.84 0.79",
-          rotation: "-55 0 0",
+          position: "1.07 1.2 -0.48",
+          rotation: "0 0 0",
           align: "left",
           color: "#FFFFFF",
-          width: "2.65",
-          wrapCount: "36",
-          scale: "0.52 0.52 0.52",
+          width: "2.05",
+          wrapCount: "28",
+          scale: "0.48 0.48 0.48",
         });
         addText(centerTable, {
           id: "prob-last-outcome",
           value: "",
-          position: "0.12 1.42 -0.47",
+          position: "0 1.82 -0.48",
           rotation: "0 0 0",
           align: "center",
           color: "#FDE68A",
-          width: "3.2",
-          wrapCount: "32",
-          scale: "0.64 0.64 0.64",
+          width: "3.5",
+          wrapCount: "44",
+          scale: "0.52 0.52 0.52",
         });
         addButton(centerTable, {
           id: "prob-run-once-main",
-          position: "-0.84 0.62 0.66",
-          rotation: "-62 0 0",
+          position: "-1.12 0.36 -0.47",
+          rotation: "0 0 0",
           action: "prob-run-once",
           color: "#16A34A",
           label: "Jugar 1",
-          width: "0.68",
-          height: "0.22",
+          width: "0.72",
+          height: "0.2",
           textWidth: "1.8",
           textPosition: "0 0 0.04",
         });
         addButton(centerTable, {
           id: "prob-run-ten-main",
-          position: "-0.12 0.62 0.66",
-          rotation: "-62 0 0",
+          position: "-0.35 0.36 -0.47",
+          rotation: "0 0 0",
           action: "prob-run-ten",
           color: "#D97706",
           label: "Jugar 10",
-          width: "0.72",
-          height: "0.22",
+          width: "0.76",
+          height: "0.2",
           textWidth: "1.9",
           textPosition: "0 0 0.04",
         });
         addButton(centerTable, {
           id: "prob-run-hundred-main",
-          position: "0.64 0.62 0.66",
-          rotation: "-62 0 0",
+          position: "0.47 0.36 -0.47",
+          rotation: "0 0 0",
           action: "prob-run-hundred",
           color: "#075985",
           label: "Jugar 100",
-          width: "0.78",
-          height: "0.22",
+          width: "0.84",
+          height: "0.2",
           textWidth: "2.05",
           textPosition: "0 0 0.04",
         });
         addButton(centerTable, {
           id: "prob-reset-main",
-          position: "1.36 0.62 0.66",
-          rotation: "-62 0 0",
+          position: "1.28 0.36 -0.47",
+          rotation: "0 0 0",
           action: "prob-reset-observed",
           color: "#991B1B",
           label: "Reset",
-          width: "0.64",
-          height: "0.22",
+          width: "0.66",
+          height: "0.2",
           textWidth: "1.7",
           textPosition: "0 0 0.04",
         });
@@ -1857,7 +1917,8 @@
           color: "#16110A",
         });
         addText(board, {
-          value: "Probabilidad teorica vs frecuencia observada",
+          id: "prob-board-title",
+          value: "Probabilidad teórica vs frecuencia observada",
           position: "0 0.4 0.03",
           align: "center",
           color: "#FDE68A",
@@ -1867,12 +1928,50 @@
         addText(board, {
           id: "prob-description",
           value: "",
-          position: "0 0.06 0.03",
+          position: "0 0.08 0.03",
           align: "center",
           color: "#FFEDD5",
           width: "4.1",
           wrapCount: "50",
-          scale: "0.62 0.62 0.62",
+          scale: "0.58 0.58 0.58",
+        });
+        appendEl(board, "a-box", {
+          width: "0.38",
+          height: "0.1",
+          depth: "0.015",
+          position: "-1.2 -0.36 0.035",
+          color: "#FDE047",
+        });
+        addText(board, {
+          value: "Teoria esperada",
+          position: "-0.78 -0.36 0.045",
+          align: "left",
+          color: "#F8FAFC",
+          width: "4",
+          scale: "0.46 0.46 0.46",
+        });
+        appendEl(board, "a-box", {
+          width: "0.02",
+          height: "0.32",
+          depth: "0.01",
+          position: "0.1 -0.36 0.04",
+          color: "#64748B",
+          opacity: "0.8",
+        });
+        appendEl(board, "a-box", {
+          width: "0.38",
+          height: "0.1",
+          depth: "0.015",
+          position: "0.62 -0.36 0.035",
+          color: "#EF4444",
+        });
+        addText(board, {
+          value: "Datos generados",
+          position: "1.04 -0.36 0.045",
+          align: "left",
+          color: "#F8FAFC",
+          width: "4",
+          scale: "0.46 0.46 0.46",
         });
 
         function addMachineBase(config) {
@@ -1949,6 +2048,67 @@
           return machine;
         }
 
+        function addStationBadge(parentEl, config) {
+          var badge = appendEl(parentEl, "a-entity", {
+            position: config.position,
+            rotation: config.rotation || "0 0 0",
+          });
+          appendEl(badge, "a-plane", {
+            width: config.width || "1.08",
+            height: config.height || "0.32",
+            color: config.color || "#020617",
+            opacity: config.opacity || "0.94",
+          });
+          addText(badge, {
+            value: config.title,
+            position: "0 0.075 0.026",
+            align: "center",
+            color: config.titleColor || "#FFFFFF",
+            width: config.titleWidth || "2.6",
+            wrapCount: config.titleWrap || "26",
+            scale: config.titleScale || "0.42 0.42 0.42",
+          });
+          addText(badge, {
+            value: config.subtitle,
+            position: "0 -0.08 0.026",
+            align: "center",
+            color: config.subtitleColor || "#CBD5E1",
+            width: config.subtitleWidth || "2.8",
+            wrapCount: config.subtitleWrap || "32",
+            scale: config.subtitleScale || "0.31 0.31 0.31",
+          });
+          return badge;
+        }
+
+        function addMachineHeader(parentEl, config) {
+          appendEl(parentEl, "a-box", {
+            width: config.width || "1.08",
+            height: config.height || "0.42",
+            depth: "0.04",
+            position: config.position,
+            color: config.color || "#052E16",
+            opacity: "0.98",
+          });
+          addText(parentEl, {
+            value: config.title,
+            position: config.titlePosition,
+            align: "center",
+            color: config.titleColor || "#FDE68A",
+            width: config.titleWidth || "2.5",
+            wrapCount: config.titleWrap || "22",
+            scale: config.titleScale || "0.5 0.5 0.5",
+          });
+          addText(parentEl, {
+            value: config.subtitle,
+            position: config.subtitlePosition,
+            align: "center",
+            color: config.subtitleColor || "#E0F2FE",
+            width: config.subtitleWidth || "2.8",
+            wrapCount: config.subtitleWrap || "28",
+            scale: config.subtitleScale || "0.36 0.36 0.36",
+          });
+        }
+
         var coinMachine = appendEl(root, "a-entity", {
           id: "prob-coin-machine",
           position: side * 3.15 + " 0 -2.05",
@@ -1956,150 +2116,204 @@
           scale: "1.08 1.08 1.08",
         });
         appendEl(coinMachine, "a-box", {
-          width: "1.18",
-          height: "1.72",
-          depth: "0.56",
-          position: "0 1.05 -0.04",
-          color: "#24150B",
+          width: "1.34",
+          height: "1.82",
+          depth: "0.6",
+          position: "0 1.04 -0.04",
+          color: "#190D08",
           shadow: "cast: true; receive: true",
         });
         appendEl(coinMachine, "a-box", {
-          width: "1.3",
+          width: "1.46",
           height: "0.18",
-          depth: "0.68",
+          depth: "0.72",
           position: "0 0.18 0",
-          color: "#0B3B2E",
+          color: "#12362D",
           shadow: "cast: true; receive: true",
         });
         appendEl(coinMachine, "a-box", {
-          width: "1.05",
-          height: "0.34",
+          width: "1.22",
+          height: "1.62",
           depth: "0.035",
-          position: "0 1.72 0.255",
-          color: "#064E3B",
-          opacity: "0.95",
+          position: "0 1.08 0.275",
+          color: "#2A170B",
+          opacity: "0.98",
         });
-        addText(coinMachine, {
-          value: "MONEDAS / BINOMIAL",
-          position: "0 1.73 0.278",
-          align: "center",
-          color: "#FDE68A",
-          width: "2.15",
-          scale: "0.38 0.38 0.38",
+        addMachineHeader(coinMachine, {
+          position: "0 1.78 0.31",
+          width: "1.12",
+          height: "0.32",
+          color: "#06311F",
+          title: "BINOMIAL",
+          subtitle: "monedas: 10 lanzamientos",
+          titlePosition: "0 1.84 0.34",
+          subtitlePosition: "0 1.71 0.34",
+          titleColor: "#FDE68A",
+          subtitleColor: "#DCFCE7",
+          titleScale: "0.54 0.54 0.54",
+          subtitleScale: "0.3 0.3 0.3",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.12",
+          height: "0.56",
+          depth: "0.045",
+          position: "0 1.31 0.302",
+          color: "#0F3B2D",
+          opacity: "0.98",
         });
         appendEl(coinMachine, "a-plane", {
-          width: "0.98",
-          height: "0.36",
-          position: "0 1.3 0.268",
-          color: "#050505",
-          opacity: "0.96",
+          width: "1.03",
+          height: "0.47",
+          position: "0 1.31 0.328",
+          color: "#E7E0CE",
+          opacity: "0.98",
         });
-        for (var reel = 0; reel < 3; reel++) {
-          appendEl(coinMachine, "a-box", {
-            width: "0.25",
-            height: "0.3",
-            depth: "0.035",
-            position: (-0.32 + reel * 0.32) + " 1.3 0.292",
-            color: "#F8FAFC",
+        for (var flip = 0; flip < 10; flip++) {
+          var row = Math.floor(flip / 5);
+          var col = flip % 5;
+          var x = -0.4 + col * 0.2;
+          var y = 1.39 - row * 0.19;
+          appendEl(coinMachine, "a-cylinder", {
+            id: "prob-coin-flip-body-" + flip,
+            position: x + " " + y + " 0.36",
+            rotation: "90 0 0",
+            radius: "0.075",
+            height: "0.018",
+            color: "#C9BFA8",
             opacity: "0.98",
           });
-          addText(coinMachine, {
-            id: "prob-coin-reel-" + reel,
-            value: "?",
-            position: (-0.32 + reel * 0.32) + " 1.3 0.315",
-            align: "center",
-            color: "#7C2D12",
-            width: "0.75",
-            scale: "0.52 0.52 0.52",
-          });
-        }
-        [
-          [-0.58, 1.82], [-0.29, 1.92], [0, 1.94], [0.29, 1.92], [0.58, 1.82],
-          [-0.58, 1.48], [0.58, 1.48], [-0.58, 1.14], [0.58, 1.14],
-        ].forEach(function (lamp, i) {
-          appendEl(coinMachine, "a-sphere", {
-            id: "prob-coin-lamp-" + i,
-            position: lamp[0] + " " + lamp[1] + " 0.305",
-            radius: "0.035",
-            color: i % 2 ? "#F59E0B" : "#DC2626",
+          appendEl(coinMachine, "a-ring", {
+            id: "prob-coin-flip-rim-" + flip,
+            position: x + " " + y + " 0.374",
+            "radius-inner": "0.061",
+            "radius-outer": "0.073",
+            color: "#A78A2D",
             opacity: "0.9",
           });
+          appendEl(coinMachine, "a-circle", {
+            id: "prob-coin-flip-face-head-" + flip,
+            position: x + " " + (y + 0.017) + " 0.379",
+            radius: "0.019",
+            color: "#A98213",
+            visible: "false",
+          });
+          appendEl(coinMachine, "a-circle", {
+            id: "prob-coin-flip-face-body-" + flip,
+            position: x + " " + (y - 0.024) + " 0.379",
+            radius: "0.031",
+            scale: "1.4 0.72 1",
+            color: "#A98213",
+            visible: "false",
+          });
+          appendEl(coinMachine, "a-box", {
+            id: "prob-coin-flip-cross-a-" + flip,
+            position: x + " " + y + " 0.379",
+            rotation: "0 0 45",
+            width: "0.09",
+            height: "0.012",
+            depth: "0.006",
+            color: "#334155",
+            visible: "false",
+          });
+          appendEl(coinMachine, "a-box", {
+            id: "prob-coin-flip-cross-b-" + flip,
+            position: x + " " + y + " 0.379",
+            rotation: "0 0 -45",
+            width: "0.09",
+            height: "0.012",
+            depth: "0.006",
+            color: "#334155",
+            visible: "false",
+          });
+          addText(coinMachine, {
+            id: "prob-coin-flip-label-" + flip,
+            value: "?",
+            position: x + " " + (y - 0.012) + " 0.373",
+            align: "center",
+            color: "#3B2A16",
+            width: "0.45",
+            wrapCount: "4",
+            scale: "0.28 0.28 0.28",
+          });
+        }
+        addText(coinMachine, {
+          value: "cara = rostro   cruz = X",
+          position: "0 1.05 0.353",
+          align: "center",
+          color: "#D7F5E6",
+          width: "2.2",
+          wrapCount: "22",
+          scale: "0.26 0.26 0.26",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.03",
+          height: "0.24",
+          depth: "0.035",
+          position: "0 0.9 0.326",
+          color: "#07120C",
+          opacity: "0.98",
         });
         addText(coinMachine, {
           id: "prob-coin-display",
           value: "",
-          position: "0 0.98 0.295",
+          position: "0 0.9 0.353",
           align: "center",
           color: "#FDE68A",
-          width: "2.1",
-          wrapCount: "28",
-          scale: "0.36 0.36 0.36",
+          width: "2.2",
+          wrapCount: "24",
+          scale: "0.42 0.42 0.42",
         });
         appendEl(coinMachine, "a-box", {
-          width: "0.8",
+          width: "1.02",
           height: "0.08",
           depth: "0.08",
-          position: "0 0.74 0.295",
+          position: "0 0.72 0.315",
           color: "#111827",
         });
         appendEl(coinMachine, "a-box", {
-          width: "0.88",
+          width: "1.04",
           height: "0.14",
           depth: "0.24",
-          position: "0 0.46 0.19",
+          position: "0 0.43 0.2",
           color: "#0F172A",
           shadow: "cast: true; receive: true",
         });
         appendEl(coinMachine, "a-box", {
-          width: "0.82",
+          width: "0.96",
           height: "0.025",
           depth: "0.2",
-          position: "0 0.54 0.285",
+          position: "0 0.51 0.31",
           color: "#F59E0B",
         });
         addButton(coinMachine, {
           id: "prob-coin-select",
-          position: "-0.27 0.66 0.32",
+          position: "-0.3 0.62 0.35",
           rotation: "-12 0 0",
           action: "prob-station-coin",
           color: "#0F766E",
           label: "Elegir",
-          width: "0.42",
-          height: "0.18",
+          width: "0.44",
+          height: "0.16",
           depth: "0.045",
-          textWidth: "1.25",
+          textWidth: "1.2",
           textPosition: "0 0 0.035",
         });
         addButton(coinMachine, {
           id: "prob-coin-run",
-          position: "0.29 0.66 0.32",
+          position: "0.31 0.62 0.35",
           rotation: "-12 0 0",
           action: "prob-run-once",
           color: "#B45309",
-          label: "Palanca",
-          width: "0.5",
-          height: "0.18",
+          label: "Simular",
+          width: "0.44",
+          height: "0.16",
           depth: "0.045",
-          textWidth: "1.45",
+          textWidth: "1.15",
           textPosition: "0 0 0.035",
-        });
-        appendEl(coinMachine, "a-cylinder", {
-          id: "prob-coin-lever",
-          position: "0.74 1.18 0.02",
-          rotation: "0 0 28",
-          radius: "0.035",
-          height: "0.58",
-          color: "#D97706",
-          animation__run: "property: rotation; startEvents: casino-run; from: 0 0 28; to: 0 0 112; dur: 260; dir: alternate; loop: 2",
-        });
-        appendEl(coinMachine, "a-sphere", {
-          position: "0.86 1.44 0.02",
-          radius: "0.095",
-          color: "#FDE68A",
         });
         appendEl(coinMachine, "a-entity", {
           id: "prob-coin-visuals",
-          position: "0 0.43 0.3",
+          position: "0 0.39 0.32",
         });
 
         var diceMachine = addMachineBase({
@@ -2132,6 +2346,20 @@
           depth: "1.12",
         });
         diceMachine.setAttribute("scale", "1.08 1.08 1.08");
+        addMachineHeader(diceMachine, {
+          position: "0 1.2 -0.455",
+          width: "1.34",
+          height: "0.36",
+          color: "#031A2D",
+          title: "UNIFORME\nDISCRETA",
+          subtitle: "dado justo: caras 1 a 6",
+          titlePosition: "0 1.28 -0.385",
+          subtitlePosition: "0 1.13 -0.385",
+          titleColor: "#7DD3FC",
+          subtitleColor: "#E0F2FE",
+          titleScale: "0.42 0.42 0.42",
+          subtitleScale: "0.32 0.32 0.32",
+        });
         addButton(diceMachine, {
           id: "prob-dice-run-ten",
           position: "0.16 0.54 0.43",
@@ -2158,24 +2386,66 @@
           textWidth: "0.95",
           textPosition: "0 0 0.032",
         });
-        appendEl(diceMachine, "a-box", {
+        function addDiePip(parentEl, position, rotation) {
+          appendEl(parentEl, "a-circle", {
+            position: position,
+            rotation: rotation,
+            radius: "0.026",
+            color: "#111827",
+            opacity: "0.98",
+          });
+        }
+
+        function addDieFace(parentEl, face, value) {
+          var side = 0.226;
+          var offset = 0.088;
+          var positions = {
+            1: [[0, 0]],
+            2: [[-offset, offset], [offset, -offset]],
+            3: [[-offset, offset], [0, 0], [offset, -offset]],
+            4: [[-offset, offset], [offset, offset], [-offset, -offset], [offset, -offset]],
+            5: [[-offset, offset], [offset, offset], [0, 0], [-offset, -offset], [offset, -offset]],
+            6: [[-offset, offset], [offset, offset], [-offset, 0], [offset, 0], [-offset, -offset], [offset, -offset]],
+          }[value] || [];
+          positions.forEach(function (pip) {
+            var u = pip[0];
+            var v = pip[1];
+            if (face === "front") addDiePip(parentEl, u + " " + v + " " + side, "0 0 0");
+            if (face === "back") addDiePip(parentEl, (-u) + " " + v + " " + (-side), "0 180 0");
+            if (face === "right") addDiePip(parentEl, side + " " + v + " " + (-u), "0 90 0");
+            if (face === "left") addDiePip(parentEl, (-side) + " " + v + " " + u, "0 -90 0");
+            if (face === "top") addDiePip(parentEl, u + " " + side + " " + (-v), "-90 0 0");
+            if (face === "bottom") addDiePip(parentEl, u + " " + (-side) + " " + v, "90 0 0");
+          });
+        }
+
+        var diceCube = appendEl(diceMachine, "a-entity", {
           id: "prob-dice-cube",
-          position: "0 0.76 0",
-          width: "0.34",
-          height: "0.34",
-          depth: "0.34",
+          position: "0 0.78 0.08",
+          rotation: "0 0 0",
+        });
+        appendEl(diceCube, "a-box", {
+          width: "0.44",
+          height: "0.44",
+          depth: "0.44",
           color: "#F8FAFC",
           shadow: "cast: true; receive: true",
-          animation__roll: "property: rotation; startEvents: casino-run; to: 360 720 360; dur: 650; easing: easeOutCubic",
         });
+        addDieFace(diceCube, "front", 5);
+        addDieFace(diceCube, "right", 3);
+        addDieFace(diceCube, "top", 1);
+        addDieFace(diceCube, "back", 2);
+        addDieFace(diceCube, "left", 4);
+        addDieFace(diceCube, "bottom", 6);
         addText(diceMachine, {
-          id: "prob-dice-face",
-          value: "?",
-          position: "0 0.765 0.176",
+          id: "prob-dice-result",
+          value: "",
+          position: "0 0.38 0.42",
+          rotation: "-65 0 0",
           align: "center",
-          color: "#0F172A",
-          width: "1.2",
-          scale: "0.8 0.8 0.8",
+          color: "#E0F2FE",
+          width: "1.9",
+          scale: "0.36 0.36 0.36",
         });
 
         var callsMachine = appendEl(root, "a-entity", {
@@ -2185,109 +2455,171 @@
           scale: "1.08 1.08 1.08",
         });
         appendEl(callsMachine, "a-box", {
-          width: "1.35",
-          height: "1.55",
-          depth: "0.34",
-          position: "0 1.02 -0.04",
-          color: "#102A1B",
+          width: "1.46",
+          height: "2.18",
+          depth: "0.36",
+          position: "0 1.25 -0.04",
+          color: "#071D12",
           shadow: "cast: true; receive: true",
         });
         appendEl(callsMachine, "a-box", {
-          width: "1.48",
+          width: "1.56",
           height: "0.16",
-          depth: "0.48",
+          depth: "0.5",
           position: "0 0.18 0",
-          color: "#263238",
+          color: "#202A2E",
           shadow: "cast: true; receive: true",
         });
-        appendEl(callsMachine, "a-plane", {
-          width: "1.16",
-          height: "0.28",
-          position: "0 1.65 0.145",
-          color: "#06130D",
-          opacity: "0.95",
+        addMachineHeader(callsMachine, {
+          position: "0 1.98 0.155",
+          width: "1.24",
+          height: "0.38",
+          color: "#030B07",
+          title: "POISSON",
+          subtitle: "autos que pasan por minuto",
+          titlePosition: "0 2.06 0.18",
+          subtitlePosition: "0 1.9 0.18",
+          titleColor: "#D9F99D",
+          subtitleColor: "#ECFCCB",
+          titleScale: "0.58 0.58 0.58",
+          subtitleScale: "0.31 0.31 0.31",
         });
-        addText(callsMachine, {
-          value: "LLAMADAS / POISSON",
-          position: "0 1.66 0.17",
-          align: "center",
-          color: "#D9F99D",
-          width: "2.4",
-          scale: "0.38 0.38 0.38",
+        appendEl(callsMachine, "a-box", {
+          width: "1.1",
+          height: "0.3",
+          depth: "0.028",
+          position: "0 1.62 0.165",
+          color: "#06130D",
+          opacity: "0.98",
         });
         addText(callsMachine, {
           id: "prob-calls-display",
           value: "",
-          position: "0 1.37 0.17",
+          position: "0 1.62 0.187",
           align: "center",
-          color: "#ECFCCB",
-          width: "2.25",
-          wrapCount: "30",
+          color: "#F8FAFC",
+          width: "2.15",
+          wrapCount: "28",
           scale: "0.4 0.4 0.4",
         });
-        appendEl(callsMachine, "a-entity", {
-          id: "prob-phone-lights",
-          position: "0 0.96 0.16",
+        addText(callsMachine, {
+          value: "CALLE POR MINUTO",
+          position: "0 1.37 0.18",
+          align: "center",
+          color: "#BAE6FD",
+          width: "2.1",
+          wrapCount: "24",
+          scale: "0.31 0.31 0.31",
         });
-        for (var phone = 0; phone < 6; phone++) {
-          var phoneX = -0.47 + (phone % 3) * 0.47;
-          var phoneY = 0.18 - Math.floor(phone / 3) * 0.34;
-          appendEl(callsMachine.querySelector("#prob-phone-lights"), "a-cylinder", {
-            id: "prob-phone-light-" + phone,
-            position: phoneX + " " + (phoneY + 0.15) + " 0",
-            radius: "0.045",
-            height: "0.028",
-            color: "#365314",
-            opacity: "0.85",
-          });
+        appendEl(callsMachine, "a-box", {
+          width: "0.33",
+          height: "0.01",
+          depth: "0.01",
+          position: "-0.47 1.37 0.18",
+          color: "#38BDF8",
+        });
+        appendEl(callsMachine, "a-box", {
+          width: "0.33",
+          height: "0.01",
+          depth: "0.01",
+          position: "0.47 1.37 0.18",
+          color: "#38BDF8",
+        });
+        appendEl(callsMachine, "a-entity", {
+          id: "prob-traffic-scene",
+          position: "0 0 0",
+        });
+        appendEl(callsMachine, "a-box", {
+          position: "0 0.88 0.185",
+          width: "1.08",
+          height: "0.38",
+          depth: "0.035",
+          color: "#374151",
+          opacity: "0.98",
+        });
+        for (var stripe = 0; stripe < 5; stripe++) {
           appendEl(callsMachine, "a-box", {
-            position: phoneX + " " + (phoneY + 0.9) + " 0.17",
-            width: "0.25",
-            height: "0.07",
-            depth: "0.055",
-            color: "#E5E7EB",
+            position: (-0.42 + stripe * 0.21) + " 0.88 0.212",
+            width: "0.09",
+            height: "0.012",
+            depth: "0.008",
+            color: "#F8FAFC",
           });
-          appendEl(callsMachine, "a-torus", {
-            position: phoneX + " " + (phoneY + 0.82) + " 0.17",
-            rotation: "0 0 0",
-            radius: "0.1",
-            "radius-tubular": "0.013",
-            arc: "180",
-            color: "#94A3B8",
+        }
+        appendEl(callsMachine, "a-box", {
+          position: "-0.54 0.88 0.212",
+          width: "0.018",
+          height: "0.38",
+          depth: "0.008",
+          color: "#FACC15",
+        });
+        appendEl(callsMachine, "a-cylinder", {
+          position: "0.52 1.12 0.2",
+          radius: "0.025",
+          height: "0.18",
+          color: "#475569",
+        });
+        appendEl(callsMachine, "a-sphere", {
+          id: "prob-traffic-light",
+          position: "0.52 1.22 0.2",
+          radius: "0.035",
+          color: "#22C55E",
+        });
+        for (var car = 0; car < 10; car++) {
+          var carEl = appendEl(callsMachine, "a-entity", {
+            id: "prob-traffic-car-" + car,
+            position: "0 0.88 0.23",
+            visible: "false",
           });
-          appendEl(callsMachine, "a-cylinder", {
-            position: phoneX + " " + (phoneY + 0.7) + " 0.165",
-            rotation: "0 0 0",
-            radius: "0.009",
-            height: "0.23",
-            color: "#475569",
+          appendEl(carEl, "a-box", {
+            width: "0.14",
+            height: "0.055",
+            depth: "0.045",
+            position: "0 0 0",
+            color: car % 3 === 0 ? "#F97316" : car % 3 === 1 ? "#38BDF8" : "#A3E635",
+          });
+          appendEl(carEl, "a-box", {
+            width: "0.075",
+            height: "0.04",
+            depth: "0.04",
+            position: "-0.012 0.04 0",
+            color: "#E0F2FE",
+          });
+          [-0.045, 0.045].forEach(function (wheelX) {
+            appendEl(carEl, "a-cylinder", {
+              position: wheelX + " -0.035 0.026",
+              rotation: "90 0 0",
+              radius: "0.018",
+              height: "0.012",
+              color: "#111827",
+            });
           });
         }
         addButton(callsMachine, {
           id: "prob-calls-select",
-          position: "-0.33 0.43 0.19",
+          position: "-0.31 0.42 0.31",
           rotation: "-10 0 0",
           action: "prob-station-calls",
-          color: "#4D7C0F",
-          label: "Elegir",
-          width: "0.44",
-          height: "0.18",
+          color: "#0369A1",
+          label: "Elegir λ",
+          width: "0.52",
+          height: "0.17",
           depth: "0.045",
-          textWidth: "1.25",
+          textWidth: "1.35",
           textPosition: "0 0 0.035",
         });
         addButton(callsMachine, {
           id: "prob-calls-run",
-          position: "0.29 0.43 0.19",
+          position: "0.31 0.42 0.31",
           rotation: "-10 0 0",
           action: "prob-run-once",
-          color: "#84CC16",
-          label: "Minuto",
+          color: "#38BDF8",
+          label: "Avanzar minuto",
           width: "0.5",
-          height: "0.18",
+          height: "0.17",
           depth: "0.045",
-          textColor: "#102A1B",
-          textWidth: "1.45",
+          textColor: "#082F49",
+          textWidth: "1.7",
           textPosition: "0 0 0.035",
         });
         appendEl(callsMachine, "a-entity", {
@@ -2323,10 +2655,63 @@
           width: "2.5",
           scale: "0.52 0.52 0.52",
         });
-        appendEl(root, "a-entity", {
+        var paramPanel = appendEl(root, "a-entity", {
+          id: "prob-param-panel",
+          position: "0 2.05 -2.62",
+          rotation: "0 0 0",
+        });
+        appendEl(paramPanel, "a-plane", {
+          position: "0 0 -0.018",
+          width: "3.25",
+          height: "1.78",
+          color: "#0D1720",
+          opacity: "0.88",
+          material: "side: double; transparent: true; roughness: 0.7; metalness: 0.05",
+        });
+        appendEl(paramPanel, "a-plane", {
+          position: "0 0 -0.015",
+          width: "3.34",
+          height: "1.87",
+          color: "#60A5FA",
+          opacity: "0.22",
+          material: "side: double; transparent: true",
+        });
+        appendEl(paramPanel, "a-plane", {
+          position: "0 0 0.002",
+          width: "3.18",
+          height: "1.7",
+          color: "#111827",
+          opacity: "0.78",
+          material: "side: double; transparent: true",
+        });
+        addText(paramPanel, {
+          value: "Parametros de simulacion",
+          position: "0 0.68 0.04",
+          align: "center",
+          color: "#E5F2FF",
+          width: "3.2",
+          scale: "0.92 0.92 0.92",
+        });
+        addText(paramPanel, {
+          value: "Ajusta los valores antes de comenzar",
+          position: "0 0.48 0.04",
+          align: "center",
+          color: "#93C5FD",
+          width: "2.8",
+          scale: "0.52 0.52 0.52",
+        });
+        appendEl(paramPanel, "a-plane", {
+          position: "0 0.33 0.025",
+          width: "2.55",
+          height: "0.012",
+          color: "#60A5FA",
+          opacity: "0.55",
+          material: "side: double; transparent: true",
+        });
+        appendEl(paramPanel, "a-entity", {
           id: "prob-param-rows",
-          position: "0 1.85 2.68",
-          rotation: "0 180 0",
+          position: "0 0.03 0.06",
+          scale: "1.3 1.3 1.3",
         });
 
         setTimeout(function () {
@@ -5407,35 +5792,35 @@
       var PROB_CASINO_STATIONS = [
         {
           id: "coin",
-          label: "Maquina de monedas",
+          label: "Binomial",
           distributionId: "binomial",
           params: { n: 10, p: 0.5 },
           intervalType: "between",
           a: 4,
           b: 6,
-          description: "Binomial: caras en 10 lanzamientos.",
+          description: "Binomial: cuenta caras en n lanzamientos con probabilidad p.",
           pending: false,
         },
         {
           id: "dice",
-          label: "Mesa de dados",
+          label: "Uniforme discreta",
           distributionId: "uniformDiscrete",
           params: { m: 6 },
           intervalType: "between",
           a: 1,
           b: 6,
-          description: "Uniforme discreta: dado justo de 6 caras.",
+          description: "Uniforme discreta: resultado de 1 a m con igual probabilidad.",
           pending: false,
         },
         {
           id: "calls",
-          label: "Central telefonica",
+          label: "Poisson",
           distributionId: "poisson",
-          params: { lambda: 4 },
+          params: { lambda: 3 },
           intervalType: "between",
           a: 2,
           b: 6,
-          description: "Poisson: llamadas por minuto.",
+          description: "Poisson: cuenta autos por minuto con tasa media lambda.",
           pending: false,
         },
       ];
@@ -5447,6 +5832,7 @@
         b: 6,
         activeStation: "coin",
         observedSamples: [],
+        lastCoinFlips: [],
         trialCount: 0,
         lastOutcome: "Elegi una maquina y activa el experimento.",
         machineRunning: false,
@@ -5882,6 +6268,7 @@
 
       function resetProbabilityObserved(message) {
         probabilityState.observedSamples = [];
+        probabilityState.lastCoinFlips = [];
         probabilityState.trialCount = 0;
         probabilityState.machineRunning = false;
         probabilityState.lastOutcome = message || "Datos observados reiniciados.";
@@ -5918,9 +6305,13 @@
           var flips = Math.round(params.n || 10);
           var p = params.p || 0.5;
           var successes = 0;
+          var coinFlips = [];
           for (var i = 0; i < flips; i++) {
-            if (Math.random() < p) successes++;
+            var isSuccess = Math.random() < p;
+            coinFlips.push(isSuccess);
+            if (isSuccess) successes++;
           }
+          probabilityState.lastCoinFlips = coinFlips;
           return successes;
         }
         if (station.id === "dice") {
@@ -6227,53 +6618,110 @@
         });
       }
 
+      function addDigitalDigit(parent, digit, size, color) {
+        var maps = {
+          "0": ["a", "b", "c", "d", "e", "f"],
+          "1": ["b", "c"],
+          "2": ["a", "b", "g", "e", "d"],
+          "3": ["a", "b", "g", "c", "d"],
+          "4": ["f", "g", "b", "c"],
+          "5": ["a", "f", "g", "c", "d"],
+          "6": ["a", "f", "g", "e", "c", "d"],
+          "7": ["a", "b", "c"],
+          "8": ["a", "b", "c", "d", "e", "f", "g"],
+          "9": ["a", "b", "c", "d", "f", "g"],
+        };
+        var active = maps[String(digit)] || [];
+        if (!active.length) {
+          addText(parent, {
+            value: "?",
+            position: "0 -0.01 0.01",
+            align: "center",
+            color: color,
+            width: (size * 3).toString(),
+            scale: size + " " + size + " " + size,
+          });
+          return;
+        }
+        var horizontal = {
+          a: [0, 0.5, size * 0.48, size * 0.065],
+          g: [0, 0, size * 0.48, size * 0.065],
+          d: [0, -0.5, size * 0.48, size * 0.065],
+        };
+        var vertical = {
+          f: [-0.24, 0.25, size * 0.065, size * 0.3],
+          b: [0.24, 0.25, size * 0.065, size * 0.3],
+          e: [-0.24, -0.25, size * 0.065, size * 0.3],
+          c: [0.24, -0.25, size * 0.065, size * 0.3],
+        };
+        active.forEach(function (segment) {
+          var spec = horizontal[segment] || vertical[segment];
+          appendEl(parent, "a-box", {
+            position: (spec[0] * size) + " " + (spec[1] * size) + " 0",
+            width: spec[2].toString(),
+            height: spec[3].toString(),
+            depth: "0.012",
+            color: color,
+            opacity: "0.98",
+          });
+        });
+      }
+
+      function setDigitalNumber(parent, value, places, size, color, gap) {
+        clearEntityChildren(parent);
+        if (!parent) return;
+        var text = value == null ? "" : String(value);
+        if (places && text !== "?") text = text.padStart(places, "0");
+        if (!text) text = "?";
+        gap = gap || size * 0.34;
+        var start = -((text.length - 1) * gap) / 2;
+        for (var i = 0; i < text.length; i++) {
+          var digit = appendEl(parent, "a-entity", {
+            position: (start + i * gap) + " 0 0",
+          });
+          addDigitalDigit(digit, text.charAt(i), size, color);
+        }
+      }
+
       function renderCoinVisuals(lab) {
         var root = lab.querySelector("#prob-coin-visuals");
         clearEntityChildren(root);
         if (!root) return;
-        var last = probabilityState.activeStation === "coin" && probabilityState.observedSamples.length
-          ? Math.round(probabilityState.observedSamples[probabilityState.observedSamples.length - 1])
-          : 0;
-        var flips = Math.round(probabilityState.parameters.n || 10);
-        for (var reel = 0; reel < 3; reel++) {
-          var reelText = lab.querySelector("#prob-coin-reel-" + reel);
-          if (reelText) {
-            var hit = reel < Math.min(last, 3);
-            reelText.setAttribute("value", hit ? "$" : "-");
-            reelText.setAttribute("color", hit ? "#A16207" : "#0F172A");
-            if (probabilityState.machineRunning && probabilityState.activeStation === "coin") {
-              reelText.setAttribute("animation__spin", "property: rotation; from: 0 0 0; to: 360 0 0; dur: 520; easing: easeOutCubic");
+        var flips = probabilityState.activeStation === "coin" ? probabilityState.lastCoinFlips : [];
+        for (var flip = 0; flip < 10; flip++) {
+          var body = lab.querySelector("#prob-coin-flip-body-" + flip);
+          var rim = lab.querySelector("#prob-coin-flip-rim-" + flip);
+          var faceHead = lab.querySelector("#prob-coin-flip-face-head-" + flip);
+          var faceBody = lab.querySelector("#prob-coin-flip-face-body-" + flip);
+          var crossA = lab.querySelector("#prob-coin-flip-cross-a-" + flip);
+          var crossB = lab.querySelector("#prob-coin-flip-cross-b-" + flip);
+          var label = lab.querySelector("#prob-coin-flip-label-" + flip);
+          var hasResult = flip < flips.length;
+          var isFace = !!flips[flip];
+          if (body) {
+            body.setAttribute("color", !hasResult ? "#C9BFA8" : isFace ? "#FACC15" : "#9CA3AF");
+            body.setAttribute("opacity", hasResult ? "1" : "0.72");
+            if (probabilityState.machineRunning && probabilityState.activeStation === "coin" && hasResult) {
+              body.setAttribute("animation__flip", "property: rotation; from: 90 0 0; to: 450 0 0; dur: 560; delay: " + (flip * 42) + "; easing: easeOutCubic");
             }
           }
-        }
-        for (var lamp = 0; lamp < 9; lamp++) {
-          var lampEl = lab.querySelector("#prob-coin-lamp-" + lamp);
-          if (lampEl && probabilityState.machineRunning && probabilityState.activeStation === "coin") {
-            lampEl.setAttribute("animation__blink", "property: opacity; from: 0.35; to: 1; dur: 180; dir: alternate; loop: 6");
+          if (rim) {
+            rim.setAttribute("color", !hasResult ? "#A78A2D" : isFace ? "#B8860B" : "#64748B");
+            rim.setAttribute("opacity", hasResult ? "0.95" : "0.55");
           }
-        }
-        var visibleCoins = Math.min(flips, 15);
-        for (var i = 0; i < visibleCoins; i++) {
-          var row = Math.floor(i / 5);
-          var col = i % 5;
-          var coinAttrs = {
-            position: (-0.42 + col * 0.21) + " " + (0.03 + row * 0.045) + " 0.02",
-            rotation: "90 0 0",
-            radius: "0.058",
-            height: "0.018",
-            color: i < last ? "#FACC15" : "#78350F",
-          };
-          if (probabilityState.machineRunning && probabilityState.activeStation === "coin") {
-            coinAttrs.animation__pop =
-              "property: position; dur: 520; delay: " + (i * 22) + "; from: " +
-              (-0.42 + col * 0.21) + " 0.34 0.02; to: " +
-              (-0.42 + col * 0.21) + " " + (0.03 + row * 0.045) + " 0.02; easing: easeOutBounce";
+          [faceHead, faceBody].forEach(function (part) {
+            if (!part) return;
+            part.setAttribute("visible", hasResult && isFace ? "true" : "false");
+            part.setAttribute("color", "#B8860B");
+          });
+          [crossA, crossB].forEach(function (part) {
+            if (!part) return;
+            part.setAttribute("visible", hasResult && !isFace ? "true" : "false");
+          });
+          if (label) {
+            label.setAttribute("value", hasResult ? "" : "?");
+            label.setAttribute("color", "#5B5144");
           }
-          appendEl(root, "a-cylinder", coinAttrs);
-        }
-        var lever = lab.querySelector("#prob-coin-lever");
-        if (lever && probabilityState.machineRunning && probabilityState.activeStation === "coin") {
-          lever.emit("casino-run");
         }
       }
 
@@ -6281,10 +6729,30 @@
         var last = probabilityState.activeStation === "dice" && probabilityState.observedSamples.length
           ? Math.round(probabilityState.observedSamples[probabilityState.observedSamples.length - 1])
           : "?";
-        setTextIfPresent(lab, "#prob-dice-face", String(last));
+        setTextIfPresent(lab, "#prob-dice-result", last === "?" ? "Tira el dado" : "Salio: " + last);
         var cube = lab.querySelector("#prob-dice-cube");
         if (cube && probabilityState.machineRunning && probabilityState.activeStation === "dice") {
+          var finalRotations = {
+            1: "0 0 0",
+            2: "90 0 0",
+            3: "0 0 90",
+            4: "0 0 -90",
+            5: "-90 0 0",
+            6: "180 0 0",
+          };
+          var target = finalRotations[last] || "0 0 0";
+          cube.setAttribute("animation__roll", "property: rotation; startEvents: casino-run; from: -360 -720 -360; to: " + target + "; dur: 720; easing: easeOutCubic");
           cube.emit("casino-run");
+        } else if (cube && last !== "?") {
+          var stableRotations = {
+            1: "0 0 0",
+            2: "90 0 0",
+            3: "0 0 90",
+            4: "0 0 -90",
+            5: "-90 0 0",
+            6: "180 0 0",
+          };
+          cube.setAttribute("rotation", stableRotations[last] || "0 0 0");
         }
       }
 
@@ -6292,15 +6760,23 @@
         var last = probabilityState.activeStation === "calls" && probabilityState.observedSamples.length
           ? Math.round(probabilityState.observedSamples[probabilityState.observedSamples.length - 1])
           : 0;
-        for (var i = 0; i < 6; i++) {
-          var light = lab.querySelector("#prob-phone-light-" + i);
-          if (light) {
-            light.setAttribute("color", i < Math.min(last, 6) ? "#BEF264" : "#365314");
-            light.setAttribute("opacity", i < Math.min(last, 6) ? "1" : "0.75");
-            if (probabilityState.machineRunning && probabilityState.activeStation === "calls" && i < Math.min(last, 6)) {
-              light.setAttribute("animation__blink", "property: scale; from: 1 1 1; to: 1.45 1.45 1.45; dur: 220; delay: " + (i * 120) + "; dir: alternate; loop: 4");
-            }
+        var visibleCars = Math.min(last, 10);
+        for (var i = 0; i < 10; i++) {
+          var car = lab.querySelector("#prob-traffic-car-" + i);
+          if (!car) continue;
+          var isVisible = i < visibleCars;
+          var laneY = i % 2 === 0 ? 0.94 : 0.82;
+          var x = -0.44 + ((i * 19 + probabilityState.trialCount * 11) % 86) / 100;
+          car.setAttribute("visible", isVisible ? "true" : "false");
+          if (!isVisible) continue;
+          car.setAttribute("position", x + " " + laneY + " 0.23");
+          if (probabilityState.machineRunning && probabilityState.activeStation === "calls") {
+            car.setAttribute("animation__drive", "property: position; from: -0.58 " + laneY + " 0.23; to: " + x + " " + laneY + " 0.23; dur: 620; delay: " + (i * 65) + "; easing: easeOutCubic");
           }
+        }
+        var trafficLight = lab.querySelector("#prob-traffic-light");
+        if (trafficLight) {
+          trafficLight.setAttribute("color", visibleCars > 0 ? "#22C55E" : "#365314");
         }
       }
 
@@ -6309,9 +6785,10 @@
         var last = probabilityState.observedSamples.length
           ? probabilityState.observedSamples[probabilityState.observedSamples.length - 1]
           : null;
-        setTextIfPresent(lab, "#prob-coin-display", "Exitos: " + (station.id === "coin" && last !== null ? Math.round(last) : "-") + " / " + Math.round(probabilityState.parameters.n || 10) + "\nTotal: " + probabilityState.trialCount);
-        setTextIfPresent(lab, "#prob-dice-display", "DADOS\nUltimo: " + (station.id === "dice" && last !== null ? Math.round(last) : "-") + "\nTiradas: " + probabilityState.trialCount);
-        setTextIfPresent(lab, "#prob-calls-display", "Llamadas/min: " + (station.id === "calls" && last !== null ? Math.round(last) : "-") + "\nMinutos: " + probabilityState.trialCount);
+        var coinLast = station.id === "coin" && last !== null ? Math.round(last) : null;
+        setTextIfPresent(lab, "#prob-coin-display", coinLast === null ? "Simula 10 monedas\nCara = exito" : "Caras: " + coinLast + " de 10\nCruces: " + (10 - coinLast));
+        setTextIfPresent(lab, "#prob-dice-display", "Dado justo: caras 1 a 6\nTiradas: " + probabilityState.trialCount);
+        setTextIfPresent(lab, "#prob-calls-display", "λ = " + formatProbNumber(probabilityState.parameters.lambda || 3, 1) + " autos/min\nMinuto actual: " + probabilityState.trialCount + "\nAutos que pasaron: " + (station.id === "calls" && last !== null ? Math.round(last) : "-"));
         renderCoinVisuals(lab);
         renderDiceVisuals(lab);
         renderCallsVisuals(lab);
@@ -6350,13 +6827,23 @@
         var limits = lab.querySelector("#prob-limits-text");
         var resultText = lab.querySelector("#prob-result");
         var outcomeText = lab.querySelector("#prob-last-outcome");
-        if (title) title.setAttribute("value", "Casino Estadistico");
+        if (title) title.setAttribute("value", "Distribucion observada");
         if (desc) {
-          desc.setAttribute(
-            "value",
-            station.label + " | " + station.description +
-              "\nAmarillo/azul: teoria. Rojo: datos generados.",
-          );
+          var baseDesc = station.label + " | " + station.description;
+          if (station.id === "coin") {
+            baseDesc =
+              "Binomial: caras en 10 lanzamientos" +
+              "\np = probabilidad de cara en cada lanzamiento";
+          } else if (station.id === "dice") {
+            baseDesc =
+              "Uniforme discreta: resultado de un dado justo" +
+              "\nCada cara tiene la misma probabilidad";
+          } else if (station.id === "calls") {
+            baseDesc =
+              "Poisson: autos que pasan por minuto" +
+              "\nλ = promedio esperado de autos por minuto";
+          }
+          desc.setAttribute("value", baseDesc);
         }
         if (distName) distName.setAttribute("value", station.label + " -> " + distribution.name);
         if (limits) {
