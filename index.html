@@ -2287,36 +2287,66 @@
           textWidth: "0.95",
           textPosition: "0 0 0.032",
         });
-        appendEl(diceMachine, "a-box", {
+        function addDiePip(parentEl, position, rotation) {
+          appendEl(parentEl, "a-circle", {
+            position: position,
+            rotation: rotation,
+            radius: "0.026",
+            color: "#111827",
+            opacity: "0.98",
+          });
+        }
+
+        function addDieFace(parentEl, face, value) {
+          var side = 0.226;
+          var offset = 0.088;
+          var positions = {
+            1: [[0, 0]],
+            2: [[-offset, offset], [offset, -offset]],
+            3: [[-offset, offset], [0, 0], [offset, -offset]],
+            4: [[-offset, offset], [offset, offset], [-offset, -offset], [offset, -offset]],
+            5: [[-offset, offset], [offset, offset], [0, 0], [-offset, -offset], [offset, -offset]],
+            6: [[-offset, offset], [offset, offset], [-offset, 0], [offset, 0], [-offset, -offset], [offset, -offset]],
+          }[value] || [];
+          positions.forEach(function (pip) {
+            var u = pip[0];
+            var v = pip[1];
+            if (face === "front") addDiePip(parentEl, u + " " + v + " " + side, "0 0 0");
+            if (face === "back") addDiePip(parentEl, (-u) + " " + v + " " + (-side), "0 180 0");
+            if (face === "right") addDiePip(parentEl, side + " " + v + " " + (-u), "0 90 0");
+            if (face === "left") addDiePip(parentEl, (-side) + " " + v + " " + u, "0 -90 0");
+            if (face === "top") addDiePip(parentEl, u + " " + side + " " + (-v), "-90 0 0");
+            if (face === "bottom") addDiePip(parentEl, u + " " + (-side) + " " + v, "90 0 0");
+          });
+        }
+
+        var diceCube = appendEl(diceMachine, "a-entity", {
           id: "prob-dice-cube",
-          position: "0 0.83 0.06",
-          width: "0.58",
-          height: "0.58",
-          depth: "0.58",
+          position: "0 0.78 0.08",
+          rotation: "0 0 0",
+        });
+        appendEl(diceCube, "a-box", {
+          width: "0.44",
+          height: "0.44",
+          depth: "0.44",
           color: "#F8FAFC",
           shadow: "cast: true; receive: true",
-          animation__roll: "property: rotation; startEvents: casino-run; to: 360 720 360; dur: 650; easing: easeOutCubic",
         });
-        appendEl(diceMachine, "a-box", {
-          position: "0 0.83 0.358",
-          width: "0.43",
-          height: "0.43",
-          depth: "0.012",
-          color: "#FFFFFF",
-          opacity: "0.98",
-        });
-        appendEl(diceMachine, "a-entity", {
-          id: "prob-dice-face",
-          position: "0 0.83 0.37",
-        });
+        addDieFace(diceCube, "front", 5);
+        addDieFace(diceCube, "right", 3);
+        addDieFace(diceCube, "top", 1);
+        addDieFace(diceCube, "back", 2);
+        addDieFace(diceCube, "left", 4);
+        addDieFace(diceCube, "bottom", 6);
         addText(diceMachine, {
-          value: "resultado",
-          position: "0 0.42 0.42",
+          id: "prob-dice-result",
+          value: "",
+          position: "0 0.38 0.42",
           rotation: "-65 0 0",
           align: "center",
           color: "#E0F2FE",
-          width: "1.7",
-          scale: "0.28 0.28 0.28",
+          width: "1.9",
+          scale: "0.36 0.36 0.36",
         });
 
         var callsMachine = appendEl(root, "a-entity", {
@@ -6484,10 +6514,30 @@
         var last = probabilityState.activeStation === "dice" && probabilityState.observedSamples.length
           ? Math.round(probabilityState.observedSamples[probabilityState.observedSamples.length - 1])
           : "?";
-        setDigitalNumber(lab.querySelector("#prob-dice-face"), String(last), 0, 0.46, "#020617");
+        setTextIfPresent(lab, "#prob-dice-result", last === "?" ? "Tira el dado" : "Salio: " + last);
         var cube = lab.querySelector("#prob-dice-cube");
         if (cube && probabilityState.machineRunning && probabilityState.activeStation === "dice") {
+          var finalRotations = {
+            1: "0 0 0",
+            2: "90 0 0",
+            3: "0 0 90",
+            4: "0 0 -90",
+            5: "-90 0 0",
+            6: "180 0 0",
+          };
+          var target = finalRotations[last] || "0 0 0";
+          cube.setAttribute("animation__roll", "property: rotation; startEvents: casino-run; from: -360 -720 -360; to: " + target + "; dur: 720; easing: easeOutCubic");
           cube.emit("casino-run");
+        } else if (cube && last !== "?") {
+          var stableRotations = {
+            1: "0 0 0",
+            2: "90 0 0",
+            3: "0 0 90",
+            4: "0 0 -90",
+            5: "-90 0 0",
+            6: "180 0 0",
+          };
+          cube.setAttribute("rotation", stableRotations[last] || "0 0 0");
         }
       }
 
@@ -6514,7 +6564,7 @@
           : null;
         var coinLast = station.id === "coin" && last !== null ? Math.round(last) : null;
         setTextIfPresent(lab, "#prob-coin-display", coinLast === null ? "Simula 10 monedas\nCara = exito" : "Caras: " + coinLast + " de 10\nCruces: " + (10 - coinLast));
-        setTextIfPresent(lab, "#prob-dice-display", "Resultado del dado\nTiradas: " + probabilityState.trialCount);
+        setTextIfPresent(lab, "#prob-dice-display", "Dado justo: caras 1 a 6\nTiradas: " + probabilityState.trialCount);
         setTextIfPresent(lab, "#prob-calls-display", (station.id === "calls" && last !== null ? Math.round(last) : "-") + " llamadas/min\nMinutos: " + probabilityState.trialCount);
         renderCoinVisuals(lab);
         renderDiceVisuals(lab);
