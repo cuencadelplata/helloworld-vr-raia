@@ -232,12 +232,19 @@
             case "prob-reset-observed":
               handleProbabilityAction(action);
               break;
-            case "complexity-prev":
-            case "complexity-next":
             case "complexity-n-minus":
             case "complexity-n-plus":
             case "complexity-n-big-minus":
             case "complexity-n-big-plus":
+            case "complexity-loops-minus":
+            case "complexity-loops-plus":
+            case "complexity-rec-no":
+            case "complexity-rec-simple":
+            case "complexity-rec-multiple":
+            case "complexity-sort-toggle":
+            case "complexity-halving-toggle":
+            case "complexity-calcular":
+            case "complexity-reset":
               handleComplexityAction(action);
               break;
 
@@ -271,7 +278,7 @@
             default:
               if (action.indexOf("prob-param-") === 0) {
                 handleProbabilityAction(action);
-              } else if (action.indexOf("complexity-select-") === 0) {
+              } else if (action.indexOf("complexity-") === 0) {
                 handleComplexityAction(action);
               }
               break;
@@ -2820,90 +2827,49 @@
           position: "0 1.72 -2.88",
           rotation: "0 0 0",
           width: 3.5,
-          height: 2.9,
+          height: 3.3,
           accent: "#FB923C",
         });
         addText(controls, {
-          value: "ESCENARIO",
-          position: "0 1.22 0.03",
+          value: "ANALIZA TU CODIGO",
+          position: "0 1.5 0.03",
           align: "center",
           color: "#FFFFFF",
-          width: "3.2",
+          width: "3.3",
         });
         addText(controls, {
           id: "complexity-case-name",
-          value: "",
-          position: "0 0.9 0.03",
+          value: "Sin calcular",
+          position: "0 1.28 0.03",
           align: "center",
-          color: "#FFEDD5",
+          color: "#FDBA74",
           width: "3.2",
-          scale: "0.84 0.84 0.84",
+          scale: "0.7 0.7 0.7",
         });
-        addButton(controls, {
-          id: "complexity-prev",
-          position: "-0.9 0.55 0",
-          action: "complexity-prev",
-          color: "#9A3412",
-          label: "Anterior",
-          width: "1.05",
-          height: "0.25",
-          textWidth: "2.6",
-          textPosition: "0 0 0.04",
-        });
-        addButton(controls, {
-          id: "complexity-next",
-          position: "0.9 0.55 0",
-          action: "complexity-next",
-          color: "#C2410C",
-          label: "Siguiente",
-          width: "1.05",
-          height: "0.25",
-          textWidth: "2.6",
-          textPosition: "0 0 0.04",
+
+        // --- Tamano de entrada n ---
+        addText(controls, {
+          value: "Tamano de entrada n",
+          position: "0 1.06 0.03",
+          align: "center",
+          color: "#FDBA74",
+          width: "3.2",
+          scale: "0.74 0.74 0.74",
         });
         addText(controls, {
           id: "complexity-n-label",
           value: "",
-          position: "0 0.12 0.03",
+          position: "0 0.86 0.03",
           align: "center",
           color: "#FFFFFF",
           width: "3.2",
+          scale: "0.9 0.9 0.9",
         });
         [
-          ["complexity-n-big-minus", "-1.2 -0.24 0", "complexity-n-big-minus", "#57534E", "n -10"],
-          ["complexity-n-minus", "-0.4 -0.24 0", "complexity-n-minus", "#78716C", "n -"],
-          ["complexity-n-plus", "0.4 -0.24 0", "complexity-n-plus", "#15803D", "n +"],
-          ["complexity-n-big-plus", "1.2 -0.24 0", "complexity-n-big-plus", "#166534", "n +10"],
-        ].forEach(function (btn) {
-          addButton(controls, {
-            id: btn[0],
-            position: btn[1],
-            action: btn[2],
-            color: btn[3],
-            label: btn[4],
-            width: "0.62",
-            height: "0.24",
-            textWidth: "1.8",
-            textPosition: "0 0 0.04",
-          });
-        });
-        addText(controls, {
-          value: "BIG O",
-          position: "0 -0.6 0.03",
-          align: "center",
-          color: "#FDBA74",
-          width: "3",
-          scale: "0.72 0.72 0.72",
-        });
-        [
-          ["complexity-select-o1", "-1.2 -0.88 0", "O(1)", "#166534"],
-          ["complexity-select-olog", "-0.4 -0.88 0", "O(log n)", "#0F766E"],
-          ["complexity-select-on", "0.4 -0.88 0", "O(n)", "#1D4ED8"],
-          ["complexity-select-onlogn", "1.2 -0.88 0", "O(n log n)", "#6D28D9"],
-          ["complexity-select-on2", "-1.2 -1.18 0", "O(n^2)", "#B45309"],
-          ["complexity-select-on3", "-0.4 -1.18 0", "O(n^3)", "#C2410C"],
-          ["complexity-select-o2n", "0.4 -1.18 0", "O(2^n)", "#BE123C"],
-          ["complexity-select-ofact", "1.2 -1.18 0", "O(n!)", "#991B1B"],
+          ["complexity-n-big-minus", "-1.25 0.6 0", "n -100", "#57534E"],
+          ["complexity-n-minus", "-0.45 0.6 0", "n -10", "#78716C"],
+          ["complexity-n-plus", "0.45 0.6 0", "n +10", "#15803D"],
+          ["complexity-n-big-plus", "1.25 0.6 0", "n +100", "#166534"],
         ].forEach(function (btn) {
           addButton(controls, {
             id: btn[0],
@@ -2911,12 +2877,138 @@
             action: btn[0],
             color: btn[3],
             label: btn[2],
-            width: "0.68",
-            height: "0.22",
-            depth: "0.05",
-            textWidth: "1.7",
+            width: "0.66",
+            height: "0.24",
+            textWidth: "1.9",
             textPosition: "0 0 0.04",
           });
+        });
+
+        // --- Bucles anidados ---
+        addText(controls, {
+          value: "Bucles anidados sobre n",
+          position: "0 0.34 0.03",
+          align: "center",
+          color: "#FDBA74",
+          width: "3.2",
+          scale: "0.7 0.7 0.7",
+        });
+        addButton(controls, {
+          id: "complexity-loops-minus",
+          position: "-1.15 0.1 0",
+          action: "complexity-loops-minus",
+          color: "#78716C",
+          label: "-",
+          width: "0.42",
+          height: "0.24",
+          textWidth: "2",
+          textPosition: "0 0 0.04",
+        });
+        addText(controls, {
+          id: "complexity-loops-label",
+          value: "",
+          position: "0 0.1 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "2.2",
+          scale: "0.82 0.82 0.82",
+        });
+        addButton(controls, {
+          id: "complexity-loops-plus",
+          position: "1.15 0.1 0",
+          action: "complexity-loops-plus",
+          color: "#15803D",
+          label: "+",
+          width: "0.42",
+          height: "0.24",
+          textWidth: "2",
+          textPosition: "0 0 0.04",
+        });
+
+        // --- Recursividad ---
+        addText(controls, {
+          value: "Recursividad",
+          position: "0 -0.16 0.03",
+          align: "center",
+          color: "#FDBA74",
+          width: "3.2",
+          scale: "0.7 0.7 0.7",
+        });
+        [
+          ["complexity-rec-no", "-1.1 -0.4 0", "No", "#3F3F46"],
+          ["complexity-rec-simple", "0 -0.4 0", "Simple", "#7C3AED"],
+          ["complexity-rec-multiple", "1.1 -0.4 0", "Multiple", "#BE123C"],
+        ].forEach(function (btn) {
+          addButton(controls, {
+            id: btn[0],
+            position: btn[1],
+            action: btn[0],
+            color: btn[3],
+            label: btn[2],
+            width: "0.92",
+            height: "0.24",
+            textWidth: "2.4",
+            textPosition: "0 0 0.04",
+          });
+        });
+
+        // --- Toggles: ordena / divide a la mitad ---
+        addButton(controls, {
+          id: "complexity-sort-toggle",
+          labelId: "complexity-sort-label",
+          position: "-0.85 -0.72 0",
+          action: "complexity-sort-toggle",
+          color: "#0F766E",
+          label: "Ordena: No",
+          width: "1.5",
+          height: "0.26",
+          textWidth: "3",
+          textPosition: "0 0 0.04",
+        });
+        addButton(controls, {
+          id: "complexity-halving-toggle",
+          labelId: "complexity-halving-label",
+          position: "0.85 -0.72 0",
+          action: "complexity-halving-toggle",
+          color: "#0F766E",
+          label: "Mitad: No",
+          width: "1.5",
+          height: "0.26",
+          textWidth: "3",
+          textPosition: "0 0 0.04",
+        });
+
+        // --- Calcular / Reset ---
+        addButton(controls, {
+          id: "complexity-calcular",
+          position: "-0.55 -1.1 0",
+          action: "complexity-calcular",
+          color: "#EA580C",
+          label: "CALCULAR",
+          width: "1.7",
+          height: "0.36",
+          depth: "0.07",
+          textWidth: "3.4",
+          textPosition: "0 0 0.05",
+        });
+        addButton(controls, {
+          id: "complexity-reset",
+          position: "0.95 -1.1 0",
+          action: "complexity-reset",
+          color: "#44403C",
+          label: "Reset",
+          width: "0.9",
+          height: "0.36",
+          textWidth: "2.4",
+          textPosition: "0 0 0.05",
+        });
+        addText(controls, {
+          value: "Marca los rasgos y presiona CALCULAR",
+          position: "0 -1.42 0.03",
+          align: "center",
+          color: "#A8A29E",
+          width: "3.2",
+          scale: "0.58 0.58 0.58",
         });
 
         var metrics = addPanel({
@@ -5242,118 +5334,6 @@
       // el proyecto original analiza AST de Python y estima Big O con
       // reglas heuristicas sobre bucles, recursividad, sort y estructuras.
 
-      var COMPLEXITY_ORDER = [
-        "O(1)", "O(log n)", "O(n)", "O(n log n)",
-        "O(n^2)", "O(n^3)", "O(2^n)", "O(n!)",
-      ];
-
-      var COMPLEXITY_ACTIONS = {
-        "complexity-select-o1": "O(1)",
-        "complexity-select-olog": "O(log n)",
-        "complexity-select-on": "O(n)",
-        "complexity-select-onlogn": "O(n log n)",
-        "complexity-select-on2": "O(n^2)",
-        "complexity-select-on3": "O(n^3)",
-        "complexity-select-o2n": "O(2^n)",
-        "complexity-select-ofact": "O(n!)",
-      };
-
-      var COMPLEXITY_CASES = [
-        {
-          name: "Calculadora simple",
-          time: "O(1)",
-          space: "O(1)",
-          code:
-            "def sumar(a, b):\n" +
-            "    resultado = a + b\n" +
-            "    return resultado",
-          metrics: { functions: 1, forLoops: 0, whileLoops: 0, ifs: 0, calls: 0, loopDepth: 0, recursion: "no", logPattern: "no", sortCalls: 0, data: 0 },
-          reason: "No hay bucles relevantes ni recursividad: el costo no depende de n.",
-          recommendation: "Mantener el codigo claro y modular.",
-        },
-        {
-          name: "Busqueda binaria",
-          time: "O(log n)",
-          space: "O(1)",
-          code:
-            "while inicio <= fin:\n" +
-            "    medio = (inicio + fin) // 2\n" +
-            "    if lista[medio] < objetivo:\n" +
-            "        inicio = medio + 1\n" +
-            "    else:\n" +
-            "        fin = medio - 1",
-          metrics: { functions: 1, forLoops: 0, whileLoops: 1, ifs: 1, calls: 0, loopDepth: 1, recursion: "no", logPattern: "si", sortCalls: 0, data: 0 },
-          reason: "El while descarta aproximadamente la mitad de la entrada en cada paso.",
-          recommendation: "Funciona mejor si los datos ya estan ordenados.",
-        },
-        {
-          name: "Busqueda lineal",
-          time: "O(n)",
-          space: "O(1)",
-          code:
-            "def buscar(lista, objetivo):\n" +
-            "    for x in lista:\n" +
-            "        if x == objetivo:\n" +
-            "            return True\n" +
-            "    return False",
-          metrics: { functions: 1, forLoops: 1, whileLoops: 0, ifs: 1, calls: 0, loopDepth: 1, recursion: "no", logPattern: "no", sortCalls: 0, data: 0 },
-          reason: "Un unico bucle recorre la entrada una vez.",
-          recommendation: "Si se hacen muchas busquedas, evaluar usar un set o diccionario.",
-        },
-        {
-          name: "Ordenamiento eficiente",
-          time: "O(n log n)",
-          space: "O(n)",
-          code:
-            "def ordenar_y_filtrar(datos):\n" +
-            "    ordenados = sorted(datos)\n" +
-            "    return [x for x in ordenados if x > 0]",
-          metrics: { functions: 1, forLoops: 0, whileLoops: 0, ifs: 1, calls: 1, loopDepth: 1, recursion: "no", logPattern: "no", sortCalls: 1, data: 1 },
-          reason: "La llamada a sorted domina el costo con crecimiento n log n.",
-          recommendation: "Evitar ordenar si solo se necesita maximo, minimo o una busqueda puntual.",
-        },
-        {
-          name: "Bucles anidados",
-          time: "O(n^2)",
-          space: "O(1)",
-          code:
-            "def buscar_par(lista):\n" +
-            "    for x in lista:\n" +
-            "        for y in lista:\n" +
-            "            if x + y == 0:\n" +
-            "                return True",
-          metrics: { functions: 1, forLoops: 2, whileLoops: 0, ifs: 1, calls: 0, loopDepth: 2, recursion: "no", logPattern: "no", sortCalls: 0, data: 0 },
-          reason: "Se detectan dos bucles anidados: por cada elemento se recorre otra vez la entrada.",
-          recommendation: "Usar un set auxiliar puede bajar este patron de O(n^2) a O(n).",
-        },
-        {
-          name: "Matriz triple",
-          time: "O(n^3)",
-          space: "O(n^2)",
-          code:
-            "for i in range(n):\n" +
-            "    for j in range(n):\n" +
-            "        for k in range(n):\n" +
-            "            total += matriz[i][k] * matriz[k][j]",
-          metrics: { functions: 0, forLoops: 3, whileLoops: 0, ifs: 0, calls: 1, loopDepth: 3, recursion: "no", logPattern: "no", sortCalls: 0, data: 1 },
-          reason: "Tres bucles anidados sugieren crecimiento cubico.",
-          recommendation: "Para matrices grandes, revisar algoritmos optimizados o librerias numericas.",
-        },
-        {
-          name: "Fibonacci recursivo",
-          time: "O(2^n)",
-          space: "O(n)",
-          code:
-            "def fib(n):\n" +
-            "    if n <= 1:\n" +
-            "        return n\n" +
-            "    return fib(n-1) + fib(n-2)",
-          metrics: { functions: 1, forLoops: 0, whileLoops: 0, ifs: 1, calls: 2, loopDepth: 0, recursion: "multiple", logPattern: "no", sortCalls: 0, data: 0 },
-          reason: "La funcion se llama a si misma mas de una vez: patron exponencial.",
-          recommendation: "Aplicar memoizacion o programacion dinamica para reducir a O(n).",
-        },
-      ];
-
       var COMPLEXITY_QUALITATIVE = {
         "O(1)": "Excelente: tiempo constante.",
         "O(log n)": "Excelente: crecimiento muy lento.",
@@ -5365,10 +5345,64 @@
         "O(n!)": "Extrema: evitar para entradas grandes.",
       };
 
+      var COMPLEXITY_FEEDBACK = {
+        "O(1)": { ok: true, msg: "Tiempo constante: el costo no depende del tamano de la entrada. Es el mejor caso posible." },
+        "O(log n)": { ok: true, msg: "Crecimiento logaritmico: aunque la entrada crezca mucho, el costo sube muy poco. Patron de busqueda binaria." },
+        "O(n)": { ok: true, msg: "Crecimiento lineal: el costo acompana al tamano de la entrada de forma proporcional. Eficiente y escalable." },
+        "O(n log n)": { ok: true, msg: "Tipico de ordenamientos eficientes. Escala muy bien incluso con entradas grandes." },
+        "O(n^2)": { ok: false, msg: "Bucles anidados: el costo crece al cuadrado. Sirve para entradas chicas. Tip: un set o diccionario auxiliar suele bajarlo a O(n)." },
+        "O(n^3)": { ok: false, msg: "Tres bucles anidados: crecimiento cubico. Para datos medianos o grandes revisa algoritmos optimizados o librerias numericas." },
+        "O(2^n)": { ok: false, msg: "Recursividad multiple: el trabajo se duplica en cada paso. Solo viable con n chico. Tip: memoizacion o programacion dinamica." },
+        "O(n!)": { ok: false, msg: "Crecimiento factorial: evitar para entradas grandes. Busca podas o heuristicas." },
+      };
+
+      var COMPLEXITY_RANK = {
+        "O(1)": 0, "O(log n)": 1, "O(n)": 2, "O(n log n)": 3,
+        "O(n^2)": 4, "O(n^3)": 5, "O(2^n)": 6, "O(n!)": 7,
+      };
+
+      function deriveBigO(state) {
+        if (state.recursion === "multiple") {
+          return state.loops >= 1 ? "O(n!)" : "O(2^n)";
+        }
+        var candidates = [];
+        if (state.loops >= 3) candidates.push("O(n^3)");
+        else if (state.loops === 2) candidates.push("O(n^2)");
+        else if (state.loops === 1) candidates.push("O(n)");
+        else candidates.push(state.halving ? "O(log n)" : "O(1)");
+        if (state.sort) candidates.push("O(n log n)");
+        if (state.recursion === "simple") candidates.push("O(n)");
+        var best = candidates[0];
+        candidates.forEach(function (c) {
+          if (COMPLEXITY_RANK[c] > COMPLEXITY_RANK[best]) best = c;
+        });
+        return best;
+      }
+
+      function deriveReason(state, bigO) {
+        var traits =
+          "Bucles anidados sobre n: " + state.loops + "\n" +
+          "Recursividad: " + state.recursion + "\n" +
+          "Ordena (sort): " + (state.sort ? "si" : "no") + "\n" +
+          "Divide a la mitad: " + (state.halving ? "si" : "no");
+        var why;
+        if (state.recursion === "multiple") why = "La recursividad multiple domina el costo.";
+        else if (state.loops >= 2) why = state.loops + " bucles anidados elevan n a la potencia " + state.loops + ".";
+        else if (state.sort && COMPLEXITY_RANK[bigO] === COMPLEXITY_RANK["O(n log n)"]) why = "La operacion de ordenamiento domina con crecimiento n log n.";
+        else if (state.loops === 1) why = "Un unico recorrido de la entrada da crecimiento lineal.";
+        else if (state.halving) why = "Descartar la mitad en cada paso da crecimiento logaritmico.";
+        else why = "No hay bucles ni recursividad que dependan de n.";
+        return { traits: traits, why: why };
+      }
+
       var complexityState = {
-        caseIndex: 4,
-        n: 20,
-        selectedBigO: "O(n^2)",
+        n: 1000,
+        loops: 1,
+        recursion: "no",
+        sort: false,
+        halving: false,
+        calculated: false,
+        result: null,
       };
 
       function complexityValue(label, n) {
@@ -5404,24 +5438,22 @@
       }
 
       function handleComplexityAction(action) {
-        if (COMPLEXITY_ACTIONS[action]) {
-          complexityState.selectedBigO = COMPLEXITY_ACTIONS[action];
-        } else if (action === "complexity-prev") {
-          complexityState.caseIndex =
-            (complexityState.caseIndex - 1 + COMPLEXITY_CASES.length) % COMPLEXITY_CASES.length;
-          complexityState.selectedBigO = COMPLEXITY_CASES[complexityState.caseIndex].time;
-        } else if (action === "complexity-next") {
-          complexityState.caseIndex =
-            (complexityState.caseIndex + 1) % COMPLEXITY_CASES.length;
-          complexityState.selectedBigO = COMPLEXITY_CASES[complexityState.caseIndex].time;
-        } else if (action === "complexity-n-minus") {
-          complexityState.n = Math.max(1, complexityState.n - 1);
-        } else if (action === "complexity-n-plus") {
-          complexityState.n = Math.min(80, complexityState.n + 1);
-        } else if (action === "complexity-n-big-minus") {
-          complexityState.n = Math.max(1, complexityState.n - 10);
-        } else if (action === "complexity-n-big-plus") {
-          complexityState.n = Math.min(80, complexityState.n + 10);
+        var s = complexityState;
+        if (action === "complexity-n-minus") s.n = Math.max(10, s.n - 10);
+        else if (action === "complexity-n-plus") s.n = Math.min(2000, s.n + 10);
+        else if (action === "complexity-n-big-minus") s.n = Math.max(10, s.n - 100);
+        else if (action === "complexity-n-big-plus") s.n = Math.min(2000, s.n + 100);
+        else if (action === "complexity-loops-minus") { s.loops = Math.max(0, s.loops - 1); s.calculated = false; }
+        else if (action === "complexity-loops-plus") { s.loops = Math.min(3, s.loops + 1); s.calculated = false; }
+        else if (action === "complexity-rec-no") { s.recursion = "no"; s.calculated = false; }
+        else if (action === "complexity-rec-simple") { s.recursion = "simple"; s.calculated = false; }
+        else if (action === "complexity-rec-multiple") { s.recursion = "multiple"; s.calculated = false; }
+        else if (action === "complexity-sort-toggle") { s.sort = !s.sort; s.calculated = false; }
+        else if (action === "complexity-halving-toggle") { s.halving = !s.halving; s.calculated = false; }
+        else if (action === "complexity-calcular") { s.result = deriveBigO(s); s.calculated = true; }
+        else if (action === "complexity-reset") {
+          s.loops = 1; s.recursion = "no"; s.sort = false; s.halving = false;
+          s.n = 1000; s.calculated = false; s.result = null;
         }
         renderComplexityLab();
       }
@@ -5431,7 +5463,8 @@
         if (!root) return;
 
         selectedBigO = selectedBigO || "O(n^2)";
-        var maxN = selectedBigO === "O(2^n)" || selectedBigO === "O(n!)" ? 30 : 80;
+        var hardCap = selectedBigO === "O(2^n)" || selectedBigO === "O(n!)" ? 30 : 2000;
+        var maxN = Math.max(10, Math.min(hardCap, complexityState.n));
         var width = 2.45;
         var height = 0.82;
         var originX = 0.12;
@@ -5565,60 +5598,63 @@
       function renderComplexityLab() {
         var lab = document.getElementById("complexity-lab");
         if (!lab) return;
-        var current = COMPLEXITY_CASES[complexityState.caseIndex];
-        var selectedBigO = complexityState.selectedBigO || current.time;
-        var m = current.metrics;
-        var ops = complexityValue(selectedBigO, complexityState.n);
+        var s = complexityState;
 
         var caseName = lab.querySelector("#complexity-case-name");
         var nLabel = lab.querySelector("#complexity-n-label");
+        var loopsLabel = lab.querySelector("#complexity-loops-label");
+        var sortLabel = lab.querySelector("#complexity-sort-label");
+        var halvingLabel = lab.querySelector("#complexity-halving-label");
         var codeTitle = lab.querySelector("#complexity-code-title");
         var code = lab.querySelector("#complexity-code");
         var result = lab.querySelector("#complexity-result");
         var metrics = lab.querySelector("#complexity-metrics");
         var recommendation = lab.querySelector("#complexity-recommendation");
+        var chart = lab.querySelector("#complexity-chart");
 
-        if (caseName) {
-          caseName.setAttribute(
-            "value",
-            current.name + " (" + (complexityState.caseIndex + 1) + "/" + COMPLEXITY_CASES.length + ")",
-          );
+        if (nLabel) nLabel.setAttribute("value", "n = " + s.n);
+        if (loopsLabel) loopsLabel.setAttribute("value", String(s.loops));
+        if (sortLabel) sortLabel.setAttribute("value", "Ordena: " + (s.sort ? "Si" : "No"));
+        if (halvingLabel) halvingLabel.setAttribute("value", "Mitad: " + (s.halving ? "Si" : "No"));
+
+        var preview = s.result || deriveBigO(s);
+        var info = deriveReason(s, preview);
+        if (codeTitle) codeTitle.setAttribute("value", "TU SELECCION");
+        if (code) code.setAttribute("value", info.traits);
+
+        if (!s.calculated) {
+          if (caseName) caseName.setAttribute("value", "Sin calcular");
+          if (result) result.setAttribute("value", "Marca los rasgos de tu codigo\ny presiona CALCULAR");
+          if (metrics) metrics.setAttribute("value", info.traits);
+          if (recommendation) recommendation.setAttribute("value", "");
+          clearEntityChildren(chart);
+          return;
         }
-        if (nLabel) nLabel.setAttribute("value", "Entrada n = " + complexityState.n);
-        if (codeTitle) codeTitle.setAttribute("value", "Patron analizado");
-        if (code) code.setAttribute("value", current.code);
+
+        var bigO = s.result;
+        var ops = complexityValue(bigO, s.n);
+        var fb = COMPLEXITY_FEEDBACK[bigO] || { ok: true, msg: "" };
+
+        if (caseName) caseName.setAttribute("value", "Resultado: " + bigO);
         if (result) {
           result.setAttribute(
             "value",
-            "Tiempo: " + current.time +
-              " | Espacio: " + current.space +
-              " | Curva: " + selectedBigO +
-              " | ops aprox. para n=" + complexityState.n + ": " + formatComplexityOps(ops) +
-              "\n" + COMPLEXITY_QUALITATIVE[current.time] +
-              "\n" + current.reason,
+            "Tu codigo es " + bigO +
+              "   |   ops aprox. para n=" + s.n + ": " + formatComplexityOps(ops) +
+              "\n" + (COMPLEXITY_QUALITATIVE[bigO] || ""),
           );
         }
         if (metrics) {
-          metrics.setAttribute(
-            "value",
-            "Funciones: " + m.functions + "\n" +
-              "Bucles for: " + m.forLoops + " | while: " + m.whileLoops + "\n" +
-              "If/elif/else: " + m.ifs + "\n" +
-              "Llamadas: " + m.calls + " | sort/sorted: " + m.sortCalls + "\n" +
-              "Profundidad de bucles: " + m.loopDepth + "\n" +
-              "Recursividad: " + m.recursion + "\n" +
-              "Patron logaritmico: " + m.logPattern + "\n" +
-              "Estructuras de datos: " + m.data,
-          );
+          metrics.setAttribute("value", info.traits + "\n\nPor que: " + info.why);
         }
         if (recommendation) {
           recommendation.setAttribute(
             "value",
-            "RECOMENDACION:\n" + current.recommendation +
-              "\n\nRegla del simulador: bucles anidados, recursividad multiple y sort dominan la estimacion.",
+            (fb.ok ? "FELICITACIONES\n" : "RECOMENDACION\n") + fb.msg +
+              "\n\nGracias por usar el simulador de complejidad.",
           );
         }
-        renderComplexityChart(lab.querySelector("#complexity-chart"), selectedBigO);
+        renderComplexityChart(chart, bigO);
       }
 
       // ===== LABORATORIO DE DISTRIBUCIONES DE PROBABILIDAD =====
