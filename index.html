@@ -3033,6 +3033,51 @@
           scale: "0.58 0.58 0.58",
         });
 
+        var codePanel = addPanel({
+          id: "complexity-code-panel",
+          position: "2.9 1.72 -2.88",
+          rotation: "0 0 0",
+          width: 1.95,
+          height: 2.6,
+          accent: "#38BDF8",
+        });
+        addText(codePanel, {
+          value: "CODIGOS",
+          position: "0 1.06 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "1.8",
+        });
+        addText(codePanel, {
+          value: "Selecciona un codigo",
+          position: "0 0.84 0.03",
+          align: "center",
+          color: "#BAE6FD",
+          width: "1.9",
+          scale: "0.6 0.6 0.6",
+        });
+
+        [
+          ["const", "Constante O(1)", "0.52"],
+          ["lineal", "Lineal O(n)", "0.25"],
+          ["binaria", "Binaria O(log n)", "-0.02"],
+          ["ordena", "Ordena O(n log n)", "-0.29"],
+          ["doble", "Doble bucle O(n^2)", "-0.56"],
+          ["fibo", "Fibonacci O(2^n)", "-0.83"],
+        ].forEach(function (btn) {
+          addButton(codePanel, {
+            id: "complexity-code-" + btn[0],
+            position: "0 " + btn[2] + " 0",
+            action: "complexity-code-" + btn[0],
+            color: "#1D4ED8",
+            label: btn[1],
+            width: "1.65",
+            height: "0.22",
+            textWidth: "2.4",
+            textPosition: "0 0 0.04",
+          });
+        });
+
         var metrics = addPanel({
           id: "complexity-metrics-panel",
           position: "0 1.75 2.88",
@@ -5383,6 +5428,81 @@
         "O(n^2)": 4, "O(n^3)": 5, "O(2^n)": 6, "O(n!)": 7,
       };
 
+      var COMPLEXITY_CODE_LIBRARY = [
+        {
+          id: "const",
+          name: "Constante",
+          code: "function first(arr) {\n  return arr[0];\n}",
+          traits: { loops: 0, recursion: "no", sort: false, halving: false },
+        },
+        {
+          id: "lineal",
+          name: "Lineal",
+          code:
+            "function linearSearch(arr, x) {\n" +
+            "  for (var i = 0; i < arr.length; i++) {\n" +
+            "    if (arr[i] === x) return i;\n" +
+            "  }\n" +
+            "  return -1;\n" +
+            "}",
+          traits: { loops: 1, recursion: "no", sort: false, halving: false },
+        },
+        {
+          id: "binaria",
+          name: "Binaria",
+          code:
+            "function binarySearch(arr, x) {\n" +
+            "  var low = 0, high = arr.length - 1;\n" +
+            "  while (low <= high) {\n" +
+            "    var mid = Math.floor((low + high) / 2);\n" +
+            "    if (arr[mid] === x) return mid;\n" +
+            "    if (arr[mid] < x) low = mid + 1;\n" +
+            "    else high = mid - 1;\n" +
+            "  }\n" +
+            "  return -1;\n" +
+            "}",
+          traits: { loops: 0, recursion: "no", sort: false, halving: true },
+        },
+        {
+          id: "ordena",
+          name: "Ordena",
+          code:
+            "function sortArray(arr) {\n" +
+            "  return arr.sort(function (a, b) {\n" +
+            "    return a - b;\n" +
+            "  });\n" +
+            "}",
+          traits: { loops: 0, recursion: "no", sort: true, halving: false },
+        },
+        {
+          id: "doble",
+          name: "Doble bucle",
+          code:
+            "for (var i = 0; i < n; i++) {\n" +
+            "  for (var j = 0; j < n; j++) {\n" +
+            "    sum += matrix[i][j];\n" +
+            "  }\n" +
+            "}",
+          traits: { loops: 2, recursion: "no", sort: false, halving: false },
+        },
+        {
+          id: "fibo",
+          name: "Fibonacci",
+          code:
+            "function fib(n) {\n" +
+            "  if (n <= 1) return n;\n" +
+            "  return fib(n - 1) + fib(n - 2);\n" +
+            "}",
+          traits: { loops: 0, recursion: "multiple", sort: false, halving: false },
+        },
+      ];
+
+      function getComplexitySample(sampleId) {
+        return COMPLEXITY_CODE_LIBRARY.find(function (sample) {
+          return sample.id === sampleId;
+        });
+      }
+
       function deriveBigO(state) {
         if (state.recursion === "multiple") {
           return state.loops >= 1 ? "O(n!)" : "O(2^n)";
@@ -5423,6 +5543,7 @@
         recursion: "no",
         sort: false,
         halving: false,
+        sampleId: null,
         calculated: false,
         result: null,
       };
@@ -5461,21 +5582,36 @@
 
       function handleComplexityAction(action) {
         var s = complexityState;
+        if (action.indexOf("complexity-code-") === 0) {
+          var sampleId = action.slice("complexity-code-".length);
+          var sample = getComplexitySample(sampleId);
+          if (sample) {
+            s.sampleId = sample.id;
+            s.loops = sample.traits.loops;
+            s.recursion = sample.traits.recursion;
+            s.sort = sample.traits.sort;
+            s.halving = sample.traits.halving;
+            s.result = deriveBigO(s);
+            s.calculated = true;
+          }
+          renderComplexityLab();
+          return;
+        }
         if (action === "complexity-n-minus") s.n = Math.max(10, s.n - 10);
         else if (action === "complexity-n-plus") s.n = Math.min(2000, s.n + 10);
         else if (action === "complexity-n-big-minus") s.n = Math.max(10, s.n - 100);
         else if (action === "complexity-n-big-plus") s.n = Math.min(2000, s.n + 100);
-        else if (action === "complexity-loops-minus") { s.loops = Math.max(0, s.loops - 1); s.calculated = false; }
-        else if (action === "complexity-loops-plus") { s.loops = Math.min(3, s.loops + 1); s.calculated = false; }
-        else if (action === "complexity-rec-no") { s.recursion = "no"; s.calculated = false; }
-        else if (action === "complexity-rec-simple") { s.recursion = "simple"; s.calculated = false; }
-        else if (action === "complexity-rec-multiple") { s.recursion = "multiple"; s.calculated = false; }
-        else if (action === "complexity-sort-toggle") { s.sort = !s.sort; s.calculated = false; }
-        else if (action === "complexity-halving-toggle") { s.halving = !s.halving; s.calculated = false; }
+        else if (action === "complexity-loops-minus") { s.loops = Math.max(0, s.loops - 1); s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-loops-plus") { s.loops = Math.min(3, s.loops + 1); s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-rec-no") { s.recursion = "no"; s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-rec-simple") { s.recursion = "simple"; s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-rec-multiple") { s.recursion = "multiple"; s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-sort-toggle") { s.sort = !s.sort; s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-halving-toggle") { s.halving = !s.halving; s.calculated = false; s.sampleId = null; }
         else if (action === "complexity-calcular") { s.result = deriveBigO(s); s.calculated = true; }
         else if (action === "complexity-reset") {
           s.loops = 1; s.recursion = "no"; s.sort = false; s.halving = false;
-          s.n = 1000; s.calculated = false; s.result = null;
+          s.n = 1000; s.calculated = false; s.result = null; s.sampleId = null;
         }
         renderComplexityLab();
       }
@@ -5633,6 +5769,7 @@
         var metrics = lab.querySelector("#complexity-metrics");
         var recommendation = lab.querySelector("#complexity-recommendation");
         var chart = lab.querySelector("#complexity-chart");
+        var selectedSample = s.sampleId ? getComplexitySample(s.sampleId) : null;
 
         if (nLabel) nLabel.setAttribute("value", "n = " + s.n);
         if (loopsLabel) loopsLabel.setAttribute("value", String(s.loops));
@@ -5641,8 +5778,13 @@
 
         var preview = s.result || deriveBigO(s);
         var info = deriveReason(s, preview);
-        if (codeTitle) codeTitle.setAttribute("value", "TU SELECCION");
-        if (code) code.setAttribute("value", info.traits);
+        if (selectedSample) {
+          if (codeTitle) codeTitle.setAttribute("value", "CODIGO: " + selectedSample.name);
+          if (code) code.setAttribute("value", selectedSample.code);
+        } else {
+          if (codeTitle) codeTitle.setAttribute("value", "TU SELECCION");
+          if (code) code.setAttribute("value", info.traits);
+        }
 
         if (!s.calculated) {
           if (caseName) caseName.setAttribute("value", "Sin calcular");
