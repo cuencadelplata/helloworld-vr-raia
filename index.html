@@ -36,24 +36,29 @@
             self.handleClick();
           });
 
-          // También poner class clickable y listener en el a-box hijo
-          // para que el raycaster lo detecte directamente
-          el.addEventListener("loaded", function () {
+          // Configura el a-box hijo como clickable (hover + click)
+          // Usa hasLoaded para cubrir entidades ya inicializadas al momento
+          // en que se registra el componente (evita perder el evento loaded)
+          function setupBox() {
             var box = el.querySelector("a-box");
-            if (box) {
-              box.classList.add("clickable");
-              box.addEventListener("click", function (evt) {
-                evt.stopPropagation();
-                self.handleClick();
-              });
-              box.addEventListener("mouseenter", function () {
-                box.setAttribute("scale", "1.15 1.15 1.15");
-              });
-              box.addEventListener("mouseleave", function () {
-                box.setAttribute("scale", "1 1 1");
-              });
-            }
-          });
+            if (!box) return;
+            box.classList.add("clickable");
+            box.addEventListener("click", function (evt) {
+              evt.stopPropagation();
+              self.handleClick();
+            });
+            box.addEventListener("mouseenter", function () {
+              box.setAttribute("scale", "1.15 1.15 1.15");
+            });
+            box.addEventListener("mouseleave", function () {
+              box.setAttribute("scale", "1 1 1");
+            });
+          }
+          if (el.hasLoaded) {
+            setupBox();
+          } else {
+            el.addEventListener("loaded", setupBox);
+          }
         },
         handleClick: function () {
           var action = this.data;
@@ -134,7 +139,1362 @@
             case "slow-algo":
               slowAlgorithm();
               break;
+            case "show-mru":
+              showMRUPlaceholder();
+              break;
+            case "show-mruv":
+              showMRUVExercise();
+              break;
+            case "simulate-mruv":
+              simulateMRUV();
+              break;
+            case "back-fisica":
+              backToFisicaMenu();
+              break;
+            case "simulate-mru":
+              simulateMRU();
+              break;
+
+            case "cpu-fcfs":
+              selectCpuAlgorithm("fcfs");
+              break;
+            case "cpu-sjf":
+              selectCpuAlgorithm("sjf");
+              break;
+            case "cpu-srtf":
+              selectCpuAlgorithm("srtf");
+              break;
+            case "cpu-rr":
+              selectCpuAlgorithm("rr");
+              break;
+            case "cpu-start":
+              startCpuScheduler();
+              break;
+            case "cpu-pause":
+              toggleCpuPause();
+              break;
+            case "cpu-reset":
+              resetCpuScheduler();
+              break;
+            case "cpu-quantum-plus":
+              changeCpuQuantum(1);
+              break;
+            case "cpu-quantum-minus":
+              changeCpuQuantum(-1);
+              break;
           }
+        },
+      });
+
+      // ============================================
+      // GENERADOR DE AULAS
+      // Construye aulas completas desde JavaScript
+      // para evitar bloques HTML duplicados.
+      // ============================================
+      var AULA_CONFIG = {
+        width: 8,
+        depth: 6,
+        height: 3.5,
+        wallThickness: 0.2,
+      };
+
+      function vectorToString(value) {
+        if (typeof value === "string") return value;
+        if (!value) return "0 0 0";
+        return (value.x || 0) + " " + (value.y || 0) + " " + (value.z || 0);
+      }
+
+      function getAulaSide(posicionXYZ) {
+        var x =
+          typeof posicionXYZ === "string"
+            ? parseFloat(posicionXYZ.split(" ")[0])
+            : posicionXYZ && typeof posicionXYZ.x === "number"
+              ? posicionXYZ.x
+              : 0;
+        return x < 0 ? -1 : 1;
+      }
+
+      function createEl(tag, attrs, children) {
+        var el = document.createElement(tag);
+        attrs = attrs || {};
+        Object.keys(attrs).forEach(function (name) {
+          if (attrs[name] !== undefined && attrs[name] !== null) {
+            el.setAttribute(name, attrs[name]);
+          }
+        });
+        (children || []).forEach(function (child) {
+          el.appendChild(child);
+        });
+        return el;
+      }
+
+      function appendEl(parent, tag, attrs, children) {
+        var el = createEl(tag, attrs, children);
+        parent.appendChild(el);
+        return el;
+      }
+
+      function wallMaterial(colorParedes, repeat) {
+        return (
+          "src: #textura-pared; color: " +
+          colorParedes +
+          "; repeat: " +
+          repeat +
+          "; roughness: 0.85"
+        );
+      }
+
+      function addWall(parent, attrs, colorParedes, repeat) {
+        attrs = Object.assign(
+          {
+            src: "#textura-pared",
+            class: "collidable",
+            material: wallMaterial(colorParedes, repeat),
+            shadow: "cast: true; receive: true",
+          },
+          attrs,
+        );
+        return appendEl(parent, "a-box", attrs);
+      }
+
+      function addText(parent, attrs) {
+        return appendEl(parent, "a-text", attrs);
+      }
+
+      function addButton(parent, config) {
+        var button = appendEl(parent, "a-entity", {
+          id: config.id,
+          position: config.position,
+          rotation: config.rotation,
+          class: "clickable",
+          "btn-action": config.action,
+        });
+
+        appendEl(button, "a-box", {
+          width: config.width || "0.9",
+          height: config.height || "0.3",
+          depth: config.depth || "0.05",
+          color: config.color,
+          opacity: "0.9",
+          animation__mouseenter:
+            "property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200",
+          animation__mouseleave:
+            "property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200",
+        });
+
+        addText(button, {
+          id: config.labelId,
+          value: config.label,
+          align: "center",
+          color: config.textColor || "#fff",
+          width: config.textWidth || "2.5",
+          position: config.textPosition || "0 0 0.03",
+        });
+
+        return button;
+      }
+
+      function addBaseClassroom(parent, id, posicionXYZ, colorParedes) {
+        var side = getAulaSide(posicionXYZ);
+        var boardX = side * 4;
+        var hallX = -side * 4;
+        var facingRotation = "0 " + -side * 90 + " 0";
+        var deskRotation = "0 " + side * 90 + " 0";
+
+        appendEl(parent, "a-plane", {
+          id: id + "-suelo",
+          class: "navegable",
+          width: AULA_CONFIG.width,
+          height: AULA_CONFIG.depth,
+          rotation: "-90 0 0",
+          position: "0 0.01 0",
+          material: "src: #textura-suelo; repeat: 4 3; roughness: 0.7",
+          shadow: "receive: true",
+        });
+
+        appendEl(parent, "a-plane", {
+          width: AULA_CONFIG.width,
+          height: AULA_CONFIG.depth,
+          rotation: "90 0 0",
+          position: "0 3.5 0",
+          material: "color: #f0ece4; roughness: 0.9",
+        });
+
+        addWall(
+          parent,
+          {
+            width: "0.2",
+            height: "3.5",
+            depth: "6",
+            position: boardX + " 1.75 0",
+          },
+          colorParedes,
+          "3 1.75",
+        );
+        addWall(
+          parent,
+          {
+            width: "8",
+            height: "3.5",
+            depth: "0.2",
+            position: "0 1.75 -3",
+          },
+          colorParedes,
+          "4 1.75",
+        );
+        addWall(
+          parent,
+          {
+            width: "8",
+            height: "3.5",
+            depth: "0.2",
+            position: "0 1.75 3",
+          },
+          colorParedes,
+          "4 1.75",
+        );
+        addWall(
+          parent,
+          {
+            width: "0.2",
+            height: "1.2",
+            depth: "6",
+            position: hallX + " 2.9 0",
+          },
+          colorParedes,
+          "3 0.6",
+        );
+
+        appendEl(parent, "a-entity", {
+          "gltf-model": "#modelo-puerta",
+          position: -side * 3.9 + " 0 0",
+          rotation: "0 " + side * 90 + " 0",
+          scale: "2 2 2",
+          shadow: "cast: true; receive: true",
+        });
+
+        appendEl(parent, "a-entity", {
+          "gltf-model": "#modelo-pizarra",
+          position: side * 3.5 + " 1.3 0",
+          rotation: facingRotation,
+          scale: "0.5 0.5 0.5",
+          shadow: "cast: true; receive: true",
+        });
+
+        [
+          [side * 1.5, 0, -1.5],
+          [side * 1.5, 0, 0],
+          [side * 1.5, 0, 1.5],
+          [-side * 1, 0, -1.5],
+          [-side * 1, 0, 0],
+          [-side * 1, 0, 1.5],
+        ].forEach(function (position) {
+          appendEl(parent, "a-entity", {
+            class: "pupitre",
+            "gltf-model": "#modelo-pupitre",
+            position: position.join(" "),
+            rotation: deskRotation,
+            scale: "0.3 0.3 0.3",
+            shadow: "cast: true; receive: true",
+          });
+        });
+
+        appendEl(parent, "a-light", {
+          type: "point",
+          color: "#FFFFFF",
+          intensity: "0.7",
+          position: "0 3.2 0",
+          distance: "10",
+          decay: "2",
+        });
+        appendEl(parent, "a-light", {
+          type: "point",
+          color: "#FFFACD",
+          intensity: "0.4",
+          position: side * 3 + " 2.5 0",
+          distance: "5",
+          decay: "2",
+        });
+      }
+
+      function buildMathContent(parent) {
+        var menu = appendEl(parent, "a-entity", {
+          id: "math-menu",
+          position: "-3.2 2.2 0",
+          rotation: "0 90 0",
+        });
+        addText(menu, {
+          value: "Analisis Matematico I",
+          position: "0 0.8 0",
+          align: "center",
+          color: "#4CAF50",
+          width: "6",
+        });
+        addText(menu, {
+          value: "Selecciona una funcion:",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#fff",
+          width: "4",
+        });
+
+        [
+          ["btn-func1", "-1.2 0 0", "func1", "#FF6B6B", "sin(x)*cos(y)", "#fff", "2.5"],
+          ["btn-func2", "0 0 0", "func2", "#4ECDC4", "x² + y²", "#fff", "2.5"],
+          [
+            "btn-func3",
+            "1.2 0 0",
+            "func3",
+            "#45B7D1",
+            "sin(sqrt(x²+y²))",
+            "#fff",
+            "2.2",
+          ],
+          ["btn-func4", "-0.6 -0.5 0", "func4", "#96CEB4", "cos(x)*sin(y)", "#fff", "2.5"],
+          ["btn-func5", "0.6 -0.5 0", "func5", "#FFEAA7", "e^(-(x²+y²))", "#333", "2.5"],
+        ].forEach(function (btn) {
+          addButton(menu, {
+            id: btn[0],
+            position: btn[1],
+            action: btn[2],
+            color: btn[3],
+            label: btn[4],
+            textColor: btn[5],
+            textWidth: btn[6],
+          });
+        });
+
+        var display = appendEl(parent, "a-entity", {
+          id: "function-display",
+          visible: false,
+          position: "0 0 0",
+        });
+        addText(display, {
+          id: "current-function-title",
+          value: "",
+          position: "-2 3 0",
+          rotation: "0 90 0",
+          align: "center",
+          color: "#4CAF50",
+          width: "6",
+        });
+        appendEl(display, "a-entity", {
+          id: "math-surface",
+          position: "0 1.5 0",
+          scale: "0.65 0.65 0.65",
+        });
+        appendEl(display, "a-cylinder", {
+          position: "0 1.5 0",
+          rotation: "0 0 90",
+          height: "2.6",
+          radius: "0.011",
+          color: "red",
+        });
+        addText(display, {
+          value: "X",
+          position: "1.5 1.5 0",
+          color: "red",
+          width: "2",
+        });
+        appendEl(display, "a-cylinder", {
+          position: "0 1.5 0",
+          height: "2.6",
+          radius: "0.011",
+          color: "green",
+        });
+        addText(display, {
+          value: "Y",
+          position: "0 2.95 0",
+          color: "green",
+          width: "2",
+        });
+        appendEl(display, "a-cylinder", {
+          position: "0 1.5 0",
+          rotation: "90 0 0",
+          height: "2.6",
+          radius: "0.011",
+          color: "blue",
+        });
+        addText(display, {
+          value: "Z",
+          position: "0 1.5 1.5",
+          color: "blue",
+          width: "2",
+        });
+        addButton(display, {
+          id: "btn-back-to-menu",
+          position: "-3.2 1 0",
+          rotation: "0 90 0",
+          action: "back-math",
+          color: "#9B59B6",
+          label: "<- Menu Funciones",
+          height: "0.25",
+          depth: "0.06",
+          textPosition: "0 0 0.04",
+        });
+      }
+
+      function buildAlgorithmContent(parent) {
+        var menu = appendEl(parent, "a-entity", {
+          id: "alg-menu",
+          position: "3.2 2.2 0",
+          rotation: "0 -90 0",
+        });
+        addText(menu, {
+          value: "Algoritmos de Ordenamiento",
+          position: "0 0.8 0",
+          align: "center",
+          color: "#2196F3",
+          width: "6",
+        });
+        addText(menu, {
+          value: "Selecciona un algoritmo:",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#fff",
+          width: "4",
+        });
+
+        [
+          ["btn-algo1", "-1.1 0.05 0", "algo-bubble", "#FF6B6B", "Bubble Sort", "0.9", "2.5"],
+          ["btn-algo2", "0 0.05 0", "algo-insertion", "#4ECDC4", "Insertion Sort", "0.9", "2.5"],
+          ["btn-algo3", "1.1 0.05 0", "algo-quick", "#45B7D1", "Quick Sort", "0.9", "2.5"],
+          ["btn-algo4", "-0.75 -0.4 0", "algo-baraja", "#8BC34A", "Baraja", "1.35", "2.5"],
+          [
+            "btn-algo5",
+            "0.75 -0.4 0",
+            "algo-intercambio",
+            "#FF9800",
+            "Intercambio Directo",
+            "1.35",
+            "2.4",
+          ],
+        ].forEach(function (btn) {
+          addButton(menu, {
+            id: btn[0],
+            position: btn[1],
+            action: btn[2],
+            color: btn[3],
+            label: btn[4],
+            width: btn[5],
+            textWidth: btn[6],
+          });
+        });
+
+        var display = appendEl(parent, "a-entity", {
+          id: "algorithm-display",
+          visible: false,
+          position: "0 0 0",
+        });
+        addText(display, {
+          id: "current-algo-title",
+          value: "",
+          position: "3.2 2.8 0",
+          rotation: "0 -90 0",
+          align: "center",
+          color: "#2196F3",
+          width: "6",
+        });
+        appendEl(display, "a-entity", {
+          id: "algo-surface",
+          position: "3.2 1.65 0",
+          rotation: "0 -90 0",
+        });
+        addButton(display, {
+          id: "btn-back-to-alg-menu",
+          position: "3.2 1.2 -0.8",
+          rotation: "0 -90 0",
+          action: "back-algo",
+          color: "#9B59B6",
+          label: "<- Menu Algoritmos",
+          height: "0.25",
+          depth: "0.06",
+          textPosition: "0 0 0.04",
+        });
+        addButton(display, {
+          id: "btn-restart-algo",
+          position: "3.2 1.2 0.8",
+          rotation: "0 -90 0",
+          action: "restart-algo",
+          color: "#FF9800",
+          label: "Reiniciar",
+          height: "0.25",
+          depth: "0.06",
+          textPosition: "0 0 0.04",
+        });
+        addButton(display, {
+          id: "btn-pause-algo",
+          position: "3.2 0.85 -0.95",
+          rotation: "0 -90 0",
+          action: "pause-algo",
+          color: "#2196F3",
+          label: "Pausar",
+          labelId: "pause-algo-label",
+          width: "0.85",
+          height: "0.24",
+          depth: "0.06",
+          textWidth: "2.1",
+          textPosition: "0 0 0.04",
+        });
+        addButton(display, {
+          id: "btn-back-step-algo",
+          position: "3.2 0.85 0",
+          rotation: "0 -90 0",
+          action: "back-step-algo",
+          color: "#607D8B",
+          label: "Atras",
+          width: "0.85",
+          height: "0.24",
+          depth: "0.06",
+          textWidth: "2.1",
+          textPosition: "0 0 0.04",
+        });
+        addButton(display, {
+          id: "btn-slow-algo",
+          position: "3.2 0.85 0.95",
+          rotation: "0 -90 0",
+          action: "slow-algo",
+          color: "#795548",
+          label: "Vel 1x",
+          labelId: "slow-algo-label",
+          width: "0.85",
+          height: "0.24",
+          depth: "0.06",
+          textWidth: "2.1",
+          textPosition: "0 0 0.04",
+        });
+      }
+
+      function buildPlaceholderContent(parent, id, tipo, posicionXYZ) {
+        if (tipo === "fisica") {
+          buildFisicaContent(parent, id, posicionXYZ);
+        } else if (tipo === "cpu") {
+          buildCpuSchedulerContent(parent, id, posicionXYZ);
+        } else {
+          var side = getAulaSide(posicionXYZ);
+          var title = "Simulador de CPU";
+          var root = appendEl(parent, "a-entity", {
+            id: id + "-sim-root",
+            position: side * 3.2 + " 2.2 0",
+            rotation: "0 " + -side * 90 + " 0",
+          });
+          addText(root, {
+            value: title,
+            position: "0 0.45 0",
+            align: "center",
+            color: "#42A5F5",
+            width: "5.5",
+          });
+        }
+      }
+
+      function buildCpuSchedulerContent(parent, id, posicionXYZ) {
+        var side = getAulaSide(posicionXYZ);
+        var frontX = side * 3.86;
+        var frontRot = "0 " + -side * 90 + " 0";
+
+        parent.querySelectorAll(".pupitre").forEach(function (desk, i) {
+          var x = i < 3 ? -side * 3.05 : side * 3.05;
+          var z = [-2.2, 0, 2.2][i % 3];
+          desk.setAttribute("position", x + " 0 " + z);
+          desk.setAttribute("scale", "0.22 0.22 0.22");
+        });
+
+        var root = appendEl(parent, "a-entity", {
+          id: "cpu-lab",
+          position: "0 0.03 0",
+        });
+
+        function addCpuPanel(config) {
+          var panel = appendEl(root, "a-entity", {
+            id: config.id,
+            position: config.position,
+            rotation: config.rotation,
+          });
+          appendEl(panel, "a-plane", {
+            width: config.width,
+            height: config.height,
+            color: config.color || "#0F1720",
+            opacity: config.opacity || "0.88",
+            material: "side: double",
+          });
+          appendEl(panel, "a-plane", {
+            width: config.width,
+            height: "0.025",
+            position: "0 " + (config.height / 2 - 0.04) + " 0.012",
+            color: config.accent || "#42A5F5",
+            opacity: "0.9",
+          });
+          return panel;
+        }
+
+        var frontPanel = addCpuPanel({
+          id: "cpu-front-panel",
+          position: frontX + " 2.0 -0.15",
+          rotation: frontRot,
+          width: 5.8,
+          height: 2.2,
+          accent: "#64B5F6",
+        });
+        addText(frontPanel, {
+          value: "LABORATORIO DE PLANIFICACI\u00d3N DE CPU",
+          position: "0 0.88 0.03",
+          align: "center",
+          color: "#90CAF9",
+          width: "5.2",
+        });
+        addText(frontPanel, {
+          value: "Visualiza como diferentes algoritmos asignan la CPU a los procesos.",
+          position: "0 0.63 0.03",
+          align: "center",
+          color: "#E3F2FD",
+          width: "4.8",
+        });
+        addText(frontPanel, {
+          value: "DIAGRAMA DE GANTT",
+          position: "0 0.34 0.03",
+          align: "center",
+          color: "#BBDEFB",
+          width: "3.5",
+        });
+        appendEl(frontPanel, "a-plane", {
+          width: "5.0",
+          height: "0.55",
+          position: "0 0.02 0.025",
+          color: "#050B12",
+          opacity: "0.82",
+        });
+        appendEl(frontPanel, "a-entity", {
+          id: "cpu-gantt-scale",
+          position: "-2.25 0.28 0.05",
+        });
+        appendEl(frontPanel, "a-entity", {
+          id: "cpu-gantt-blocks",
+          position: "-2.25 -0.03 0.06",
+        });
+        appendEl(frontPanel, "a-entity", {
+          id: "cpu-gantt-legend",
+          position: "-2.2 -0.42 0.05",
+        });
+        addText(frontPanel, {
+          value:
+            "\u00bfQue es el Diagrama de Gantt?\nMuestra en una linea de tiempo que proceso se ejecuta en la CPU. Cada bloque representa un intervalo continuo de ejecucion.",
+          position: "0 -0.78 0.03",
+          align: "center",
+          color: "#CFD8DC",
+          width: "4.8",
+        });
+
+        var leftPanel = addCpuPanel({
+          id: "cpu-left-panel",
+          position: "0 1.85 -2.88",
+          rotation: "0 0 0",
+          width: 3.2,
+          height: 2.35,
+          accent: "#29B6F6",
+        });
+        addText(leftPanel, {
+          value: "ALGORITMOS DE PLANIFICACI\u00d3N",
+          position: "0 0.94 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3.3",
+        });
+        [
+          ["cpu-btn-fcfs", "0 0.58 0", "cpu-fcfs", "#1565C0", "FCFS"],
+          ["cpu-btn-sjf", "0 0.24 0", "cpu-sjf", "#2E7D32", "SJF"],
+          ["cpu-btn-srtf", "0 -0.1 0", "cpu-srtf", "#6A1B9A", "SRTF"],
+          ["cpu-btn-rr", "0 -0.44 0", "cpu-rr", "#EF6C00", "ROUND ROBIN"],
+        ].forEach(function (btn) {
+          addButton(leftPanel, {
+            id: btn[0],
+            position: btn[1],
+            action: btn[2],
+            color: btn[3],
+            label: btn[4],
+            width: "2.55",
+            height: "0.26",
+            depth: "0.06",
+            textWidth: "3.2",
+            textPosition: "0 0 0.04",
+          });
+        });
+
+        var controlPanel = addCpuPanel({
+          id: "cpu-controls",
+          position: "0 0.8 -2.88",
+          rotation: "0 0 0",
+          width: 3.2,
+          height: 0.9,
+          accent: "#81C784",
+        });
+        addText(controlPanel, {
+          value: "CONTROLES",
+          position: "0 0.33 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3",
+        });
+        [
+          ["cpu-btn-start", "-0.92 0.02 0", "cpu-start", "#2E7D32", "INICIAR"],
+          ["cpu-btn-pause", "0 0.02 0", "cpu-pause", "#B8860B", "PAUSAR"],
+          ["cpu-btn-reset", "0.92 0.02 0", "cpu-reset", "#C62828", "REINICIAR"],
+          ["cpu-btn-qminus", "-0.5 -0.28 0", "cpu-quantum-minus", "#1565C0", "QUANTUM -"],
+          ["cpu-btn-qplus", "0.5 -0.28 0", "cpu-quantum-plus", "#1565C0", "QUANTUM +"],
+        ].forEach(function (btn) {
+          addButton(controlPanel, {
+            id: btn[0],
+            position: btn[1],
+            action: btn[2],
+            color: btn[3],
+            label: btn[4],
+            width: "0.82",
+            height: "0.24",
+            depth: "0.06",
+            textWidth: "2.2",
+            textPosition: "0 0 0.04",
+          });
+        });
+
+        var metrics = addCpuPanel({
+          id: "cpu-metrics-panel",
+          position: "0 1.9 2.88",
+          rotation: "0 180 0",
+          width: 3.25,
+          height: 2.05,
+          accent: "#90CAF9",
+        });
+        addText(metrics, {
+          value: "M\u00c9TRICAS",
+          position: "0 0.82 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3",
+        });
+        addText(metrics, {
+          id: "cpu-metrics-text",
+          value: "",
+          position: "-1.45 0.52 0.03",
+          align: "left",
+          color: "#E3F2FD",
+          width: "3.1",
+        });
+
+        var table = addCpuPanel({
+          id: "cpu-process-table-panel",
+          position: "0 0.72 2.88",
+          rotation: "0 180 0",
+          width: 3.25,
+          height: 1.05,
+          accent: "#4FC3F7",
+        });
+        addText(table, {
+          value: "TABLA DE PROCESOS",
+          position: "0 0.39 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3",
+        });
+        addText(table, {
+          id: "cpu-process-table-text",
+          value: "",
+          position: "-1.5 0.18 0.03",
+          align: "left",
+          color: "#E0F7FA",
+          width: "3.15",
+        });
+
+        appendEl(root, "a-box", {
+          id: "cpu-machine",
+          position: "0 0.72 0",
+          width: "1.05",
+          height: "1.0",
+          depth: "1.05",
+          color: "#263238",
+          metalness: "0.25",
+          roughness: "0.45",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(root, "a-box", {
+          position: "0 1.25 0",
+          width: "0.86",
+          height: "0.08",
+          depth: "0.86",
+          color: "#80DEEA",
+          opacity: "0.7",
+        });
+        addText(root, {
+          value: "CPU",
+          position: "0 1.36 0.58",
+          align: "center",
+          color: "#69F0AE",
+          width: "3",
+        });
+        addText(root, {
+          id: "cpu-current-label",
+          value: "-",
+          position: "0 0.82 0.56",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3",
+        });
+        addText(root, {
+          value: "La CPU ejecuta un solo proceso a la vez.",
+          position: "0 0.15 0.75",
+          align: "center",
+          color: "#E8F5E9",
+          width: "3.2",
+        });
+
+        [
+          ["Nuevo", "Procesos que acaban de llegar.", "-2.65 0.04 1.55", "#9E9E9E"],
+          ["Cola de Listos", "Esperan disponibilidad de CPU.", "-2.25 0.04 -1.45", "#1E88E5"],
+          ["Ejecutando / CPU", "Proceso activo en este instante.", "0 0.04 -1.35", "#43A047"],
+          ["Espera / E/S", "Esperan Entrada/Salida.", "2.2 0.04 -1.45", "#FDD835"],
+          ["Terminados", "Procesos finalizados.", "2.65 0.04 1.55", "#E53935"],
+        ].forEach(function (zone) {
+          var parts = zone[2].split(" ");
+          appendEl(root, "a-plane", {
+            position: zone[2],
+            rotation: "-90 0 0",
+            width: "1.85",
+            height: "1.05",
+            color: zone[3],
+            opacity: "0.22",
+          });
+          addText(root, {
+            value: zone[0],
+            position: parts[0] + " 0.12 " + parts[2],
+            rotation: "-90 0 0",
+            align: "center",
+            color: zone[3],
+            width: "3.2",
+          });
+          addText(root, {
+            value: zone[1],
+            position: parts[0] + " 0.11 " + (parseFloat(parts[2]) + 0.34),
+            rotation: "-90 0 0",
+            align: "center",
+            color: "#ECEFF1",
+            width: "2.2",
+          });
+        });
+
+        var flow = addCpuPanel({
+          id: "cpu-flow-panel",
+          position: "0 0.08 2.28",
+          rotation: "-75 180 0",
+          width: 5.4,
+          height: 0.72,
+          accent: "#78909C",
+          opacity: "0.82",
+        });
+        addText(flow, {
+          value: "\u00bfC\u00d3MO FUNCIONA?",
+          position: "0 0.22 0.03",
+          align: "center",
+          color: "#B3E5FC",
+          width: "4",
+        });
+        addText(flow, {
+          value: "1. Llegada  ->  2. Listo  ->  3. Ejecucion  ->  4. E/S si aplica  ->  5. Termina",
+          position: "0 -0.07 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "5.2",
+        });
+
+        addText(root, {
+          id: "cpu-status-text",
+          value: "Elegi un algoritmo y pulsa Iniciar",
+          position: "0 2.92 -2.25",
+          align: "center",
+          color: "#E3F2FD",
+          width: "5.5",
+        });
+
+        appendEl(root, "a-entity", { id: "cpu-processes" });
+        setTimeout(function () {
+          resetCpuScheduler();
+        }, 0);
+      }
+
+
+
+
+      function buildFisicaContent(parent, id, posicionXYZ) {
+        var side = getAulaSide(posicionXYZ);
+        var menu = appendEl(parent, "a-entity", {
+          id: id + "-fisica-menu",
+          position: side * 3.2 + " 2.2 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+        addText(menu, {
+          value: "Simulador de Física",
+          position: "0 0.8 0",
+          align: "center",
+          color: "#4CAF50",
+          width: "6",
+        });
+        addText(menu, {
+          value: "Selecciona un tipo de movimiento:",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#fff",
+          width: "4",
+        });
+
+        // Botón MRU
+        addButton(menu, {
+          id: "btn-mru",
+          position: "-0.7 0 0",
+          action: "show-mru",
+          color: "#2196F3",
+          label: "MRU",
+          textColor: "#fff",
+          textWidth: "2.5",
+        });
+
+        // Botón MRUV
+        addButton(menu, {
+          id: "btn-mruv",
+          position: "0.7 0 0",
+          action: "show-mruv",
+          color: "#FF9800",
+          label: "MRUV",
+          textColor: "#fff",
+          textWidth: "2.5",
+        });
+
+        // Entidad para mostrar el ejercicio MRUV
+        var mruvDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mruv-display",
+          visible: false,
+          position: side * 3.0 + " 2.6 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        addText(mruvDisplay, {
+          id: "mruv-title",
+          value: "Ejercicio 2: MRUV",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#FF9800",
+          width: "5.5",
+          scale: "1.0 1.0 1.0",
+        });
+
+        addText(mruvDisplay, {
+          id: "mruv-enunciado",
+          value: "Un auto esta detenido frente a un semaforo en rojo.\nCuando la luz cambia a verde, el conductor acelera\nen linea recta por la avenida. El auto parte del\nreposo con una aceleracion constante de 2,5 m/s²\ndurante un tiempo de 4 segundos. Calcula:",
+          position: "-1 -0.3 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addText(mruvDisplay, {
+          id: "mruv-pregunta",
+          value: "1. ¿Que velocidad alcanza?\n2. ¿Que distancia recorre?",
+          position: "-1 -1.05 0",
+          align: "left",
+          color: "#FFEB3B",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addButton(mruvDisplay, {
+          id: "btn-simular-mruv",
+          position: "0 -1.4 0",
+          action: "simulate-mruv",
+          color: "#4CAF50",
+          label: "▶ SIMULAR",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        addButton(mruvDisplay, {
+          id: "btn-back-mruv",
+          position: "0 -1.9 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        // Entidad para la simulación (auto animado)
+        var simulationArea = appendEl(parent, "a-entity", {
+          id: id + "-mruv-simulation",
+          visible: false,
+          position: side * 3.2 + " 1.3 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        // Auto (representado como un cubo + cilindro)
+        var car = appendEl(simulationArea, "a-entity", {
+          id: "mruv-car",
+          position: "-1.5 0 0",
+        });
+
+        appendEl(car, "a-box", {
+          width: "0.4",
+          height: "0.25",
+          depth: "0.8",
+          color: "#E53935",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "-0.15 -0.15 -0.25",
+          rotation: "90 0 0",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "0.15 -0.15 -0.25",
+          rotation: "90 0 0",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "-0.15 -0.15 0.25",
+          rotation: "90 0 0",
+        });
+
+        appendEl(car, "a-cylinder", {
+          radius: "0.1",
+          height: "0.05",
+          color: "#333",
+          position: "0.15 -0.15 0.25",
+          rotation: "90 0 0",
+        });
+
+        // Línea de referencia en el suelo
+        appendEl(simulationArea, "a-plane", {
+          width: "5",
+          height: "0.02",
+          color: "#666",
+          position: "0 -0.3 0",
+          rotation: "-90 0 0",
+        });
+
+        // Marcas de distancia
+        for (var i = 0; i <= 5; i++) {
+          appendEl(simulationArea, "a-box", {
+            width: "0.1",
+            height: "0.2",
+            depth: "0.02",
+            color: "#666",
+            position: (-2 + i) + " -0.25 0",
+          });
+          addText(simulationArea, {
+            value: (i * 4) + "m",
+            position: (-2 + i) + " 0.1 0",
+            align: "center",
+            color: "#888",
+            width: "1.5",
+            scale: "0.35 0.35 0.35",
+          });
+        }
+
+        // Texto de información durante la simulación
+        addText(simulationArea, {
+          id: "mruv-sim-info",
+          value: "Presionando...",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#FFEB3B",
+          width: "4.5",
+          scale: "0.75 0.75 0.75",
+        });
+
+        // Entidad para mostrar resultados
+        var resultsDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mruv-results",
+          visible: false,
+          position: "0 0 0",
+        });
+
+        addText(resultsDisplay, {
+          id: "results-title",
+          value: "Resultados de la Simulación",
+          position: side * 3.8+ " 3 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "center",
+          color: "#4CAF50",
+          width: "6",
+        });
+
+        addText(resultsDisplay, {
+          id: "results-content",
+          value: "",
+          position: side * 3.8 + " 2.2 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.75 0.75 0.75",
+        });
+
+        addButton(resultsDisplay, {
+          id: "btn-back-results",
+          position: side * 3.8 + " 0.4 0",
+          rotation: "0 " + -side * 90 + " 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "0.9",
+        });
+
+        // ===== ENTIDADES MRU =====
+
+        var mruDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mru-display",
+          visible: false,
+          position: side * 3.0 + " 2.6 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        addText(mruDisplay, {
+          value: "Ejercicio 1: MRU",
+          position: "0 0.5 0",
+          align: "center",
+          color: "#2196F3",
+          width: "5.5",
+        });
+
+        addText(mruDisplay, {
+          value: "Un auto circula a velocidad constante de\n20 m/s (72 km/h) por la autopista\nen linea recta. No acelera ni frena.\nCalcula:",
+          position: "-1 -0.2 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addText(mruDisplay, {
+          value: "1. ¿Que distancia recorre en 4 segundos?\n2. ¿En cuanto tiempo recorre 60 m?",
+          position: "-1 -1.0 0",
+          align: "left",
+          color: "#FFEB3B",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.85 0.85 0.85",
+        });
+
+        addButton(mruDisplay, {
+          id: "btn-simular-mru",
+          position: "0 -1.4 0",
+          action: "simulate-mru",
+          color: "#2196F3",
+          label: "▶ SIMULAR",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        addButton(mruDisplay, {
+          id: "btn-back-mru",
+          position: "0 -1.9 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "1.0",
+        });
+
+        // Simulación MRU
+        var mruSimulation = appendEl(parent, "a-entity", {
+          id: id + "-mru-simulation",
+          visible: false,
+          position: side * 3.2 + " 1.3 0",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        var mruCar = appendEl(mruSimulation, "a-entity", {
+          id: "mru-car",
+          position: "-2 0 0",
+        });
+
+        appendEl(mruCar, "a-box", {
+          width: "0.4",
+          height: "0.25",
+          depth: "0.8",
+          color: "#1565C0",
+        });
+
+        [[-0.15, -0.15, -0.25], [0.15, -0.15, -0.25],
+         [-0.15, -0.15,  0.25], [0.15, -0.15,  0.25]].forEach(function (pos) {
+          appendEl(mruCar, "a-cylinder", {
+            radius: "0.1",
+            height: "0.05",
+            color: "#333",
+            position: pos.join(" "),
+            rotation: "90 0 0",
+          });
+        });
+
+        // Flecha que indica velocidad constante
+        appendEl(mruCar, "a-box", {
+          width: "0.32",
+          height: "0.04",
+          depth: "0.04",
+          color: "#42A5F5",
+          position: "0 0.22 0",
+        });
+        appendEl(mruCar, "a-box", {
+          width: "0.08",
+          height: "0.08",
+          depth: "0.04",
+          color: "#42A5F5",
+          position: "0.18 0.22 0",
+          rotation: "0 0 45",
+        });
+
+        appendEl(mruSimulation, "a-plane", {
+          width: "5",
+          height: "0.02",
+          color: "#666",
+          position: "0 -0.3 0",
+          rotation: "-90 0 0",
+        });
+
+        // Marcas cada 20 m (escala 0.05: 20 m = 1 unidad de escena)
+        // La marca de 60 m (mi=3) se resalta en naranja — responde pregunta 2
+        for (var mi = 0; mi <= 4; mi++) {
+          var isSixtyM = (mi === 3);
+          appendEl(mruSimulation, "a-box", {
+            width: "0.1",
+            height: isSixtyM ? "0.3" : "0.2",
+            depth: "0.02",
+            color: isSixtyM ? "#FF9800" : "#666",
+            position: (-2 + mi) + " -0.25 0",
+          });
+          addText(mruSimulation, {
+            value: (mi * 20) + "m",
+            position: (-2 + mi) + " 0.1 0",
+            align: "center",
+            color: isSixtyM ? "#FF9800" : "#888",
+            width: "1.5",
+            scale: "0.35 0.35 0.35",
+          });
+        }
+
+        addText(mruSimulation, {
+          id: "mru-sim-info",
+          value: "Listo...",
+          position: "0 0.55 0",
+          align: "center",
+          color: "#42A5F5",
+          width: "4.5",
+          scale: "0.75 0.75 0.75",
+        });
+
+        // Resultados MRU
+        var mruResultsDisplay = appendEl(parent, "a-entity", {
+          id: id + "-mru-results",
+          visible: false,
+          position: "0 0 0",
+        });
+
+        addText(mruResultsDisplay, {
+          value: "Resultados de la Simulacion",
+          position: side * 3.8 + " 3 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "center",
+          color: "#2196F3",
+          width: "6",
+        });
+
+        addText(mruResultsDisplay, {
+          id: "mru-results-content",
+          value: "",
+          position: side * 3.8 + " 2.2 0",
+          rotation: "0 " + -side * 90 + " 0",
+          align: "left",
+          color: "#fff",
+          width: "2.8",
+          wrapCount: "40",
+          scale: "0.75 0.75 0.75",
+        });
+
+        addButton(mruResultsDisplay, {
+          id: "btn-back-mru-results",
+          position: side * 3.8 + " 0.4 0",
+          rotation: "0 " + -side * 90 + " 0",
+          action: "back-fisica",
+          color: "#9B59B6",
+          label: "<- Volver",
+          textColor: "#fff",
+          textWidth: "2.5",
+          height: "0.3",
+          width: "0.9",
+        });
+      }
+
+      function generarAula(id, posicionXYZ, colorParedes, tipo, targetEl) {
+        var aula = targetEl || document.createElement("a-entity");
+        var scene = document.querySelector("a-scene");
+        id = id || "aula";
+        tipo = tipo || "base";
+        colorParedes = colorParedes || "#ffffff";
+
+        while (aula.firstChild) aula.removeChild(aula.firstChild);
+        aula.setAttribute("id", id);
+        aula.setAttribute("position", vectorToString(posicionXYZ));
+        aula.setAttribute("data-aula-tipo", tipo);
+
+        addBaseClassroom(aula, id, posicionXYZ, colorParedes);
+
+        if (tipo === "matematica") {
+          buildMathContent(aula);
+        } else if (tipo === "algoritmos") {
+          buildAlgorithmContent(aula);
+        } else if (tipo === "cpu" || tipo === "fisica") {
+          buildPlaceholderContent(aula, id, tipo, posicionXYZ);
+        }
+
+        if (!targetEl && scene) scene.appendChild(aula);
+        return aula;
+      }
+
+      AFRAME.registerComponent("generar-aula", {
+        schema: {
+          posicionXYZ: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
+          colorParedes: { type: "color", default: "#ffffff" },
+          tipo: { type: "string", default: "base" },
+        },
+
+        init: function () {
+          generarAula(
+            this.el.id,
+            this.data.posicionXYZ,
+            this.data.colorParedes,
+            this.data.tipo,
+            this.el,
+          );
         },
       });
 
@@ -183,7 +1543,8 @@
         // Construir bounding boxes MANUALMENTE desde atributos
         // (no usa setFromObject que puede fallar con grupos anidados)
         buildCollisionBoxes: function () {
-          var walls = document.querySelectorAll("a-box");
+          this.wallBoxes = [];
+          var walls = document.querySelectorAll(".collidable");
           var self = this;
 
           walls.forEach(function (wall) {
@@ -469,6 +1830,7 @@
       <div class="location">
         <p>📍 Pasillo Principal</p>
         <p>🚪 Aula 1 (Izquierda) | Aula 2 (Derecha)</p>
+        <p>🚪 Aula 3 CPU | Aula 4 Fisica</p>
       </div>
     </div>
 
@@ -508,8 +1870,8 @@
       ></a-entity>
 
       <!-- ################################################################## -->
-      <!-- GRUPO: PASILLO PRINCIPAL (4m ancho x 15m largo x 3.5m alto)       -->
-      <!-- Centrado en X=0, desde Z=-7.5 hasta Z=7.5                         -->
+      <!-- GRUPO: PASILLO PRINCIPAL (4m ancho x 22m largo x 3.5m alto)       -->
+      <!-- Centrado en X=0, desde Z=-14.5 hasta Z=7.5                        -->
       <!-- ################################################################## -->
       <a-entity id="pasillo" position="0 0 0">
         <!-- SUELO DEL PASILLO -->
@@ -517,10 +1879,10 @@
           id="pasillo-suelo"
           class="navegable"
           width="4"
-          height="15"
+          height="22"
           rotation="-90 0 0"
-          position="0 0.01 0"
-          material="src: #textura-suelo; repeat: 2 8; roughness: 0.7"
+          position="0 0.01 -3.5"
+          material="src: #textura-suelo; repeat: 2 12; roughness: 0.7"
           shadow="receive: true"
         ></a-plane>
 
@@ -528,26 +1890,16 @@
         <a-plane
           id="techo-pasillo"
           width="4"
-          height="15"
+          height="22"
           rotation="90 0 0"
-          position="0 3.5 0"
+          position="0 3.5 -3.5"
           material="color: #e8e4dc; roughness: 0.9"
         ></a-plane>
 
-        <!-- PARED IZQUIERDA DEL PASILLO (con hueco para Aula 1) -->
-        <!-- Sección trasera (desde Z=-7.5 hasta Z=-3) -->
+        <!-- PAREDES LATERALES DEL PASILLO (huecos para Aula 1-4) -->
+        <!-- Pared izquierda: conecta Aula 1 y Aula 3 -->
         <a-box
-          src="#textura-pared"
-          width="0.2"
-          height="3.5"
-          depth="4.5"
-          position="-2 1.75 -5.25"
-          material="src: #textura-pared; repeat: 2.25 1.75; roughness: 0.85"
-          shadow="cast: true; receive: true"
-        ></a-box>
-
-        <!-- Sección frontal (desde Z=1 hasta Z=7.5) -->
-        <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.2"
           height="3.5"
@@ -556,9 +1908,30 @@
           material="src: #textura-pared; repeat: 3.25 1.75; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
-
-        <!-- Dintel sobre puerta Aula 1 -->
         <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="3"
+          position="-2 1.75 -4.5"
+          material="src: #textura-pared; repeat: 1.5 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="4.5"
+          position="-2 1.75 -12.25"
+          material="src: #textura-pared; repeat: 2.25 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Hueco puerta Aula 1 -->
+        <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.2"
           height="1.2"
@@ -567,8 +1940,8 @@
           material="src: #textura-pared; repeat: 2 0.6; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
-        <!-- Relleno izquierdo puerta Aula 1 -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.2"
           height="2.3"
@@ -577,8 +1950,8 @@
           material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
-        <!-- Relleno derecho puerta Aula 1 -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.2"
           height="2.3"
@@ -588,20 +1961,41 @@
           shadow="cast: true; receive: true"
         ></a-box>
 
-        <!-- PARED DERECHA DEL PASILLO (con hueco para Aula 2) -->
-        <!-- Sección trasera -->
+        <!-- Hueco puerta Aula 3 -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.2"
-          height="3.5"
-          depth="4.5"
-          position="2 1.75 -5.25"
-          material="src: #textura-pared; repeat: 2.25 1.75; roughness: 0.85"
+          height="1.2"
+          depth="4"
+          position="-2 2.9 -8"
+          material="src: #textura-pared; repeat: 2 0.6; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="-2 1.15 -9.4"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="-2 1.15 -6.6"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
 
-        <!-- Sección frontal -->
+        <!-- Pared derecha: conecta Aula 2 y Aula 4 -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.2"
           height="3.5"
@@ -610,9 +2004,30 @@
           material="src: #textura-pared; repeat: 3.25 1.75; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
-
-        <!-- Dintel sobre puerta Aula 2 -->
         <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="3"
+          position="2 1.75 -4.5"
+          material="src: #textura-pared; repeat: 1.5 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
+          depth="4.5"
+          position="2 1.75 -12.25"
+          material="src: #textura-pared; repeat: 2.25 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
+        <!-- Hueco puerta Aula 2 -->
+        <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.2"
           height="1.2"
@@ -621,8 +2036,8 @@
           material="src: #textura-pared; repeat: 2 0.6; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
-        <!-- Relleno izquierdo puerta Aula 2 -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.2"
           height="2.3"
@@ -631,8 +2046,8 @@
           material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
-        <!-- Relleno derecho puerta Aula 2 -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.2"
           height="2.3"
@@ -642,13 +2057,46 @@
           shadow="cast: true; receive: true"
         ></a-box>
 
+        <!-- Hueco puerta Aula 4 -->
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="1.2"
+          depth="4"
+          position="2 2.9 -8"
+          material="src: #textura-pared; repeat: 2 0.6; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="2 1.15 -9.4"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="2 1.15 -6.6"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
         <!-- PARED TRASERA DEL PASILLO (fondo) -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="4"
           height="3.5"
           depth="0.2"
-          position="0 1.75 -7.5"
+          position="0 1.75 -14.5"
           material="src: #textura-pared; repeat: 2 1.75; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
@@ -656,6 +2104,7 @@
         <!-- ENTRADA PRINCIPAL (Arco doble al frente Z=7.5) -->
         <!-- Columna izquierda -->
         <a-box
+          class="collidable"
           width="0.5"
           height="3.5"
           depth="0.5"
@@ -666,6 +2115,7 @@
 
         <!-- Columna derecha -->
         <a-box
+          class="collidable"
           width="0.5"
           height="3.5"
           depth="0.5"
@@ -676,6 +2126,7 @@
 
         <!-- Dintel de entrada -->
         <a-box
+          class="collidable"
           width="4"
           height="0.5"
           depth="0.6"
@@ -685,6 +2136,7 @@
         ></a-box>
         <!-- Relleno izquierdo entrada principal -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.6"
           height="3"
@@ -695,6 +2147,7 @@
         ></a-box>
         <!-- Relleno derecho entrada principal -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="0.6"
           height="3"
@@ -705,6 +2158,7 @@
         ></a-box>
         <!-- Relleno arriba de las puertas entrada -->
         <a-box
+          class="collidable"
           src="#textura-pared"
           width="2.4"
           height="0.5"
@@ -733,7 +2187,7 @@
         <!-- LOGO 3D GIRANDO al fondo del pasillo -->
         <a-entity
           id="logo-pasillo"
-          position="0 2 -6.5"
+          position="0 2 -13.5"
           scale="3 3 3"
           animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear"
         >
@@ -744,12 +2198,20 @@
           type="point"
           color="#FFFFFF"
           intensity="1"
-          position="0 3.2 -6.5"
+          position="0 3.2 -13.5"
           distance="5"
           decay="1"
         ></a-light>
 
         <!-- ILUMINACIÓN DEL PASILLO -->
+        <a-light
+          type="point"
+          color="#FFF8DC"
+          intensity="0.6"
+          position="0 3.2 -10"
+          distance="8"
+          decay="2"
+        ></a-light>
         <a-light
           type="point"
           color="#FFF8DC"
@@ -777,844 +2239,27 @@
       </a-entity>
 
       <!-- ################################################################## -->
-      <!-- GRUPO: AULA 1 (Izquierda del pasillo)                             -->
-      <!-- Dimensiones: 8m ancho (X) x 6m largo (Z) x 3.5m alto              -->
-      <!-- Conecta al pasillo en X=-2, Z=-3 a Z=1                            -->
+      <!-- AULAS GENERADAS DINAMICAMENTE                                      -->
       <!-- ################################################################## -->
-      <a-entity id="aula1" position="-6 0 -1">
-        <!-- SUELO DEL AULA 1 -->
-        <a-plane
-          id="aula1-suelo"
-          class="navegable"
-          width="8"
-          height="6"
-          rotation="-90 0 0"
-          position="0 0.01 0"
-          material="src: #textura-suelo; repeat: 4 3; roughness: 0.7"
-          shadow="receive: true"
-        ></a-plane>
-
-        <!-- TECHO DEL AULA 1 -->
-        <a-plane
-          width="8"
-          height="6"
-          rotation="90 0 0"
-          position="0 3.5 0"
-          material="color: #f0ece4; roughness: 0.9"
-        ></a-plane>
-
-        <!-- PARED FRONTAL (donde está el pizarrón, X negativo) -->
-        <a-box
-          src="#textura-pared"
-          width="0.2"
-          height="3.5"
-          depth="6"
-          position="-4 1.75 0"
-          material="src: #textura-pared; repeat: 3 1.75; roughness: 0.85"
-          shadow="cast: true; receive: true"
-        ></a-box>
-
-        <!-- PARED TRASERA (hacia el pasillo, X positivo) - tiene hueco puerta -->
-        <!-- Ya conecta con el pasillo, el hueco está abierto -->
-
-        <!-- PARED LATERAL IZQUIERDA (Z negativo) -->
-        <a-box
-          src="#textura-pared"
-          width="8"
-          height="3.5"
-          depth="0.2"
-          position="0 1.75 -3"
-          material="src: #textura-pared; repeat: 4 1.75; roughness: 0.85"
-          shadow="cast: true; receive: true"
-        ></a-box>
-
-        <!-- PARED LATERAL DERECHA (Z positivo) -->
-        <a-box
-          src="#textura-pared"
-          width="8"
-          height="3.5"
-          depth="0.2"
-          position="0 1.75 3"
-          material="src: #textura-pared; repeat: 4 1.75; roughness: 0.85"
-          shadow="cast: true; receive: true"
-        ></a-box>
-
-        <!-- Sección de pared hacia pasillo (arriba del hueco) -->
-        <a-box
-          src="#textura-pared"
-          width="0.2"
-          height="1.2"
-          depth="6"
-          position="4 2.9 0"
-          material="src: #textura-pared; repeat: 3 0.6; roughness: 0.85"
-          shadow="cast: true; receive: true"
-        ></a-box>
-
-        <!-- Marco de puerta del Aula 1 -->
-        <a-entity
-          gltf-model="#modelo-puerta"
-          position="3.9 0 0"
-          rotation="0 -90 0"
-          scale="2 2 2"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-
-        <!-- PIZARRÓN AULA 1 (en pared -X, mira hacia +X) -->
-        <a-entity
-          gltf-model="#modelo-pizarra"
-          position="-3.5 1.3 0"
-          rotation="0 90 0"
-          scale="0.5 0.5 0.5"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-
-        <!-- PUPITRES AULA 1 (6 pupitres en 2 filas de 3) -->
-        <!-- rotation="0 -90 0" = miran hacia -X = hacia el pizarrón -->
-        <!-- Fila 1 (más cerca del pizarrón) -->
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="-1.5 0 -1.5"
-          rotation="0 -90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="-1.5 0 0"
-          rotation="0 -90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="-1.5 0 1.5"
-          rotation="0 -90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-
-        <!-- Fila 2 (más lejos del pizarrón) -->
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="1 0 -1.5"
-          rotation="0 -90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="1 0 0"
-          rotation="0 -90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="1 0 1.5"
-          rotation="0 -90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-
-        <!-- ILUMINACIÓN AULA 1 -->
-        <a-light
-          type="point"
-          color="#FFFFFF"
-          intensity="0.7"
-          position="0 3.2 0"
-          distance="10"
-          decay="2"
-        ></a-light>
-        <a-light
-          type="point"
-          color="#FFFACD"
-          intensity="0.4"
-          position="-3 2.5 0"
-          distance="5"
-          decay="2"
-        ></a-light>
-
-        <!-- ============================================ -->
-        <!-- CONTENIDO INTERACTIVO: ANÁLISIS MATEMÁTICO   -->
-        <!-- Menú en la pared del pizarrón, visualización -->
-        <!-- en el centro del aula                        -->
-        <!-- ============================================ -->
-
-        <!-- Menú de funciones (en la pared del pizarrón, facing +X) -->
-        <a-entity id="math-menu" position="-3.2 2.2 0" rotation="0 90 0">
-          <a-text
-            value="Analisis Matematico I"
-            position="0 0.8 0"
-            align="center"
-            color="#4CAF50"
-            width="6"
-          ></a-text>
-          <a-text
-            value="Selecciona una funcion:"
-            position="0 0.5 0"
-            align="center"
-            color="#fff"
-            width="4"
-          ></a-text>
-
-          <!-- Fila 1 -->
-          <a-entity
-            id="btn-func1"
-            position="-1.2 0 0"
-            class="clickable"
-            btn-action="func1"
-          >
-            <a-box
-              width="0.9"
-              height="0.3"
-              depth="0.05"
-              color="#FF6B6B"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="sin(x)*cos(y)"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-          <a-entity
-            id="btn-func2"
-            position="0 0 0"
-            class="clickable"
-            btn-action="func2"
-          >
-            <a-box
-              width="0.9"
-              height="0.3"
-              depth="0.05"
-              color="#4ECDC4"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="x² + y²"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-          <a-entity
-            id="btn-func3"
-            position="1.2 0 0"
-            class="clickable"
-            btn-action="func3"
-          >
-            <a-box
-              width="0.9"
-              height="0.3"
-              depth="0.05"
-              color="#45B7D1"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="sin(sqrt(x²+y²))"
-              align="center"
-              color="#fff"
-              width="2.2"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-
-          <!-- Fila 2 -->
-          <a-entity
-            id="btn-func4"
-            position="-0.6 -0.5 0"
-            class="clickable"
-            btn-action="func4"
-          >
-            <a-box
-              width="0.9"
-              height="0.3"
-              depth="0.05"
-              color="#96CEB4"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="cos(x)*sin(y)"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-          <a-entity
-            id="btn-func5"
-            position="0.6 -0.5 0"
-            class="clickable"
-            btn-action="func5"
-          >
-            <a-box
-              width="0.9"
-              height="0.3"
-              depth="0.05"
-              color="#FFEAA7"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="e^(-(x²+y²))"
-              align="center"
-              color="#333"
-              width="2.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-        </a-entity>
-
-        <!-- Área de visualización de funciones (centro del aula) -->
-        <a-entity id="function-display" visible="false" position="0 0 0">
-          <a-text
-            id="current-function-title"
-            value=""
-            position="-2 3 0"
-            rotation="0 90 0"
-            align="center"
-            color="#4CAF50"
-            width="6"
-          ></a-text>
-
-          <!-- Superficie matemática 3D -->
-          <a-entity
-            id="math-surface"
-            position="0 1.5 0"
-            scale="0.65 0.65 0.65"
-          ></a-entity>
-
-          <!-- Ejes de coordenadas -->
-          <a-cylinder
-            position="0 1.5 0"
-            rotation="0 0 90"
-            height="2.6"
-            radius="0.011"
-            color="red"
-          ></a-cylinder>
-          <a-text value="X" position="1.5 1.5 0" color="red" width="2"></a-text>
-          <a-cylinder
-            position="0 1.5 0"
-            height="2.6"
-            radius="0.011"
-            color="green"
-          ></a-cylinder>
-          <a-text value="Y" position="0 2.95 0" color="green" width="2"></a-text>
-          <a-cylinder
-            position="0 1.5 0"
-            rotation="90 0 0"
-            height="2.6"
-            radius="0.011"
-            color="blue"
-          ></a-cylinder>
-          <a-text
-            value="Z"
-            position="0 1.5 1.5"
-            color="blue"
-            width="2"
-          ></a-text>
-
-          <!-- Botón volver al menú -->
-          <a-entity
-            id="btn-back-to-menu"
-            position="-3.2 1 0"
-            rotation="0 90 0"
-            class="clickable"
-            btn-action="back-math"
-          >
-            <a-box
-              width="0.9"
-              height="0.25"
-              depth="0.06"
-              color="#9B59B6"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="<- Menu Funciones"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.04"
-            ></a-text>
-          </a-entity>
-        </a-entity>
-      </a-entity>
-
-      <!-- ################################################################## -->
-      <!-- GRUPO: AULA 2 (Derecha del pasillo)                               -->
-      <!-- Dimensiones: 8m ancho x 6m largo x 3.5m alto                      -->
-      <!-- Pupitres en semicírculo mirando al pizarrón                       -->
-      <!-- ################################################################## -->
-      <a-entity id="aula2" position="6 0 -1">
-        <!-- SUELO DEL AULA 2 -->
-        <a-plane
-          id="aula2-suelo"
-          class="navegable"
-          width="8"
-          height="6"
-          rotation="-90 0 0"
-          position="0 0.01 0"
-          material="src: #textura-suelo; repeat: 4 3; roughness: 0.7"
-          shadow="receive: true"
-        ></a-plane>
-
-        <!-- TECHO DEL AULA 2 -->
-        <a-plane
-          width="8"
-          height="6"
-          rotation="90 0 0"
-          position="0 3.5 0"
-          material="color: #f0ece4; roughness: 0.9"
-        ></a-plane>
-
-        <!-- PARED FRONTAL (donde está el pizarrón, X positivo) -->
-        <a-box
-          src="#textura-pared"
-          width="0.2"
-          height="3.5"
-          depth="6"
-          position="4 1.75 0"
-          material="src: #textura-pared; repeat: 3 1.75; roughness: 0.85"
-          shadow="cast: true; receive: true"
-        ></a-box>
-
-        <!-- PARED LATERAL IZQUIERDA (Z negativo) -->
-        <a-box
-          src="#textura-pared"
-          width="8"
-          height="3.5"
-          depth="0.2"
-          position="0 1.75 -3"
-          material="src: #textura-pared; repeat: 4 1.75; roughness: 0.85"
-          shadow="cast: true; receive: true"
-        ></a-box>
-
-        <!-- PARED LATERAL DERECHA (Z positivo) -->
-        <a-box
-          src="#textura-pared"
-          width="8"
-          height="3.5"
-          depth="0.2"
-          position="0 1.75 3"
-          material="src: #textura-pared; repeat: 4 1.75; roughness: 0.85"
-          shadow="cast: true; receive: true"
-        ></a-box>
-
-        <!-- Sección de pared hacia pasillo (arriba del hueco) -->
-        <a-box
-          src="#textura-pared"
-          width="0.2"
-          height="1.2"
-          depth="6"
-          position="-4 2.9 0"
-          material="src: #textura-pared; repeat: 3 0.6; roughness: 0.85"
-          shadow="cast: true; receive: true"
-        ></a-box>
-
-        <!-- Marco de puerta del Aula 2 -->
-        <a-entity
-          gltf-model="#modelo-puerta"
-          position="-3.9 0 0"
-          rotation="0 90 0"
-          scale="2 2 2"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-
-        <!-- PIZARRÓN AULA 2 (en pared +X, mira hacia -X) -->
-        <a-entity
-          gltf-model="#modelo-pizarra"
-          position="3.5 1.3 0"
-          rotation="0 -90 0"
-          scale="0.5 0.5 0.5"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-
-        <!-- PUPITRES AULA 2 (6 pupitres en 2 filas de 3) -->
-        <!-- rotation="0 90 0" = miran hacia +X = hacia el pizarrón -->
-
-        <!-- Fila 1 (más cerca del pizarrón) -->
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="1.5 0 -1.5"
-          rotation="0 90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="1.5 0 0"
-          rotation="0 90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="1.5 0 1.5"
-          rotation="0 90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-
-        <!-- Fila 2 (más lejos del pizarrón) -->
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="-1 0 -1.5"
-          rotation="0 90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="-1 0 0"
-          rotation="0 90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-        <a-entity
-          class="pupitre"
-          gltf-model="#modelo-pupitre"
-          position="-1 0 1.5"
-          rotation="0 90 0"
-          scale="0.3 0.3 0.3"
-          shadow="cast: true; receive: true"
-        ></a-entity>
-
-        <!-- ILUMINACIÓN AULA 2 -->
-        <a-light
-          type="point"
-          color="#FFFFFF"
-          intensity="0.7"
-          position="0 3.2 0"
-          distance="10"
-          decay="2"
-        ></a-light>
-        <a-light
-          type="point"
-          color="#FFFACD"
-          intensity="0.4"
-          position="3 2.5 0"
-          distance="5"
-          decay="2"
-        ></a-light>
-
-        <!-- ============================================ -->
-        <!-- CONTENIDO INTERACTIVO: ALGORITMOS            -->
-        <!-- Menú en la pared del pizarrón, visualización -->
-        <!-- en el centro del aula                        -->
-        <!-- ============================================ -->
-
-        <!-- Menú de algoritmos (en la pared del pizarrón, facing -X) -->
-        <a-entity id="alg-menu" position="3.2 2.2 0" rotation="0 -90 0">
-          <a-text
-            value="Algoritmos de Ordenamiento"
-            position="0 0.8 0"
-            align="center"
-            color="#2196F3"
-            width="6"
-          ></a-text>
-          <a-text
-            value="Selecciona un algoritmo:"
-            position="0 0.5 0"
-            align="center"
-            color="#fff"
-            width="4"
-          ></a-text>
-
-          <a-entity
-            id="btn-algo1"
-            position="-1.1 0.05 0"
-            class="clickable"
-            btn-action="algo-bubble"
-          >
-            <a-box
-              width="0.9"
-              height="0.3"
-              depth="0.05"
-              color="#FF6B6B"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Bubble Sort"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-          <a-entity
-            id="btn-algo2"
-            position="0 0.05 0"
-            class="clickable"
-            btn-action="algo-insertion"
-          >
-            <a-box
-              width="0.9"
-              height="0.3"
-              depth="0.05"
-              color="#4ECDC4"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Insertion Sort"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-          <a-entity
-            id="btn-algo3"
-            position="1.1 0.05 0"
-            class="clickable"
-            btn-action="algo-quick"
-          >
-            <a-box
-              width="0.9"
-              height="0.3"
-              depth="0.05"
-              color="#45B7D1"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Quick Sort"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-          <a-entity
-            id="btn-algo4"
-            position="-0.75 -0.4 0"
-            class="clickable"
-            btn-action="algo-baraja"
-          >
-            <a-box
-              width="1.35"
-              height="0.3"
-              depth="0.05"
-              color="#8BC34A"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Baraja"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-          <a-entity
-            id="btn-algo5"
-            position="0.75 -0.4 0"
-            class="clickable"
-            btn-action="algo-intercambio"
-          >
-            <a-box
-              width="1.35"
-              height="0.3"
-              depth="0.05"
-              color="#FF9800"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Intercambio Directo"
-              align="center"
-              color="#fff"
-              width="2.4"
-              position="0 0 0.03"
-            ></a-text>
-          </a-entity>
-        </a-entity>
-
-        <!-- Área de visualización de algoritmos (centro del aula) -->
-        <a-entity id="algorithm-display" visible="false" position="0 0 0">
-          <a-text
-            id="current-algo-title"
-            value=""
-            position="3.2 2.8 0"
-            rotation="0 -90 0"
-            align="center"
-            color="#2196F3"
-            width="6"
-          ></a-text>
-
-          <!-- Contenedor de cubos del array (pegado a la pared del pizarrón) -->
-          <a-entity
-            id="algo-surface"
-            position="3.2 1.65 0"
-            rotation="0 -90 0"
-          ></a-entity>
-
-          <!-- Botón volver al menú -->
-          <a-entity
-            id="btn-back-to-alg-menu"
-            position="3.2 1.2 -0.8"
-            rotation="0 -90 0"
-            class="clickable"
-            btn-action="back-algo"
-          >
-            <a-box
-              width="0.9"
-              height="0.25"
-              depth="0.06"
-              color="#9B59B6"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="<- Menu Algoritmos"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.04"
-            ></a-text>
-          </a-entity>
-
-          <!-- Botón reiniciar -->
-          <a-entity
-            id="btn-restart-algo"
-            position="3.2 1.2 0.8"
-            rotation="0 -90 0"
-            class="clickable"
-            btn-action="restart-algo"
-          >
-            <a-box
-              width="0.9"
-              height="0.25"
-              depth="0.06"
-              color="#FF9800"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Reiniciar"
-              align="center"
-              color="#fff"
-              width="2.5"
-              position="0 0 0.04"
-            ></a-text>
-          </a-entity>
-
-          <!-- Controles de reproduccion de la animacion -->
-          <a-entity
-            id="btn-pause-algo"
-            position="3.2 0.85 -0.95"
-            rotation="0 -90 0"
-            class="clickable"
-            btn-action="pause-algo"
-          >
-            <a-box
-              width="0.85"
-              height="0.24"
-              depth="0.06"
-              color="#2196F3"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              id="pause-algo-label"
-              value="Pausar"
-              align="center"
-              color="#fff"
-              width="2.1"
-              position="0 0 0.04"
-            ></a-text>
-          </a-entity>
-
-          <a-entity
-            id="btn-back-step-algo"
-            position="3.2 0.85 0"
-            rotation="0 -90 0"
-            class="clickable"
-            btn-action="back-step-algo"
-          >
-            <a-box
-              width="0.85"
-              height="0.24"
-              depth="0.06"
-              color="#607D8B"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              value="Atras"
-              align="center"
-              color="#fff"
-              width="2.1"
-              position="0 0 0.04"
-            ></a-text>
-          </a-entity>
-
-          <a-entity
-            id="btn-slow-algo"
-            position="3.2 0.85 0.95"
-            rotation="0 -90 0"
-            class="clickable"
-            btn-action="slow-algo"
-          >
-            <a-box
-              width="0.85"
-              height="0.24"
-              depth="0.06"
-              color="#795548"
-              opacity="0.9"
-              animation__mouseenter="property: scale; to: 1.1 1.1 1.1; startEvents: mouseenter; dur: 200"
-              animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200"
-            ></a-box>
-            <a-text
-              id="slow-algo-label"
-              value="Vel 1x"
-              align="center"
-              color="#fff"
-              width="2.1"
-              position="0 0 0.04"
-            ></a-text>
-          </a-entity>
-        </a-entity>
-      </a-entity>
+      <a-entity
+        id="aula1"
+        generar-aula="posicionXYZ: -6 0 -1; colorParedes: #ffffff; tipo: matematica"
+      ></a-entity>
+      <a-entity
+        id="aula2"
+        generar-aula="posicionXYZ: 6 0 -1; colorParedes: #ffffff; tipo: algoritmos"
+      ></a-entity>
+      <a-entity
+        id="aula3"
+        generar-aula="posicionXYZ: -6 0 -8; colorParedes: #eef5ff; tipo: cpu"
+      ></a-entity>
+      <a-entity
+        id="aula4"
+        generar-aula="posicionXYZ: 6 0 -8; colorParedes: #f3fff1; tipo: fisica"
+      ></a-entity>
 
       <!-- ========================================== -->
-      <!-- ILUMINACIÓN GLOBAL                        -->
+      <!-- ILUMINACION GLOBAL                        -->
       <!-- ========================================== -->
 
       <!-- Luz ambiental general -->
@@ -1677,7 +2322,7 @@
             teleportOrigin: #camera;
             type: parabolic;
             button: grip;
-            collisionEntities: #pasillo-suelo, #aula1-suelo, #aula2-suelo;
+            collisionEntities: .navegable;
             curveHitColor: #4CAF50;
             curveMissColor: #FF5722;
             hitCylinderColor: #4CAF50;
@@ -1696,7 +2341,7 @@
             teleportOrigin: #camera;
             type: parabolic;
             button: grip;
-            collisionEntities: #pasillo-suelo, #aula1-suelo, #aula2-suelo;
+            collisionEntities: .navegable;
             curveHitColor: #4CAF50;
             curveMissColor: #FF5722;
             hitCylinderColor: #4CAF50;
@@ -2389,6 +3034,863 @@
         }
       }
 
+      // ===== CPU SCHEDULER VR LAB (AULA 3) =====
+
+      var cpuTimeouts = [];
+      var cpuSchedulerState = null;
+      var cpuColors = {
+        new: "#9E9E9E",
+        ready: "#1E88E5",
+        running: "#43A047",
+        waiting: "#FDD835",
+        terminated: "#E53935",
+      };
+      var cpuAlgorithmNames = {
+        fcfs: "FCFS",
+        sjf: "SJF no preemptivo",
+        srtf: "SRTF preemptivo",
+        rr: "Round Robin",
+      };
+
+      var cpuProcessTemplate = [
+        { id: "P1", arrivalTime: 0, burstTime: 8, ioStart: 3, ioDuration: 2 },
+        { id: "P2", arrivalTime: 1, burstTime: 4, ioStart: null, ioDuration: 0 },
+        { id: "P3", arrivalTime: 2, burstTime: 9, ioStart: 4, ioDuration: 3 },
+        { id: "P4", arrivalTime: 3, burstTime: 5, ioStart: null, ioDuration: 0 },
+      ];
+
+      function cloneCpuProcesses() {
+        return cpuProcessTemplate.map(function (p) {
+          return {
+            id: p.id,
+            arrivalTime: p.arrivalTime,
+            burstTime: p.burstTime,
+            ioStart: p.ioStart,
+            ioDuration: p.ioDuration,
+            remainingTime: p.burstTime,
+            executedTime: 0,
+            ioRemaining: 0,
+            ioDone: false,
+            state: "new",
+            startTime: null,
+            completionTime: null,
+            waitingTime: 0,
+            responseTime: null,
+            entity: null,
+          };
+        });
+      }
+
+      function ensureCpuState() {
+        if (cpuSchedulerState) return cpuSchedulerState;
+        cpuSchedulerState = {
+          algorithm: "fcfs",
+          quantum: 2,
+          time: 0,
+          readyQueue: [],
+          waitingList: [],
+          current: null,
+          currentQuantum: 0,
+          processes: cloneCpuProcesses(),
+          gantt: [],
+          running: false,
+          paused: false,
+          finished: false,
+          busyTicks: 0,
+        };
+        return cpuSchedulerState;
+      }
+
+      function clearCpuTimeouts() {
+        cpuTimeouts.forEach(clearTimeout);
+        cpuTimeouts = [];
+      }
+
+      function scheduleCpuTimeout(cb, delay) {
+        var id = setTimeout(function () {
+          cpuTimeouts = cpuTimeouts.filter(function (t) {
+            return t !== id;
+          });
+          cb();
+        }, delay);
+        cpuTimeouts.push(id);
+      }
+
+      function cpuZonePosition(state, index) {
+        var map = {
+          new: [-3.0 + index * 0.35, 0.34, 1.55],
+          ready: [-2.75 + index * 0.35, 0.34, -1.45],
+          running: [0, 1.18, 0.03],
+          waiting: [1.85 + index * 0.35, 0.34, -1.45],
+          terminated: [2.3 + index * 0.35, 0.34, 1.55],
+        };
+        return map[state] || [0, 0.36, 0];
+      }
+
+      function createCpuProcessEntity(proc, index) {
+        var parent = document.getElementById("cpu-processes");
+        if (!parent) return null;
+        var pos = cpuZonePosition("new", index);
+        var el = document.createElement("a-entity");
+        el.setAttribute("id", "cpu-proc-" + proc.id);
+        el.setAttribute("position", pos.join(" "));
+        el.setAttribute("class", "cpu-process");
+
+        var body = document.createElement("a-box");
+        body.setAttribute("class", "cpu-process-body");
+        body.setAttribute("width", "0.42");
+        body.setAttribute("height", "0.42");
+        body.setAttribute("depth", "0.42");
+        body.setAttribute("color", cpuColors.new);
+        body.setAttribute("shadow", "cast: true; receive: true");
+        el.appendChild(body);
+
+        var text = document.createElement("a-text");
+        text.setAttribute("value", proc.id);
+        text.setAttribute("align", "center");
+        text.setAttribute("color", "#ffffff");
+        text.setAttribute("width", "2");
+        text.setAttribute("position", "0 0 0.23");
+        el.appendChild(text);
+
+        parent.appendChild(el);
+        return el;
+      }
+
+      function moveCpuProcess(proc, state, index, preempted) {
+        if (!proc || !proc.entity) return;
+        proc.state = state;
+        var pos = cpuZonePosition(state, index || 0);
+        var body = proc.entity.querySelector(".cpu-process-body");
+        if (body) body.setAttribute("color", cpuColors[state]);
+        var scalePulse = preempted ? 1.28 : 1;
+        proc.entity.setAttribute("scale", scalePulse + " " + scalePulse + " " + scalePulse);
+        if (window.gsap) {
+          gsap.to(proc.entity.object3D.position, {
+            x: pos[0],
+            y: pos[1],
+            z: pos[2],
+            duration: preempted ? 1.7 : 1.35,
+            ease: "power2.inOut",
+            onComplete: function () {
+              proc.entity.setAttribute("position", pos.join(" "));
+              proc.entity.setAttribute("scale", "1 1 1");
+            },
+          });
+        } else {
+          proc.entity.setAttribute("position", pos.join(" "));
+          proc.entity.setAttribute("scale", "1 1 1");
+        }
+      }
+
+      function layoutCpuQueues() {
+        var s = ensureCpuState();
+        s.processes.forEach(function (p, i) {
+          if (p.state === "new") moveCpuProcess(p, "new", i);
+        });
+        s.readyQueue.forEach(function (p, i) {
+          moveCpuProcess(p, "ready", i);
+        });
+        s.waitingList.forEach(function (p, i) {
+          moveCpuProcess(p, "waiting", i);
+        });
+        s.processes
+          .filter(function (p) {
+            return p.state === "terminated";
+          })
+          .forEach(function (p, i) {
+            moveCpuProcess(p, "terminated", i);
+          });
+        if (s.current) moveCpuProcess(s.current, "running", 0);
+      }
+
+      function updateCpuButtons() {
+        var s = ensureCpuState();
+        var pauseLabel = document.querySelector("#cpu-btn-pause a-text");
+        if (pauseLabel) pauseLabel.setAttribute("value", s.paused ? "Reanudar" : "Pausar");
+        ["fcfs", "sjf", "srtf", "rr"].forEach(function (alg) {
+          var box = document.querySelector("#cpu-btn-" + alg + " a-box");
+          if (box) {
+            box.setAttribute("opacity", s.algorithm === alg ? "1" : "0.72");
+          }
+        });
+      }
+
+      function updateCpuMetrics() {
+        var s = ensureCpuState();
+        var completed = s.processes.filter(function (p) {
+          return p.state === "terminated";
+        });
+        var avg = function (field) {
+          if (!completed.length) return "0.0";
+          var sum = completed.reduce(function (acc, p) {
+            return acc + (p[field] || 0);
+          }, 0);
+          return (sum / completed.length).toFixed(1);
+        };
+        var throughput = s.time > 0 ? (completed.length / s.time).toFixed(2) : "0.00";
+        var utilization = s.time > 0 ? ((s.busyTicks / s.time) * 100).toFixed(0) : "0";
+        var text =
+          "Tiempo actual: " + s.time +
+          "\nAlgoritmo: " + cpuAlgorithmNames[s.algorithm] +
+          "\nQuantum: " + (s.algorithm === "rr" ? s.quantum : "-") +
+          "\nTiempo de espera prom. (WT): " + avg("waitingTime") +
+          "\nTiempo de retorno prom. (TAT): " + avg("turnaroundTime") +
+          "\nTiempo de respuesta prom.: " + avg("responseTime") +
+          "\nProcesos por segundo: " + throughput +
+          "\nUtilizacion de CPU: " + utilization + "%";
+        var metrics = document.getElementById("cpu-metrics-text");
+        if (metrics) metrics.setAttribute("value", text);
+        var status = document.getElementById("cpu-status-text");
+        if (status) {
+          var current = s.current ? "Ejecutando " + s.current.id : "CPU libre";
+          if (s.finished) current = "Simulacion finalizada";
+          status.setAttribute("value", current);
+        }
+        var cpuCurrent = document.getElementById("cpu-current-label");
+        if (cpuCurrent) {
+          cpuCurrent.setAttribute("value", s.current ? s.current.id : "-");
+        }
+        var table = document.getElementById("cpu-process-table-text");
+        if (table) table.setAttribute("value", buildCpuProcessTableText());
+        updateCpuButtons();
+      }
+
+      function getCpuStateLabel(state) {
+        return {
+          new: "Nuevo",
+          ready: "Listo",
+          running: "Ejecutando",
+          waiting: "Espera/E/S",
+          terminated: "Terminado",
+        }[state] || "-";
+      }
+
+      function buildCpuProcessTableText() {
+        var s = ensureCpuState();
+        var lines = ["Proceso | Llegada | Rafaga | E/S ini | E/S dur | Estado"];
+        s.processes.forEach(function (p) {
+          lines.push(
+            p.id +
+              " | " +
+              p.arrivalTime +
+              " | " +
+              p.burstTime +
+              " | " +
+              (p.ioStart === null ? "-" : p.ioStart) +
+              " | " +
+              (p.ioDuration || "-") +
+              " | " +
+              getCpuStateLabel(p.state),
+          );
+        });
+        return lines.join("\n");
+      }
+
+      function resetCpuGantt() {
+        var parent = document.getElementById("cpu-gantt-blocks");
+        if (!parent) return;
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+        renderCpuGanttScale();
+        renderCpuGanttLegend();
+      }
+
+      function renderCpuGanttScale() {
+        var parent = document.getElementById("cpu-gantt-scale");
+        if (!parent) return;
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+        for (var t = 0; t <= 30; t += 5) {
+          var x = t * 0.15;
+          appendEl(parent, "a-box", {
+            width: "0.012",
+            height: "0.12",
+            depth: "0.02",
+            position: x + " -0.07 0",
+            color: "#B0BEC5",
+          });
+          addText(parent, {
+            value: String(t),
+            position: x + " 0.03 0.02",
+            align: "center",
+            color: "#ECEFF1",
+            width: "1.2",
+          });
+        }
+        addText(parent, {
+          value: "Tiempo ->",
+          position: "4.8 0.03 0.02",
+          align: "center",
+          color: "#ECEFF1",
+          width: "1.4",
+        });
+      }
+
+      function renderCpuGanttLegend() {
+        var parent = document.getElementById("cpu-gantt-legend");
+        if (!parent) return;
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+        var colors = getCpuProcessColors();
+        ["P1", "P2", "P3", "P4"].forEach(function (pid, i) {
+          var x = i * 0.5;
+          appendEl(parent, "a-box", {
+            width: "0.12",
+            height: "0.12",
+            depth: "0.03",
+            position: x + " 0 0",
+            color: colors[pid],
+          });
+          addText(parent, {
+            value: pid,
+            position: x + 0.16 + " 0 0.02",
+            align: "left",
+            color: "#E3F2FD",
+            width: "1.4",
+          });
+        });
+      }
+
+      function getCpuProcessColors() {
+        return { P1: "#42A5F5", P2: "#66BB6A", P3: "#AB47BC", P4: "#FFA726" };
+      }
+
+      function addCpuGanttBlock(pid, start, duration) {
+        var parent = document.getElementById("cpu-gantt-blocks");
+        if (!parent) return;
+        var colors = getCpuProcessColors();
+        var scale = 0.15;
+        var width = Math.max(0.11, duration * scale);
+        var x = start * scale + width / 2;
+        var block = document.createElement("a-entity");
+        block.setAttribute("position", x + " 0 0");
+        var box = document.createElement("a-box");
+        box.setAttribute("width", width);
+        box.setAttribute("height", "0.26");
+        box.setAttribute("depth", "0.05");
+        box.setAttribute("color", colors[pid] || "#B0BEC5");
+        block.appendChild(box);
+        var label = document.createElement("a-text");
+        label.setAttribute("value", pid);
+        label.setAttribute("align", "center");
+        label.setAttribute("color", "#ffffff");
+        label.setAttribute("width", "1.6");
+        label.setAttribute("position", "0 0 0.04");
+        block.appendChild(label);
+        parent.appendChild(block);
+      }
+
+      function recordCpuExecution(pid) {
+        var s = ensureCpuState();
+        var last = s.gantt[s.gantt.length - 1];
+        if (last && last.pid === pid && last.start + last.duration === s.time) {
+          last.duration++;
+          resetCpuGantt();
+          s.gantt.forEach(function (b) {
+            addCpuGanttBlock(b.pid, b.start, b.duration);
+          });
+        } else {
+          var block = { pid: pid, start: s.time, duration: 1 };
+          s.gantt.push(block);
+          addCpuGanttBlock(block.pid, block.start, block.duration);
+        }
+      }
+
+      function resetCpuScheduler() {
+        clearCpuTimeouts();
+        cpuSchedulerState = {
+          algorithm: cpuSchedulerState ? cpuSchedulerState.algorithm : "fcfs",
+          quantum: cpuSchedulerState ? cpuSchedulerState.quantum : 2,
+          time: 0,
+          readyQueue: [],
+          waitingList: [],
+          current: null,
+          currentQuantum: 0,
+          processes: cloneCpuProcesses(),
+          gantt: [],
+          running: false,
+          paused: false,
+          finished: false,
+          busyTicks: 0,
+        };
+        resetCpuGantt();
+        var parent = document.getElementById("cpu-processes");
+        if (parent) {
+          while (parent.firstChild) parent.removeChild(parent.firstChild);
+          cpuSchedulerState.processes.forEach(function (p, i) {
+            p.entity = createCpuProcessEntity(p, i);
+          });
+        }
+        layoutCpuQueues();
+        updateCpuMetrics();
+      }
+
+      function selectCpuAlgorithm(algorithm) {
+        var s = ensureCpuState();
+        s.algorithm = algorithm;
+        resetCpuScheduler();
+      }
+
+      function changeCpuQuantum(delta) {
+        var s = ensureCpuState();
+        s.quantum = Math.max(1, Math.min(8, s.quantum + delta));
+        updateCpuMetrics();
+      }
+
+      function startCpuScheduler() {
+        var s = ensureCpuState();
+        if (s.finished) resetCpuScheduler();
+        s = ensureCpuState();
+        if (s.running && !s.paused) return;
+        s.running = true;
+        s.paused = false;
+        updateCpuMetrics();
+        scheduleCpuTimeout(runCpuTick, 500);
+      }
+
+      function toggleCpuPause() {
+        var s = ensureCpuState();
+        if (!s.running || s.finished) return;
+        s.paused = !s.paused;
+        clearCpuTimeouts();
+        updateCpuMetrics();
+        if (!s.paused) scheduleCpuTimeout(runCpuTick, 500);
+      }
+
+      function enqueueCpuReady(proc, preempted) {
+        var s = ensureCpuState();
+        if (s.readyQueue.indexOf(proc) === -1) s.readyQueue.push(proc);
+        moveCpuProcess(proc, "ready", s.readyQueue.indexOf(proc), preempted);
+      }
+
+      function chooseNextCpuProcess() {
+        var s = ensureCpuState();
+        if (!s.readyQueue.length) return null;
+
+        // FCFS y Round Robin toman el primer proceso de la cola visible.
+        if (s.algorithm === "fcfs" || s.algorithm === "rr") {
+          return s.readyQueue.shift();
+        }
+
+        // SJF no preemptivo: al liberarse la CPU elige la menor rafaga restante.
+        // No desaloja al proceso que ya esta ejecutando.
+        var bestIndex = 0;
+        for (var i = 1; i < s.readyQueue.length; i++) {
+          if (s.readyQueue[i].remainingTime < s.readyQueue[bestIndex].remainingTime) {
+            bestIndex = i;
+          }
+        }
+        return s.readyQueue.splice(bestIndex, 1)[0];
+      }
+
+      function applySrtfPreemption() {
+        var s = ensureCpuState();
+        if (s.algorithm !== "srtf" || !s.current || !s.readyQueue.length) return;
+        var shortest = s.readyQueue.reduce(function (best, p) {
+          return p.remainingTime < best.remainingTime ? p : best;
+        }, s.readyQueue[0]);
+        // SRTF preemptivo: si un listo tiene menor tiempo restante, expulsa
+        // visualmente al proceso actual y lo devuelve a la cola de listos.
+        if (shortest.remainingTime < s.current.remainingTime) {
+          s.readyQueue = s.readyQueue.filter(function (p) {
+            return p !== shortest;
+          });
+          enqueueCpuReady(s.current, true);
+          s.current = shortest;
+          s.currentQuantum = 0;
+        }
+      }
+
+      function finishCpuProcess(proc) {
+        var s = ensureCpuState();
+        proc.completionTime = s.time + 1;
+        proc.turnaroundTime = proc.completionTime - proc.arrivalTime;
+        moveCpuProcess(proc, "terminated", 0);
+        s.current = null;
+        s.currentQuantum = 0;
+      }
+
+      function sendCpuProcessToIo(proc) {
+        var s = ensureCpuState();
+        proc.ioDone = true;
+        // La E/S se descuenta al inicio de cada tick; se suma una unidad para
+        // que una duracion de 2 ocupe dos intervalos completos fuera de la CPU.
+        proc.ioRemaining = proc.ioDuration + 1;
+        s.waitingList.push(proc);
+        moveCpuProcess(proc, "waiting", s.waitingList.length - 1);
+        s.current = null;
+        s.currentQuantum = 0;
+      }
+
+      function runCpuTick() {
+        var s = ensureCpuState();
+        if (!s.running || s.paused || s.finished) return;
+
+        s.processes.forEach(function (p) {
+          if (p.state === "new" && p.arrivalTime <= s.time) {
+            enqueueCpuReady(p, false);
+          }
+        });
+
+        s.waitingList.slice().forEach(function (p) {
+          p.ioRemaining--;
+          if (p.ioRemaining <= 0) {
+            s.waitingList = s.waitingList.filter(function (wp) {
+              return wp !== p;
+            });
+            enqueueCpuReady(p, false);
+          }
+        });
+
+        applySrtfPreemption();
+
+        if (!s.current) {
+          s.current = chooseNextCpuProcess();
+          s.currentQuantum = 0;
+        }
+
+        if (s.current) {
+          if (s.current.startTime === null) {
+            s.current.startTime = s.time;
+            s.current.responseTime = s.current.startTime - s.current.arrivalTime;
+          }
+          moveCpuProcess(s.current, "running", 0);
+        }
+
+        s.readyQueue.forEach(function (p) {
+          p.waitingTime++;
+        });
+
+        if (s.current) {
+          s.busyTicks++;
+          s.current.executedTime++;
+          s.current.remainingTime--;
+          s.currentQuantum++;
+          recordCpuExecution(s.current.id);
+
+          if (s.current.remainingTime <= 0) {
+            finishCpuProcess(s.current);
+          } else if (
+            s.current.ioStart !== null &&
+            !s.current.ioDone &&
+            s.current.executedTime === s.current.ioStart
+          ) {
+            sendCpuProcessToIo(s.current);
+          } else if (s.algorithm === "rr" && s.currentQuantum >= s.quantum) {
+            var preempted = s.current;
+            s.current = null;
+            s.currentQuantum = 0;
+            // Round Robin: al consumir quantum sin terminar, vuelve al final
+            // de la cola de listos con una animacion de expulsion.
+            enqueueCpuReady(preempted, true);
+          }
+        }
+
+        s.time++;
+        layoutCpuQueues();
+        updateCpuMetrics();
+
+        if (
+          s.processes.every(function (p) {
+            return p.state === "terminated";
+          })
+        ) {
+          s.finished = true;
+          s.running = false;
+          updateCpuMetrics();
+          return;
+        }
+
+        scheduleCpuTimeout(runCpuTick, 1600);
+      }
+
+
+      // ===== FUNCIONES DE FÍSICA/MRUV =====
+
+      var FISICA_SELECTORS = [
+        "#aula4-fisica-menu",
+        "#aula4-mruv-display", "#aula4-mruv-simulation", "#aula4-mruv-results",
+        "#aula4-mru-display",  "#aula4-mru-simulation",  "#aula4-mru-results",
+      ];
+
+      // Timeouts pendientes de mostrar resultados (pueden cancelarse al navegar)
+      var mruvResultsTimeout = null;
+      var mruResultsTimeout = null;
+
+      function hideFisicaAll() {
+        // Cancelar timeouts de resultados pendientes
+        if (mruvResultsTimeout) { clearTimeout(mruvResultsTimeout); mruvResultsTimeout = null; }
+        if (mruResultsTimeout)  { clearTimeout(mruResultsTimeout);  mruResultsTimeout  = null; }
+        // Detener animaciones activas
+        if (typeof mruvSimulationRunning !== "undefined" && mruvSimulationRunning) {
+          mruvSimulationRunning = false;
+          if (mruvAnimationId) { cancelAnimationFrame(mruvAnimationId); mruvAnimationId = null; }
+        }
+        if (typeof mruSimulationRunning !== "undefined" && mruSimulationRunning) {
+          mruSimulationRunning = false;
+          if (mruAnimationId) { cancelAnimationFrame(mruAnimationId); mruAnimationId = null; }
+        }
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+        FISICA_SELECTORS.forEach(function (sel) {
+          var el = aula4.querySelector(sel);
+          if (el) el.setAttribute("visible", false);
+        });
+      }
+
+      function backToFisicaMenu() {
+        hideFisicaAll();
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+        var menu = aula4.querySelector("#aula4-fisica-menu");
+        if (menu) menu.setAttribute("visible", true);
+      }
+
+      function showMRUPlaceholder() {
+        showMRUExercise();
+      }
+
+      function showMRUExercise() {
+        hideFisicaAll();
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+        var el = aula4.querySelector("#aula4-mru-display");
+        if (el) el.setAttribute("visible", true);
+      }
+
+      function showMRUVExercise() {
+        hideFisicaAll();
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+        var el = aula4.querySelector("#aula4-mruv-display");
+        if (el) el.setAttribute("visible", true);
+      }
+
+      var mruvSimulationRunning = false;
+      var mruvSimulationStartTime = 0;
+      var mruvAnimationId = null;
+
+      function simulateMRUV() {
+        if (mruvSimulationRunning) return;
+
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var simulation = aula4.querySelector("#aula4-mruv-simulation");
+        var car = aula4.querySelector("#mruv-car");
+        var simInfo = aula4.querySelector("#mruv-sim-info");
+
+        if (!simulation || !car) return;
+
+        // Usar hideFisicaAll() en vez de ocultar las cosas a mano
+        hideFisicaAll();
+        simulation.setAttribute("visible", true);
+
+        // Parámetros de la simulación (según el ejercicio)
+        var v0 = 0; // velocidad inicial en m/s
+        var a = 2.5; // aceleración en m/s²
+        var t_total = 4; // tiempo total en segundos
+        var scale = 0.20; // escala de posición en la escena (1 metro = 0.20 unidades)
+
+        // Posición inicial del auto
+        var initialX = -2;
+
+        // Función de movimiento: x(t) = x0 + v0*t + 0.5*a*t²
+        function getMRUVPosition(t) {
+          return initialX + v0 * t + 0.5 * a * t * t * scale;
+        }
+
+        // Función para actualizar la información
+        function updateMRUVInfo(t) {
+          var v = v0 + a * t; // velocidad actual
+          var x = v0 * t + 0.5 * a * t * t; // distancia recorrida
+          var info =
+            "Tiempo: " +
+            t.toFixed(2) +
+            "s | Velocidad: " +
+            v.toFixed(2) +
+            "m/s | Distancia: " +
+            x.toFixed(2) +
+            "m";
+          if (simInfo) simInfo.setAttribute("value", info);
+        }
+
+        // Función de animación
+        function animateMRUV(currentTime) {
+          if (!mruvSimulationRunning) return;
+
+          if (mruvSimulationStartTime === 0) {
+            mruvSimulationStartTime = currentTime;
+          }
+
+          var elapsed = (currentTime - mruvSimulationStartTime) / 1000; // convertir a segundos
+
+          if (elapsed <= t_total) {
+            var newX = getMRUVPosition(elapsed);
+            car.setAttribute("position", newX + " 0 0");
+            updateMRUVInfo(elapsed);
+            mruvAnimationId = requestAnimationFrame(animateMRUV);
+          } else {
+            // Simulación completada
+            mruvSimulationRunning = false;
+            car.setAttribute("position", getMRUVPosition(t_total) + " 0 0");
+            updateMRUVInfo(t_total);
+
+            mruvResultsTimeout = setTimeout(showMRUVResults, 1000);
+          }
+        }
+
+        mruvSimulationRunning = true;
+        mruvSimulationStartTime = 0;
+        car.setAttribute("position", initialX + " 0 0");
+        updateMRUVInfo(0);
+
+        // Iniciar animación
+        if (mruvAnimationId) cancelAnimationFrame(mruvAnimationId);
+        mruvAnimationId = requestAnimationFrame(animateMRUV);
+      }
+
+      function showMRUVResults() {
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        // Limpiamos pantalla
+        hideFisicaAll();
+
+        var results = aula4.querySelector("#aula4-mruv-results");
+        var resultsContent = aula4.querySelector("#results-content");
+
+        if (results) results.setAttribute("visible", true);
+
+        // Parámetros del ejercicio
+        var v0 = 0;
+        var a = 2.5;
+        var t = 4;
+
+        // Cálculos
+        var vf = v0 + a * t; // velocidad final
+        var x = v0 * t + 0.5 * a * t * t; // distancia recorrida
+        var vfKmh = vf * 3.6; // convertir a km/h
+
+        // Formular respuestas
+        var resultsText =
+          "RESPUESTAS:\n\n" +
+          "1. Velocidad final:\n" +
+          "   vf = v0 + a·t\n" +
+          "   vf = 0 + 2,5 × 4\n" +
+          "   vf = " +
+          vf.toFixed(2) +
+          " m/s (" +
+          vfKmh.toFixed(2) +
+          " km/h)\n\n" +
+          "2. Distancia recorrida:\n" +
+          "   x = v0·t + ½·a·t²\n" +
+          "   x = 0 + ½ × 2,5 × 4²\n" +
+          "   x = ½ × 2,5 × 16\n" +
+          "   x = " +
+          x.toFixed(2) +
+          " metros";
+
+        if (resultsContent) resultsContent.setAttribute("value", resultsText);
+      }
+
+      // ===== FUNCIONES DE FÍSICA/MRU =====
+
+      var mruSimulationRunning = false;
+      var mruSimulationStartTime = 0;
+      var mruAnimationId = null;
+
+      function simulateMRU() {
+        if (mruSimulationRunning) return;
+
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        var simulation = aula4.querySelector("#aula4-mru-simulation");
+        var car = aula4.querySelector("#mru-car");
+        var simInfo = aula4.querySelector("#mru-sim-info");
+
+        if (!simulation || !car) return;
+
+        // Ocultar todo y mostrar solo la simulación
+        hideFisicaAll();
+        simulation.setAttribute("visible", true);
+
+        // Parámetros: v=20 m/s constante, t_total=4s
+        // Escala: 1 m = 0.05 unidades de escena → 80 m = 4 unidades (de -2 a +2)
+        var v = 20;
+        var t_total = 4;
+        var scale = 0.05;
+        var initialX = -2;
+
+        function getMRUPosition(t) {
+          return initialX + v * t * scale;
+        }
+
+        function updateMRUInfo(t) {
+          var x = v * t;
+          var info =
+            "Tiempo: " + t.toFixed(2) + "s" +
+            " | Velocidad: " + v + " m/s (cte.)" +
+            " | Distancia: " + x.toFixed(1) + " m";
+          if (simInfo) simInfo.setAttribute("value", info);
+        }
+
+        function animateMRU(currentTime) {
+          if (!mruSimulationRunning) return;
+          if (mruSimulationStartTime === 0) mruSimulationStartTime = currentTime;
+          var elapsed = (currentTime - mruSimulationStartTime) / 1000;
+
+          if (elapsed <= t_total) {
+            car.setAttribute("position", getMRUPosition(elapsed) + " 0 0");
+            updateMRUInfo(elapsed);
+            mruAnimationId = requestAnimationFrame(animateMRU);
+          } else {
+            mruSimulationRunning = false;
+            car.setAttribute("position", getMRUPosition(t_total) + " 0 0");
+            updateMRUInfo(t_total);
+            mruResultsTimeout = setTimeout(showMRUResults, 1000);
+          }
+        }
+
+        mruSimulationRunning = true;
+        mruSimulationStartTime = 0;
+        car.setAttribute("position", initialX + " 0 0");
+        updateMRUInfo(0);
+        if (mruAnimationId) cancelAnimationFrame(mruAnimationId);
+        mruAnimationId = requestAnimationFrame(animateMRU);
+      }
+
+     function showMRUResults() {
+        var aula4 = document.getElementById("aula4");
+        if (!aula4) return;
+
+        // ¡ESTO ES CLAVE! Limpiamos toda la pantalla antes de mostrar el resultado
+        hideFisicaAll();
+
+        var results = aula4.querySelector("#aula4-mru-results");
+        var content = aula4.querySelector("#mru-results-content");
+
+        if (results) results.setAttribute("visible", true);
+
+        var v = 20;
+        var t1 = 4;
+        var x1 = v * t1;       // 80 m
+        var x2 = 60;
+        var t2 = x2 / v;       // 3 s
+
+        var text =
+          "RESPUESTAS:\n\n" +
+          "1. Distancia en " + t1 + " segundos:\n" +
+          "   x = v x t\n" +
+          "   x = " + v + " x " + t1 + "\n" +
+          "   x = " + x1 + " metros\n\n" +
+          "2. Tiempo para " + x2 + " metros:\n" +
+          "   t = x / v\n" +
+          "   t = " + x2 + " / " + v + "\n" +
+          "   t = " + t2.toFixed(1) + " segundos";
+
+        if (content) content.setAttribute("value", text);
+      }
+
       // ===== EVENT LISTENERS =====
       // Los botones se manejan via componente btn-action (registrado arriba)
       // Solo queda el manejo de VR enter/exit
@@ -2399,6 +3901,7 @@
         scene.addEventListener("loaded", function () {
           console.log("🏛️ Facultad Virtual VR cargada correctamente");
           console.log("📍 Aula 1: Análisis Matemático | Aula 2: Algoritmos");
+          console.log("🔬 Aula 4: Física (MRUV)");
         });
 
         scene.addEventListener("enter-vr", function () {
