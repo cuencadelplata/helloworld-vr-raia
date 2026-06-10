@@ -18,6 +18,68 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script>
+      var LUCIDE_ICONS = {
+        landmark: [
+          ["line", { x1: "3", x2: "21", y1: "22", y2: "22" }],
+          ["line", { x1: "6", x2: "6", y1: "18", y2: "11" }],
+          ["line", { x1: "10", x2: "10", y1: "18", y2: "11" }],
+          ["line", { x1: "14", x2: "14", y1: "18", y2: "11" }],
+          ["line", { x1: "18", x2: "18", y1: "18", y2: "11" }],
+          ["polygon", { points: "12 2 20 7 4 7" }],
+        ],
+        "map-pin": [
+          ["path", { d: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" }],
+          ["circle", { cx: "12", cy: "10", r: "3" }],
+        ],
+        "door-open": [
+          ["path", { d: "M13 4h3a2 2 0 0 1 2 2v14" }],
+          ["path", { d: "M2 20h3" }],
+          ["path", { d: "M13 20h9" }],
+          ["path", { d: "M10 12v.01" }],
+          ["path", { d: "M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.562Z" }],
+        ],
+      };
+
+      function createLucideSvg(iconNode) {
+        var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        svg.setAttribute("width", "18");
+        svg.setAttribute("height", "18");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "2");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("aria-hidden", "true");
+
+        iconNode.forEach(function (node) {
+          var child = document.createElementNS("http://www.w3.org/2000/svg", node[0]);
+          Object.keys(node[1] || {}).forEach(function (attr) {
+            child.setAttribute(attr, node[1][attr]);
+          });
+          svg.appendChild(child);
+        });
+        return svg;
+      }
+
+      function renderLucideIcons() {
+        document.querySelectorAll("[data-lucide-icon]").forEach(function (slot) {
+          var icon = LUCIDE_ICONS[slot.getAttribute("data-lucide-icon")];
+          if (!icon) return;
+          slot.textContent = "";
+          slot.appendChild(createLucideSvg(icon));
+        });
+      }
+
+      if (document.readyState === "loading") {
+        window.addEventListener("DOMContentLoaded", renderLucideIcons);
+      } else {
+        renderLucideIcons();
+      }
+    </script>
+
+    <script>
       // ============================================
       // COMPONENTE BTN-ACTION
       // Maneja clicks en botones interactivos.
@@ -62,7 +124,7 @@
         },
         handleClick: function () {
           var action = this.data;
-          console.log("🔘 Boton:", action);
+          console.log("Boton:", action);
           var mathMenu = document.getElementById("math-menu");
           var functionDisplay = document.getElementById("function-display");
           var algMenu = document.getElementById("alg-menu");
@@ -154,6 +216,37 @@
             case "simulate-mru":
               simulateMRU();
               break;
+            case "prob-prev":
+            case "prob-next":
+            case "prob-interval":
+            case "prob-a-minus":
+            case "prob-a-plus":
+            case "prob-b-minus":
+            case "prob-b-plus":
+            case "prob-station-coin":
+            case "prob-station-dice":
+            case "prob-station-calls":
+            case "prob-run-once":
+            case "prob-run-ten":
+            case "prob-run-hundred":
+            case "prob-reset-observed":
+              handleProbabilityAction(action);
+              break;
+            case "complexity-n-minus":
+            case "complexity-n-plus":
+            case "complexity-n-big-minus":
+            case "complexity-n-big-plus":
+            case "complexity-loops-minus":
+            case "complexity-loops-plus":
+            case "complexity-rec-no":
+            case "complexity-rec-simple":
+            case "complexity-rec-multiple":
+            case "complexity-sort-toggle":
+            case "complexity-halving-toggle":
+            case "complexity-calcular":
+            case "complexity-reset":
+              handleComplexityAction(action);
+              break;
 
             case "cpu-fcfs":
               selectCpuAlgorithm("fcfs");
@@ -182,6 +275,13 @@
             case "cpu-quantum-minus":
               changeCpuQuantum(-1);
               break;
+            default:
+              if (action.indexOf("prob-param-") === 0) {
+                handleProbabilityAction(action);
+              } else if (action.indexOf("complexity-") === 0) {
+                handleComplexityAction(action);
+              }
+              break;
           }
         },
       });
@@ -192,10 +292,10 @@
       // para evitar bloques HTML duplicados.
       // ============================================
       var AULA_CONFIG = {
-        width: 8,
-        depth: 6,
-        height: 3.5,
-        wallThickness: 0.2,
+        width: 9,
+        depth: 7,
+        height: 4.5,
+        wallThickness: 0.3,
       };
 
       function vectorToString(value) {
@@ -414,6 +514,56 @@
           position: side * 3 + " 2.5 0",
           distance: "5",
           decay: "2",
+        });
+      }
+
+      function getAulaDisplayName(id, tipo) {
+        var names = {
+          matematica: "Analisis Matematico",
+          algoritmos: "Algoritmos",
+          cpu: "Planificacion de CPU",
+          fisica: "Fisica",
+          probabilidad: "Probabilidad",
+          complejidad: "Complejidad Computacional",
+        };
+        var match = String(id || "").match(/\d+/);
+        var number = match ? match[0] : "?";
+        return "Aula " + number + "\n" + (names[tipo] || "Laboratorio");
+      }
+
+      function addAulaSign(parent, id, tipo, posicionXYZ) {
+        var side = getAulaSide(posicionXYZ);
+        var hallX = -side * 4.08;
+        var sign = appendEl(parent, "a-entity", {
+          id: id + "-cartel",
+          position: hallX + " 1.95 -1.9",
+          rotation: "0 " + -side * 90 + " 0",
+        });
+
+        appendEl(sign, "a-box", {
+          width: "1.62",
+          height: "0.72",
+          depth: "0.045",
+          color: "#92400E",
+          opacity: "0.95",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(sign, "a-box", {
+          width: "1.5",
+          height: "0.6",
+          depth: "0.055",
+          position: "0 0 0.02",
+          color: "#111827",
+          opacity: "0.96",
+        });
+        addText(sign, {
+          value: getAulaDisplayName(id, tipo),
+          position: "0 0.01 0.075",
+          align: "center",
+          color: "#FDE68A",
+          width: "2.65",
+          wrapCount: "20",
+          scale: "0.68 0.68 0.68",
         });
       }
 
@@ -670,6 +820,10 @@
           buildFisicaContent(parent, id, posicionXYZ);
         } else if (tipo === "cpu") {
           buildCpuSchedulerContent(parent, id, posicionXYZ);
+        } else if (tipo === "probabilidad") {
+          buildProbabilityContent(parent, id, posicionXYZ);
+        } else if (tipo === "complejidad") {
+          buildComplexityContent(parent, id, posicionXYZ);
         } else {
           var side = getAulaSide(posicionXYZ);
           var title = "Simulador de CPU";
@@ -1090,9 +1244,9 @@
           position: "-1 -0.3 0",
           align: "left",
           color: "#fff",
-          width: "2.8",
-          wrapCount: "40",
-          scale: "0.85 0.85 0.85",
+          width: "3.4",
+          wrapCount: "46",
+          scale: "0.72 0.72 0.72",
         });
 
         addText(mruvDisplay, {
@@ -1101,9 +1255,9 @@
           position: "-1 -1.05 0",
           align: "left",
           color: "#FFEB3B",
-          width: "2.8",
-          wrapCount: "40",
-          scale: "0.85 0.85 0.85",
+          width: "3.4",
+          wrapCount: "46",
+          scale: "0.72 0.72 0.72",
         });
 
         addButton(mruvDisplay, {
@@ -1286,9 +1440,9 @@
           position: "-1 -0.2 0",
           align: "left",
           color: "#fff",
-          width: "2.8",
-          wrapCount: "40",
-          scale: "0.85 0.85 0.85",
+          width: "3.4",
+          wrapCount: "46",
+          scale: "0.72 0.72 0.72",
         });
 
         addText(mruDisplay, {
@@ -1296,9 +1450,9 @@
           position: "-1 -1.0 0",
           align: "left",
           color: "#FFEB3B",
-          width: "2.8",
-          wrapCount: "40",
-          scale: "0.85 0.85 0.85",
+          width: "3.4",
+          wrapCount: "46",
+          scale: "0.72 0.72 0.72",
         });
 
         addButton(mruDisplay, {
@@ -1435,9 +1589,9 @@
           rotation: "0 " + -side * 90 + " 0",
           align: "left",
           color: "#fff",
-          width: "2.8",
-          wrapCount: "40",
-          scale: "0.75 0.75 0.75",
+          width: "3.4",
+          wrapCount: "46",
+          scale: "0.7 0.7 0.7",
         });
 
         addButton(mruResultsDisplay, {
@@ -1454,6 +1608,1355 @@
         });
       }
 
+      function buildProbabilityContent(parent, id, posicionXYZ) {
+        var side = getAulaSide(posicionXYZ);
+        var frontX = side * 3.82;
+        var frontRot = "0 " + -side * 90 + " 0";
+        var rightWallX = -side * 3.82;
+        var rightMachineX = -side * 3.15;
+        var rightWallRot = "0 " + side * 90 + " 0";
+
+        parent.querySelectorAll(".pupitre").forEach(function (desk) {
+          desk.parentNode.removeChild(desk);
+        });
+
+        var root = appendEl(parent, "a-entity", {
+          id: "probability-lab",
+          position: "0 0.03 0",
+        });
+
+        function addPanel(config) {
+          var panel = appendEl(root, "a-entity", {
+            id: config.id,
+            position: config.position,
+            rotation: config.rotation,
+          });
+          appendEl(panel, "a-plane", {
+            width: config.width,
+            height: config.height,
+            color: config.color || "#101820",
+            opacity: config.opacity || "0.9",
+            material: "side: double",
+          });
+          appendEl(panel, "a-plane", {
+            width: config.width,
+            height: "0.03",
+            position: "0 " + (config.height / 2 - 0.05) + " 0.012",
+            color: config.accent || "#26A69A",
+            opacity: "0.95",
+          });
+          return panel;
+        }
+
+        function expandProbabilityClassroom() {
+          var floor = parent.querySelector("#" + id + "-suelo");
+          if (floor) {
+            floor.setAttribute("width", "9.6");
+            floor.setAttribute("height", "10.8");
+            floor.setAttribute("position", "0.8 0.01 -1.925");
+            floor.setAttribute("material", "src: #textura-suelo; repeat: 4.8 5.4; roughness: 0.7");
+          }
+
+          parent.querySelectorAll(".collidable").forEach(function (wall) {
+            var width = parseFloat(wall.getAttribute("width") || 0);
+            var depth = parseFloat(wall.getAttribute("depth") || 0);
+            var pos = wall.getAttribute("position");
+            var p = typeof pos === "string" ? pos.split(" ").map(parseFloat) : [pos.x, pos.y, pos.z];
+            if (Math.abs(depth - 0.2) < 0.02 && Math.abs(p[2] + 3) < 0.05) {
+              wall.setAttribute("width", "9.6");
+              wall.setAttribute("position", "0.8 1.75 -7.2");
+              wall.setAttribute("material", wallMaterial(colorParedes, "4.8 1.75"));
+            } else if (Math.abs(depth - 0.2) < 0.02 && Math.abs(p[2] - 3) < 0.05) {
+              wall.setAttribute("width", "9.6");
+              wall.setAttribute("position", "0.8 1.75 3.35");
+              wall.setAttribute("material", wallMaterial(colorParedes, "4.8 1.75"));
+            } else if (Math.abs(width - 0.2) < 0.02 && Math.abs(p[0] - side * 4) < 0.1) {
+              wall.setAttribute("depth", "12");
+              wall.setAttribute("position", side * 4 + " 1.75 -1.925");
+              wall.setAttribute("material", wallMaterial(colorParedes, "5.25 1.75"));
+            } else if (Math.abs(width - 0.2) < 0.02 && Math.abs(p[0] + side * 4) < 0.1) {
+              wall.setAttribute("height", "1.2");
+              wall.setAttribute("depth", "10.55");
+              wall.setAttribute("position", -side * 5.6 + " 2.9 -1.925");
+              wall.setAttribute("material", wallMaterial(colorParedes, "5.25 0.6"));
+            }
+          });
+
+          parent.querySelectorAll("a-plane").forEach(function (plane) {
+            var pos = plane.getAttribute("position");
+            var p = typeof pos === "string" ? pos.split(" ").map(parseFloat) : pos ? [pos.x, pos.y, pos.z] : [0, 0, 0];
+            if (Math.abs(p[1] - 3.5) < 0.05) {
+              plane.setAttribute("width", "9.6");
+              plane.setAttribute("height", "10.8");
+              plane.setAttribute("position", "0.8 3.5 -1.925");
+            }
+          });
+
+          var blackboard = parent.querySelector("[gltf-model='#modelo-pizarra']");
+          if (blackboard) blackboard.setAttribute("position", side * 3.5 + " 1.3 0");
+        }
+
+        expandProbabilityClassroom();
+
+        [
+          [-1.45, 0, 1.25],
+          [0, 0, 1.25],
+          [1.45, 0, 1.25],
+          [-1.45, 0, 0.25],
+          [0, 0, 0.25],
+          [1.45, 0, 0.25],
+        ].forEach(function (pos) {
+          appendEl(root, "a-entity", {
+            class: "prob-audience-chair",
+            "gltf-model": "#modelo-pupitre",
+            position: pos.join(" "),
+            rotation: "0 -90 0",
+            scale: "0.24 0.24 0.24",
+            shadow: "cast: true; receive: true",
+          });
+        });
+
+        var centerTable = appendEl(root, "a-entity", {
+          id: "prob-center-table-group",
+          position: "0 0 2.25",
+          rotation: "0 180 0",
+        });
+
+        appendEl(centerTable, "a-box", {
+          id: "casino-center-table",
+          position: "0 0.38 0",
+          width: "2.45",
+          height: "0.14",
+          depth: "1.75",
+          color: "#3B2414",
+          visible: "false",
+          material: "roughness: 0.45; metalness: 0.08",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "0 0.47 0",
+          width: "2.25",
+          height: "0.035",
+          depth: "1.55",
+          color: "#0F766E",
+          opacity: "0.92",
+          visible: "false",
+          shadow: "receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "0 0.515 -0.79",
+          width: "2.35",
+          height: "0.035",
+          depth: "0.045",
+          color: "#F59E0B",
+          visible: "false",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "0 0.515 0.79",
+          width: "2.35",
+          height: "0.035",
+          depth: "0.045",
+          color: "#F59E0B",
+          visible: "false",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "-1.18 0.515 0",
+          width: "0.045",
+          height: "0.035",
+          depth: "1.6",
+          color: "#F59E0B",
+          visible: "false",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "1.18 0.515 0",
+          width: "0.045",
+          height: "0.035",
+          depth: "1.6",
+          color: "#F59E0B",
+          visible: "false",
+        });
+
+        appendEl(centerTable, "a-box", {
+          id: "prob-chart-panel",
+          position: "0 1.48 -0.55",
+          width: "4.05",
+          height: "2.58",
+          depth: "0.06",
+          color: "#0B1115",
+          opacity: "0.97",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "0 2.78 -0.51",
+          width: "4.18",
+          height: "0.07",
+          depth: "0.09",
+          color: "#6B3F18",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "0 0.16 -0.51",
+          width: "4.18",
+          height: "0.07",
+          depth: "0.09",
+          color: "#6B3F18",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "-2.06 1.48 -0.51",
+          width: "0.07",
+          height: "2.61",
+          depth: "0.09",
+          color: "#6B3F18",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "2.06 1.48 -0.51",
+          width: "0.07",
+          height: "2.61",
+          depth: "0.09",
+          color: "#6B3F18",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-box", {
+          position: "0 0.48 -0.55",
+          width: "0.12",
+          height: "0.9",
+          depth: "0.08",
+          color: "#3B2414",
+          visible: "false",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(centerTable, "a-entity", {
+          id: "prob-chart",
+          position: "-1.65 0.8 -0.49",
+          rotation: "0 0 0",
+          scale: "0.64 0.64 0.64",
+        });
+        addText(centerTable, {
+          id: "prob-title",
+          value: "Distribucion observada",
+          position: "0 2.5 -0.48",
+          rotation: "0 0 0",
+          align: "center",
+          color: "#E5E7EB",
+          width: "4.6",
+          scale: "0.74 0.74 0.74",
+        });
+        addText(centerTable, {
+          id: "prob-theory-block",
+          value: "",
+          position: "0 1.93 -0.48",
+          rotation: "0 0 0",
+          align: "center",
+          color: "#DBEAFE",
+          width: "4.2",
+          wrapCount: "62",
+          scale: "0.42 0.42 0.42",
+        });
+        addText(centerTable, {
+          id: "prob-chart-explanation",
+          value: "",
+          position: "0 2.23 -0.48",
+          rotation: "0 0 0",
+          align: "center",
+          color: "#FDE68A",
+          width: "4.1",
+          wrapCount: "58",
+          scale: "0.42 0.42 0.42",
+        });
+        addText(centerTable, {
+          id: "prob-result",
+          value: "",
+          position: "1.12 1.22 -0.48",
+          rotation: "0 0 0",
+          align: "left",
+          color: "#FFFFFF",
+          width: "2.05",
+          wrapCount: "28",
+          scale: "0.48 0.48 0.48",
+        });
+        addText(centerTable, {
+          id: "prob-last-outcome",
+          value: "",
+          position: "0 1.6 -0.48",
+          rotation: "0 0 0",
+          align: "center",
+          color: "#FDE68A",
+          width: "3.5",
+          wrapCount: "44",
+          scale: "0.4 0.4 0.4",
+        });
+        addButton(centerTable, {
+          id: "prob-run-once-main",
+          position: "-1.12 0.36 -0.47",
+          rotation: "0 0 0",
+          action: "prob-run-once",
+          color: "#16A34A",
+          label: "Jugar 1",
+          width: "0.72",
+          height: "0.2",
+          textWidth: "1.8",
+          textPosition: "0 0 0.04",
+        });
+        addButton(centerTable, {
+          id: "prob-run-ten-main",
+          position: "-0.35 0.36 -0.47",
+          rotation: "0 0 0",
+          action: "prob-run-ten",
+          color: "#D97706",
+          label: "Jugar 10",
+          width: "0.76",
+          height: "0.2",
+          textWidth: "1.9",
+          textPosition: "0 0 0.04",
+        });
+        addButton(centerTable, {
+          id: "prob-run-hundred-main",
+          position: "0.47 0.36 -0.47",
+          rotation: "0 0 0",
+          action: "prob-run-hundred",
+          color: "#075985",
+          label: "Jugar 100",
+          width: "0.84",
+          height: "0.2",
+          textWidth: "2.05",
+          textPosition: "0 0 0.04",
+        });
+        addButton(centerTable, {
+          id: "prob-reset-main",
+          position: "1.28 0.36 -0.47",
+          rotation: "0 0 0",
+          action: "prob-reset-observed",
+          color: "#991B1B",
+          label: "Reset",
+          width: "0.66",
+          height: "0.2",
+          textWidth: "1.7",
+          textPosition: "0 0 0.04",
+        });
+
+        var board = addPanel({
+          id: "prob-board",
+          position: frontX + " 2.05 0",
+          rotation: frontRot,
+          width: 4.6,
+          height: 1.18,
+          accent: "#F59E0B",
+          color: "#16110A",
+        });
+        addText(board, {
+          id: "prob-board-title",
+          value: "Probabilidad teórica vs frecuencia observada",
+          position: "0 0.4 0.03",
+          align: "center",
+          color: "#FDE68A",
+          width: "4.3",
+          scale: "0.78 0.78 0.78",
+        });
+        addText(board, {
+          id: "prob-description",
+          value: "",
+          position: "0 0.08 0.03",
+          align: "center",
+          color: "#FFEDD5",
+          width: "4.1",
+          wrapCount: "50",
+          scale: "0.58 0.58 0.58",
+        });
+        appendEl(board, "a-box", {
+          width: "0.38",
+          height: "0.1",
+          depth: "0.015",
+          position: "-1.2 -0.36 0.035",
+          color: "#FDE047",
+        });
+        addText(board, {
+          value: "Teoria esperada",
+          position: "-0.78 -0.36 0.045",
+          align: "left",
+          color: "#F8FAFC",
+          width: "4",
+          scale: "0.46 0.46 0.46",
+        });
+        appendEl(board, "a-box", {
+          width: "0.02",
+          height: "0.32",
+          depth: "0.01",
+          position: "0.1 -0.36 0.04",
+          color: "#64748B",
+          opacity: "0.8",
+        });
+        appendEl(board, "a-box", {
+          width: "0.38",
+          height: "0.1",
+          depth: "0.015",
+          position: "0.62 -0.36 0.035",
+          color: "#EF4444",
+        });
+        addText(board, {
+          value: "Datos generados",
+          position: "1.04 -0.36 0.045",
+          align: "left",
+          color: "#F8FAFC",
+          width: "4",
+          scale: "0.46 0.46 0.46",
+        });
+
+        function addMachineBase(config) {
+          var backZ = parseFloat(config.backZ || "-0.52");
+          var machine = appendEl(root, "a-entity", {
+            id: config.id,
+            position: config.position,
+            rotation: config.rotation,
+          });
+          appendEl(machine, "a-box", {
+            width: config.width || "1.35",
+            height: "0.12",
+            depth: config.depth || "1.05",
+            position: "0 0.45 0",
+            color: config.tableColor || "#2F1B11",
+            shadow: "cast: true; receive: true",
+          });
+          appendEl(machine, "a-box", {
+            width: config.width || "1.35",
+            height: "0.75",
+            depth: "0.12",
+            position: "0 0.9 " + backZ,
+            color: config.bodyColor || "#111827",
+            opacity: "0.94",
+            shadow: "cast: true; receive: true",
+          });
+          appendEl(machine, "a-plane", {
+            width: (parseFloat(config.width || "1.35") - 0.18).toString(),
+            height: "0.36",
+            position: "0 0.98 " + (backZ + 0.064),
+            color: "#020617",
+            opacity: "0.92",
+          });
+          addText(machine, {
+            id: config.displayId,
+            value: "",
+            position: "0 1.02 " + (backZ + 0.075),
+            align: "center",
+            color: config.accent || "#FDE68A",
+            width: "2.35",
+            wrapCount: "28",
+            scale: "0.55 0.55 0.55",
+          });
+          addButton(machine, {
+            id: config.buttonId,
+            position: config.selectPosition || "-0.36 0.55 0.38",
+            rotation: "-65 0 0",
+            action: config.stationAction,
+            color: config.accentDark || "#0F766E",
+            label: config.selectLabel || "Elegir",
+            width: config.selectWidth || "0.58",
+            height: config.selectHeight || "0.22",
+            depth: config.selectDepth || "0.05",
+            textWidth: config.selectTextWidth || "1.7",
+            textPosition: config.selectTextPosition || "0 0 0.04",
+          });
+          addButton(machine, {
+            id: config.runButtonId,
+            position: config.runPosition || "0.34 0.55 0.38",
+            rotation: "-65 0 0",
+            action: config.runAction || "prob-run-once",
+            color: config.accent || "#F59E0B",
+            label: config.runLabel || "Activar",
+            width: config.runWidth || "0.66",
+            height: config.runHeight || "0.22",
+            depth: config.runDepth || "0.05",
+            textWidth: config.runTextWidth || "1.8",
+            textPosition: config.runTextPosition || "0 0 0.04",
+          });
+          appendEl(machine, "a-entity", {
+            id: config.visualId,
+            position: "0 0.63 0.03",
+          });
+          return machine;
+        }
+
+        function addStationBadge(parentEl, config) {
+          var badge = appendEl(parentEl, "a-entity", {
+            position: config.position,
+            rotation: config.rotation || "0 0 0",
+          });
+          appendEl(badge, "a-plane", {
+            width: config.width || "1.08",
+            height: config.height || "0.32",
+            color: config.color || "#020617",
+            opacity: config.opacity || "0.94",
+          });
+          addText(badge, {
+            value: config.title,
+            position: "0 0.075 0.026",
+            align: "center",
+            color: config.titleColor || "#FFFFFF",
+            width: config.titleWidth || "2.6",
+            wrapCount: config.titleWrap || "26",
+            scale: config.titleScale || "0.42 0.42 0.42",
+          });
+          addText(badge, {
+            value: config.subtitle,
+            position: "0 -0.08 0.026",
+            align: "center",
+            color: config.subtitleColor || "#CBD5E1",
+            width: config.subtitleWidth || "2.8",
+            wrapCount: config.subtitleWrap || "32",
+            scale: config.subtitleScale || "0.31 0.31 0.31",
+          });
+          return badge;
+        }
+
+        function addMachineHeader(parentEl, config) {
+          appendEl(parentEl, "a-box", {
+            width: config.width || "1.08",
+            height: config.height || "0.42",
+            depth: "0.04",
+            position: config.position,
+            color: config.color || "#052E16",
+            opacity: "0.98",
+          });
+          addText(parentEl, {
+            value: config.title,
+            position: config.titlePosition,
+            align: "center",
+            color: config.titleColor || "#FDE68A",
+            width: config.titleWidth || "2.5",
+            wrapCount: config.titleWrap || "22",
+            scale: config.titleScale || "0.5 0.5 0.5",
+          });
+          addText(parentEl, {
+            value: config.subtitle,
+            position: config.subtitlePosition,
+            align: "center",
+            color: config.subtitleColor || "#E0F2FE",
+            width: config.subtitleWidth || "2.8",
+            wrapCount: config.subtitleWrap || "28",
+            scale: config.subtitleScale || "0.36 0.36 0.36",
+          });
+        }
+
+        var coinMachine = appendEl(root, "a-entity", {
+          id: "prob-coin-machine",
+          position: side * 3.15 + " 0 -2.05",
+          rotation: frontRot,
+          scale: "1.08 1.08 1.08",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.34",
+          height: "1.82",
+          depth: "0.6",
+          position: "0 1.04 -0.04",
+          color: "#190D08",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.46",
+          height: "0.18",
+          depth: "0.72",
+          position: "0 0.18 0",
+          color: "#12362D",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.22",
+          height: "1.62",
+          depth: "0.035",
+          position: "0 1.08 0.275",
+          color: "#2A170B",
+          opacity: "0.98",
+        });
+        addMachineHeader(coinMachine, {
+          position: "0 1.78 0.31",
+          width: "1.12",
+          height: "0.32",
+          color: "#06311F",
+          title: "BINOMIAL",
+          subtitle: "monedas: 10 lanzamientos",
+          titlePosition: "0 1.84 0.34",
+          subtitlePosition: "0 1.71 0.34",
+          titleColor: "#FDE68A",
+          subtitleColor: "#DCFCE7",
+          titleScale: "0.54 0.54 0.54",
+          subtitleScale: "0.3 0.3 0.3",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.12",
+          height: "0.56",
+          depth: "0.045",
+          position: "0 1.31 0.302",
+          color: "#0F3B2D",
+          opacity: "0.98",
+        });
+        appendEl(coinMachine, "a-plane", {
+          width: "1.03",
+          height: "0.47",
+          position: "0 1.31 0.328",
+          color: "#E7E0CE",
+          opacity: "0.98",
+        });
+        for (var flip = 0; flip < 10; flip++) {
+          var row = Math.floor(flip / 5);
+          var col = flip % 5;
+          var x = -0.4 + col * 0.2;
+          var y = 1.39 - row * 0.19;
+          appendEl(coinMachine, "a-cylinder", {
+            id: "prob-coin-flip-body-" + flip,
+            position: x + " " + y + " 0.36",
+            rotation: "90 0 0",
+            radius: "0.075",
+            height: "0.018",
+            color: "#C9BFA8",
+            opacity: "0.98",
+          });
+          appendEl(coinMachine, "a-ring", {
+            id: "prob-coin-flip-rim-" + flip,
+            position: x + " " + y + " 0.374",
+            "radius-inner": "0.061",
+            "radius-outer": "0.073",
+            color: "#A78A2D",
+            opacity: "0.9",
+          });
+          appendEl(coinMachine, "a-circle", {
+            id: "prob-coin-flip-face-head-" + flip,
+            position: x + " " + (y + 0.017) + " 0.379",
+            radius: "0.019",
+            color: "#A98213",
+            visible: "false",
+          });
+          appendEl(coinMachine, "a-circle", {
+            id: "prob-coin-flip-face-body-" + flip,
+            position: x + " " + (y - 0.024) + " 0.379",
+            radius: "0.031",
+            scale: "1.4 0.72 1",
+            color: "#A98213",
+            visible: "false",
+          });
+          appendEl(coinMachine, "a-box", {
+            id: "prob-coin-flip-cross-a-" + flip,
+            position: x + " " + y + " 0.379",
+            rotation: "0 0 45",
+            width: "0.09",
+            height: "0.012",
+            depth: "0.006",
+            color: "#334155",
+            visible: "false",
+          });
+          appendEl(coinMachine, "a-box", {
+            id: "prob-coin-flip-cross-b-" + flip,
+            position: x + " " + y + " 0.379",
+            rotation: "0 0 -45",
+            width: "0.09",
+            height: "0.012",
+            depth: "0.006",
+            color: "#334155",
+            visible: "false",
+          });
+          addText(coinMachine, {
+            id: "prob-coin-flip-label-" + flip,
+            value: "?",
+            position: x + " " + (y - 0.012) + " 0.373",
+            align: "center",
+            color: "#3B2A16",
+            width: "0.45",
+            wrapCount: "4",
+            scale: "0.28 0.28 0.28",
+          });
+        }
+        addText(coinMachine, {
+          value: "cara = rostro   cruz = X",
+          position: "0 1.05 0.353",
+          align: "center",
+          color: "#D7F5E6",
+          width: "2.2",
+          wrapCount: "22",
+          scale: "0.26 0.26 0.26",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.03",
+          height: "0.24",
+          depth: "0.035",
+          position: "0 0.9 0.326",
+          color: "#07120C",
+          opacity: "0.98",
+        });
+        addText(coinMachine, {
+          id: "prob-coin-display",
+          value: "",
+          position: "0 0.9 0.353",
+          align: "center",
+          color: "#FDE68A",
+          width: "2.2",
+          wrapCount: "24",
+          scale: "0.42 0.42 0.42",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.02",
+          height: "0.08",
+          depth: "0.08",
+          position: "0 0.72 0.315",
+          color: "#111827",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "1.04",
+          height: "0.14",
+          depth: "0.24",
+          position: "0 0.43 0.2",
+          color: "#0F172A",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(coinMachine, "a-box", {
+          width: "0.96",
+          height: "0.025",
+          depth: "0.2",
+          position: "0 0.51 0.31",
+          color: "#F59E0B",
+        });
+        addButton(coinMachine, {
+          id: "prob-coin-select",
+          position: "-0.3 0.62 0.35",
+          rotation: "-12 0 0",
+          action: "prob-station-coin",
+          color: "#0F766E",
+          label: "Elegir",
+          width: "0.44",
+          height: "0.16",
+          depth: "0.045",
+          textWidth: "1.2",
+          textPosition: "0 0 0.035",
+        });
+        addButton(coinMachine, {
+          id: "prob-coin-run",
+          position: "0.31 0.62 0.35",
+          rotation: "-12 0 0",
+          action: "prob-run-once",
+          color: "#B45309",
+          label: "Simular",
+          width: "0.44",
+          height: "0.16",
+          depth: "0.045",
+          textWidth: "1.15",
+          textPosition: "0 0 0.035",
+        });
+        appendEl(coinMachine, "a-entity", {
+          id: "prob-coin-visuals",
+          position: "0 0.39 0.32",
+        });
+
+        var diceMachine = addMachineBase({
+          id: "prob-dice-machine",
+          position: side * 3.15 + " 0 0",
+          rotation: frontRot,
+          displayId: "prob-dice-display",
+          buttonId: "prob-dice-select",
+          runButtonId: "prob-dice-run",
+          visualId: "prob-dice-visuals",
+          stationAction: "prob-station-dice",
+          runAction: "prob-run-once",
+          runLabel: "x1",
+          selectPosition: "-0.54 0.54 0.43",
+          selectWidth: "0.34",
+          selectHeight: "0.17",
+          selectDepth: "0.04",
+          selectTextWidth: "0.95",
+          selectTextPosition: "0 0 0.032",
+          runPosition: "-0.18 0.54 0.43",
+          runWidth: "0.3",
+          runHeight: "0.17",
+          runDepth: "0.04",
+          runTextWidth: "0.9",
+          runTextPosition: "0 0 0.032",
+          accent: "#38BDF8",
+          accentDark: "#0369A1",
+          bodyColor: "#082F49",
+          width: "1.55",
+          depth: "1.12",
+        });
+        diceMachine.setAttribute("scale", "1.08 1.08 1.08");
+        addMachineHeader(diceMachine, {
+          position: "0 1.2 -0.455",
+          width: "1.34",
+          height: "0.36",
+          color: "#031A2D",
+          title: "UNIFORME\nDISCRETA",
+          subtitle: "dado justo: caras 1 a 6",
+          titlePosition: "0 1.28 -0.385",
+          subtitlePosition: "0 1.13 -0.385",
+          titleColor: "#7DD3FC",
+          subtitleColor: "#E0F2FE",
+          titleScale: "0.42 0.42 0.42",
+          subtitleScale: "0.32 0.32 0.32",
+        });
+        addButton(diceMachine, {
+          id: "prob-dice-run-ten",
+          position: "0.16 0.54 0.43",
+          rotation: "-65 0 0",
+          action: "prob-run-ten",
+          color: "#0284C7",
+          label: "x10",
+          width: "0.3",
+          height: "0.17",
+          depth: "0.04",
+          textWidth: "0.9",
+          textPosition: "0 0 0.032",
+        });
+        addButton(diceMachine, {
+          id: "prob-dice-run-hundred",
+          position: "0.52 0.54 0.43",
+          rotation: "-65 0 0",
+          action: "prob-run-hundred",
+          color: "#075985",
+          label: "x100",
+          width: "0.34",
+          height: "0.17",
+          depth: "0.04",
+          textWidth: "0.95",
+          textPosition: "0 0 0.032",
+        });
+        function addDiePip(parentEl, position, rotation) {
+          appendEl(parentEl, "a-circle", {
+            position: position,
+            rotation: rotation,
+            radius: "0.026",
+            color: "#111827",
+            opacity: "0.98",
+          });
+        }
+
+        function addDieFace(parentEl, face, value) {
+          var side = 0.226;
+          var offset = 0.088;
+          var positions = {
+            1: [[0, 0]],
+            2: [[-offset, offset], [offset, -offset]],
+            3: [[-offset, offset], [0, 0], [offset, -offset]],
+            4: [[-offset, offset], [offset, offset], [-offset, -offset], [offset, -offset]],
+            5: [[-offset, offset], [offset, offset], [0, 0], [-offset, -offset], [offset, -offset]],
+            6: [[-offset, offset], [offset, offset], [-offset, 0], [offset, 0], [-offset, -offset], [offset, -offset]],
+          }[value] || [];
+          positions.forEach(function (pip) {
+            var u = pip[0];
+            var v = pip[1];
+            if (face === "front") addDiePip(parentEl, u + " " + v + " " + side, "0 0 0");
+            if (face === "back") addDiePip(parentEl, (-u) + " " + v + " " + (-side), "0 180 0");
+            if (face === "right") addDiePip(parentEl, side + " " + v + " " + (-u), "0 90 0");
+            if (face === "left") addDiePip(parentEl, (-side) + " " + v + " " + u, "0 -90 0");
+            if (face === "top") addDiePip(parentEl, u + " " + side + " " + (-v), "-90 0 0");
+            if (face === "bottom") addDiePip(parentEl, u + " " + (-side) + " " + v, "90 0 0");
+          });
+        }
+
+        var diceCube = appendEl(diceMachine, "a-entity", {
+          id: "prob-dice-cube",
+          position: "0 0.78 0.08",
+          rotation: "0 0 0",
+        });
+        appendEl(diceCube, "a-box", {
+          width: "0.44",
+          height: "0.44",
+          depth: "0.44",
+          color: "#F8FAFC",
+          shadow: "cast: true; receive: true",
+        });
+        addDieFace(diceCube, "front", 5);
+        addDieFace(diceCube, "right", 3);
+        addDieFace(diceCube, "top", 1);
+        addDieFace(diceCube, "back", 2);
+        addDieFace(diceCube, "left", 4);
+        addDieFace(diceCube, "bottom", 6);
+        addText(diceMachine, {
+          id: "prob-dice-result",
+          value: "",
+          position: "0 0.38 0.42",
+          rotation: "-65 0 0",
+          align: "center",
+          color: "#E0F2FE",
+          width: "1.9",
+          scale: "0.36 0.36 0.36",
+        });
+
+        var callsMachine = appendEl(root, "a-entity", {
+          id: "prob-calls-machine",
+          position: side * 3.15 + " 0 2.05",
+          rotation: frontRot,
+          scale: "1.08 1.08 1.08",
+        });
+        appendEl(callsMachine, "a-box", {
+          width: "1.46",
+          height: "2.18",
+          depth: "0.36",
+          position: "0 1.25 -0.04",
+          color: "#071D12",
+          shadow: "cast: true; receive: true",
+        });
+        appendEl(callsMachine, "a-box", {
+          width: "1.56",
+          height: "0.16",
+          depth: "0.5",
+          position: "0 0.18 0",
+          color: "#202A2E",
+          shadow: "cast: true; receive: true",
+        });
+        addMachineHeader(callsMachine, {
+          position: "0 1.98 0.155",
+          width: "1.24",
+          height: "0.38",
+          color: "#030B07",
+          title: "POISSON",
+          subtitle: "autos que pasan por minuto",
+          titlePosition: "0 2.06 0.18",
+          subtitlePosition: "0 1.9 0.18",
+          titleColor: "#D9F99D",
+          subtitleColor: "#ECFCCB",
+          titleScale: "0.58 0.58 0.58",
+          subtitleScale: "0.31 0.31 0.31",
+        });
+        appendEl(callsMachine, "a-box", {
+          width: "1.1",
+          height: "0.3",
+          depth: "0.028",
+          position: "0 1.62 0.165",
+          color: "#06130D",
+          opacity: "0.98",
+        });
+        addText(callsMachine, {
+          id: "prob-calls-display",
+          value: "",
+          position: "0 1.62 0.187",
+          align: "center",
+          color: "#F8FAFC",
+          width: "2.15",
+          wrapCount: "28",
+          scale: "0.4 0.4 0.4",
+        });
+        addText(callsMachine, {
+          value: "CALLE POR MINUTO",
+          position: "0 1.37 0.18",
+          align: "center",
+          color: "#BAE6FD",
+          width: "2.1",
+          wrapCount: "24",
+          scale: "0.31 0.31 0.31",
+        });
+        appendEl(callsMachine, "a-box", {
+          width: "0.33",
+          height: "0.01",
+          depth: "0.01",
+          position: "-0.47 1.37 0.18",
+          color: "#38BDF8",
+        });
+        appendEl(callsMachine, "a-box", {
+          width: "0.33",
+          height: "0.01",
+          depth: "0.01",
+          position: "0.47 1.37 0.18",
+          color: "#38BDF8",
+        });
+        appendEl(callsMachine, "a-entity", {
+          id: "prob-traffic-scene",
+          position: "0 0 0",
+        });
+        appendEl(callsMachine, "a-box", {
+          position: "0 0.88 0.185",
+          width: "1.08",
+          height: "0.38",
+          depth: "0.035",
+          color: "#374151",
+          opacity: "0.98",
+        });
+        for (var stripe = 0; stripe < 5; stripe++) {
+          appendEl(callsMachine, "a-box", {
+            position: (-0.42 + stripe * 0.21) + " 0.88 0.212",
+            width: "0.09",
+            height: "0.012",
+            depth: "0.008",
+            color: "#F8FAFC",
+          });
+        }
+        appendEl(callsMachine, "a-box", {
+          position: "-0.54 0.88 0.212",
+          width: "0.018",
+          height: "0.38",
+          depth: "0.008",
+          color: "#FACC15",
+        });
+        appendEl(callsMachine, "a-cylinder", {
+          position: "0.52 1.12 0.2",
+          radius: "0.025",
+          height: "0.18",
+          color: "#475569",
+        });
+        appendEl(callsMachine, "a-sphere", {
+          id: "prob-traffic-light",
+          position: "0.52 1.22 0.2",
+          radius: "0.035",
+          color: "#22C55E",
+        });
+        for (var car = 0; car < 10; car++) {
+          var carEl = appendEl(callsMachine, "a-entity", {
+            id: "prob-traffic-car-" + car,
+            position: "0 0.88 0.23",
+            visible: "false",
+          });
+          appendEl(carEl, "a-box", {
+            width: "0.14",
+            height: "0.055",
+            depth: "0.045",
+            position: "0 0 0",
+            color: car % 3 === 0 ? "#F97316" : car % 3 === 1 ? "#38BDF8" : "#A3E635",
+          });
+          appendEl(carEl, "a-box", {
+            width: "0.075",
+            height: "0.04",
+            depth: "0.04",
+            position: "-0.012 0.04 0",
+            color: "#E0F2FE",
+          });
+          [-0.045, 0.045].forEach(function (wheelX) {
+            appendEl(carEl, "a-cylinder", {
+              position: wheelX + " -0.035 0.026",
+              rotation: "90 0 0",
+              radius: "0.018",
+              height: "0.012",
+              color: "#111827",
+            });
+          });
+        }
+        addButton(callsMachine, {
+          id: "prob-calls-select",
+          position: "-0.31 0.42 0.31",
+          rotation: "-10 0 0",
+          action: "prob-station-calls",
+          color: "#0369A1",
+          label: "Elegir λ",
+          width: "0.52",
+          height: "0.17",
+          depth: "0.045",
+          textWidth: "1.35",
+          textPosition: "0 0 0.035",
+        });
+        addButton(callsMachine, {
+          id: "prob-calls-run",
+          position: "0.31 0.42 0.31",
+          rotation: "-10 0 0",
+          action: "prob-run-once",
+          color: "#38BDF8",
+          label: "Avanzar minuto",
+          width: "0.5",
+          height: "0.17",
+          depth: "0.045",
+          textColor: "#082F49",
+          textWidth: "1.7",
+          textPosition: "0 0 0.035",
+        });
+        appendEl(callsMachine, "a-entity", {
+          id: "prob-calls-visuals",
+          position: "0 0.68 0.18",
+        });
+
+        var controls = addPanel({
+          id: "prob-controls",
+          position: "0 2.15 -5.03",
+          rotation: "0 0 0",
+          width: 2.6,
+          height: 0.72,
+          accent: "#22C55E",
+          color: "#052E16",
+          opacity: "0.86",
+        });
+        addText(controls, {
+          id: "prob-dist-name",
+          value: "",
+          position: "0 0.18 0.03",
+          align: "center",
+          color: "#DCFCE7",
+          width: "2.5",
+          scale: "0.62 0.62 0.62",
+        });
+        addText(controls, {
+          id: "prob-limits-text",
+          value: "",
+          position: "0 -0.12 0.03",
+          align: "center",
+          color: "#BBF7D0",
+          width: "2.5",
+          scale: "0.52 0.52 0.52",
+        });
+        var paramPanel = appendEl(root, "a-entity", {
+          id: "prob-param-panel",
+          position: "0 2.05 -2.62",
+          rotation: "0 0 0",
+        });
+        appendEl(paramPanel, "a-plane", {
+          position: "0 0 -0.018",
+          width: "4.45",
+          height: "2.62",
+          color: "#0D1720",
+          opacity: "0.88",
+          material: "side: double; transparent: true; roughness: 0.7; metalness: 0.05",
+        });
+        appendEl(paramPanel, "a-plane", {
+          position: "0 0 -0.015",
+          width: "4.56",
+          height: "2.73",
+          color: "#60A5FA",
+          opacity: "0.22",
+          material: "side: double; transparent: true",
+        });
+        appendEl(paramPanel, "a-plane", {
+          position: "0 0 0.002",
+          width: "4.32",
+          height: "2.46",
+          color: "#111827",
+          opacity: "0.78",
+          material: "side: double; transparent: true",
+        });
+        addText(paramPanel, {
+          value: "Parametros del modelo",
+          position: "0 0.85 0.04",
+          align: "center",
+          color: "#E5F2FF",
+          width: "4.2",
+          scale: "0.9 0.9 0.9",
+        });
+        addText(paramPanel, {
+          value: "Ajusta los parametros matematicos que definen la distribucion teorica",
+          position: "0 0.61 0.04",
+          align: "center",
+          color: "#93C5FD",
+          width: "4",
+          scale: "0.44 0.44 0.44",
+        });
+        appendEl(paramPanel, "a-plane", {
+          position: "0 0.41 0.025",
+          width: "3.62",
+          height: "0.012",
+          color: "#60A5FA",
+          opacity: "0.55",
+          material: "side: double; transparent: true",
+        });
+        appendEl(paramPanel, "a-entity", {
+          id: "prob-param-rows",
+          position: "0 0.02 0.06",
+          scale: "1 1 1",
+        });
+
+        setTimeout(function () {
+          renderProbabilityLab();
+        }, 0);
+      }
+
+      function buildComplexityContent(parent, id, posicionXYZ) {
+        var side = getAulaSide(posicionXYZ);
+        var frontX = side * 3.82;
+        var frontRot = "0 " + -side * 90 + " 0";
+
+        parent.querySelectorAll(".pupitre").forEach(function (desk, i) {
+          var x = i < 3 ? -side * 3.0 : side * 3.0;
+          var z = [-2.15, 0, 2.15][i % 3];
+          desk.setAttribute("position", x + " 0 " + z);
+          desk.setAttribute("scale", "0.22 0.22 0.22");
+        });
+
+        var root = appendEl(parent, "a-entity", {
+          id: "complexity-lab",
+          position: "0 0.03 0",
+        });
+
+        function addPanel(config) {
+          var panel = appendEl(root, "a-entity", {
+            id: config.id,
+            position: config.position,
+            rotation: config.rotation,
+          });
+          appendEl(panel, "a-plane", {
+            width: config.width,
+            height: config.height,
+            color: config.color || "#17120B",
+            opacity: config.opacity || "0.9",
+            material: "side: double",
+          });
+          appendEl(panel, "a-plane", {
+            width: config.width,
+            height: "0.03",
+            position: "0 " + (config.height / 2 - 0.05) + " 0.012",
+            color: config.accent || "#F97316",
+            opacity: "0.95",
+          });
+          return panel;
+        }
+
+        var board = addPanel({
+          id: "complexity-board",
+          position: frontX + " 2.05 0",
+          rotation: frontRot,
+          width: 5.95,
+          height: 2.35,
+          accent: "#F97316",
+        });
+        addText(board, {
+          value: "Simulador de Complejidad Computacional",
+          position: "0 0.93 0.03",
+          align: "center",
+          color: "#FDBA74",
+          width: "5.6",
+        });
+        addText(board, {
+          id: "complexity-code-title",
+          value: "",
+          position: "-2.55 0.72 0.03",
+          align: "left",
+          color: "#FFEDD5",
+          width: "3.1",
+          scale: "0.6 0.6 0.6",
+        });
+        addText(board, {
+          id: "complexity-code",
+          value: "",
+          position: "-2.55 0.18 0.03",
+          align: "left",
+          color: "#E7E5E4",
+          width: "3.0",
+          wrapCount: "48",
+          scale: "0.55 0.55 0.55",
+        });
+        appendEl(board, "a-plane", {
+          width: "2.8",
+          height: "1.05",
+          position: "1.15 0.12 0.025",
+          color: "#070707",
+          opacity: "0.84",
+        });
+        appendEl(board, "a-entity", {
+          id: "complexity-chart",
+          position: "-0.15 -0.38 0.06",
+        });
+        addText(board, {
+          id: "complexity-result",
+          value: "",
+          position: "0 -0.79 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "5.4",
+          wrapCount: "78",
+          scale: "0.68 0.68 0.68",
+        });
+
+        var controls = addPanel({
+          id: "complexity-controls",
+          position: "0 1.72 -2.88",
+          rotation: "0 0 0",
+          width: 3.5,
+          height: 3.3,
+          accent: "#FB923C",
+        });
+        addText(controls, {
+          value: "ANALIZA TU CODIGO",
+          position: "0 1.5 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3.3",
+        });
+        addText(controls, {
+          id: "complexity-case-name",
+          value: "Sin calcular",
+          position: "0 1.28 0.03",
+          align: "center",
+          color: "#FDBA74",
+          width: "3.2",
+          scale: "0.7 0.7 0.7",
+        });
+
+        // --- NUEVO PANEL IZQUIERDO: SELECCIÓN DIRECTA DE COMPLEJIDADES ---
+        var advanced = appendEl(controls, "a-entity", {
+          id: "complexity-advanced",
+          position: "0 0 0",
+        });
+
+        addText(advanced, {
+          value: "Selecciona una Complejidad:",
+          position: "0 1.06 0.03",
+          align: "center",
+          color: "#FDBA74",
+          width: "3.2",
+          scale: "0.75 0.75 0.75",
+        });
+
+        [
+          ["const", "Constante O(1)", "0.70", "#1D4ED8"],
+          ["lineal", "Lineal O(n)", "0.40", "#1D4ED8"],
+          ["binaria", "Binaria O(log n)", "0.10", "#1D4ED8"],
+          ["ordena", "Ordena O(n log n)", "-0.20", "#1D4ED8"],
+          ["doble", "Cuadratica O(n^2)", "-0.50", "#1D4ED8"],
+          ["fibo", "Exponencial O(2^n)", "-0.80", "#1D4ED8"],
+        ].forEach(function (btn) {
+          addButton(advanced, {
+            id: "complexity-code-" + btn[0],
+            position: "0 " + btn[2] + " 0",
+            action: "complexity-code-" + btn[0],
+            color: btn[3],
+            label: btn[1],
+            width: "2.6",
+            height: "0.24",
+            textWidth: "2.8",
+            textPosition: "0 0 0.04",
+          });
+        });
+
+        addText(advanced, {
+          value: "Toca cualquier caso para cargar graficas y metricas",
+          position: "0 -1.15 0.03",
+          align: "center",
+          color: "#A8A29E",
+          width: "3.2",
+          scale: "0.55 0.55 0.55",
+        });
+
+
+        var metrics = addPanel({
+          id: "complexity-metrics-panel",
+          position: "0 1.75 2.88",
+          rotation: "0 180 0",
+          width: 3.65,
+          height: 2.45,
+          accent: "#A3E635",
+        });
+        addText(metrics, {
+          value: "METRICAS AST",
+          position: "0 1.06 0.03",
+          align: "center",
+          color: "#FFFFFF",
+          width: "3.0",
+          scale: "0.7 0.7 0.7",
+        });
+        addText(metrics, {
+          id: "complexity-metrics",
+          value: "",
+          position: "-1.55 0.46 0.03",
+          align: "left",
+          color: "#ECFCCB",
+          width: "3.15",
+          wrapCount: "52",
+          scale: "0.56 0.56 0.56",
+        });
+        addText(metrics, {
+          id: "complexity-recommendation",
+          value: "",
+          position: "-1.55 -0.82 0.03",
+          align: "left",
+          color: "#FFFFFF",
+          width: "3.15",
+          wrapCount: "52",
+          scale: "0.54 0.54 0.54",
+        });
+
+        setTimeout(function () {
+          renderComplexityLab();
+        }, 0);
+      }
+
       function generarAula(id, posicionXYZ, colorParedes, tipo, targetEl) {
         var aula = targetEl || document.createElement("a-entity");
         var scene = document.querySelector("a-scene");
@@ -1467,12 +2970,13 @@
         aula.setAttribute("data-aula-tipo", tipo);
 
         addBaseClassroom(aula, id, posicionXYZ, colorParedes);
+        addAulaSign(aula, id, tipo, posicionXYZ);
 
         if (tipo === "matematica") {
           buildMathContent(aula);
         } else if (tipo === "algoritmos") {
           buildAlgorithmContent(aula);
-        } else if (tipo === "cpu" || tipo === "fisica") {
+        } else if (tipo === "cpu" || tipo === "fisica" || tipo === "probabilidad" || tipo === "complejidad") {
           buildPlaceholderContent(aula, id, tipo, posicionXYZ);
         }
 
@@ -1574,7 +3078,7 @@
             self.wallBoxes.push(box);
           });
 
-          console.log("🧱 Colisión lista:", this.wallBoxes.length, "paredes");
+          console.log("Colision lista:", this.wallBoxes.length, "paredes");
 
           // Debug: mostrar las cajas que bloquean la zona del pasillo
           var debugCount = 0;
@@ -1583,7 +3087,7 @@
             // Si la caja está cerca del centro del pasillo
             if (b.min.x < 1 && b.max.x > -1 && b.min.z < 7 && b.max.z > 5) {
               console.log(
-                "⚠️ Caja cerca del spawn:",
+                "Caja cerca del spawn:",
                 i,
                 "X[" + b.min.x.toFixed(1) + "," + b.max.x.toFixed(1) + "]",
                 "Y[" + b.min.y.toFixed(1) + "," + b.max.y.toFixed(1) + "]",
@@ -1593,7 +3097,7 @@
             }
           }
           if (debugCount === 0) {
-            console.log("✅ Ninguna caja bloquea la zona de spawn");
+            console.log("Ninguna caja bloquea la zona de spawn");
           }
         },
 
@@ -1805,6 +3309,32 @@
         font-size: 18px;
         font-weight: 600;
       }
+      .info-panel .panel-title,
+      .info-panel .icon-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .info-panel [data-lucide-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #8b9cff;
+        flex: 0 0 18px;
+        width: 18px;
+        min-width: 18px;
+      }
+      .info-panel .location [data-lucide-icon] {
+        color: #ff6b9d;
+      }
+      .info-panel svg {
+        width: 16px;
+        height: 16px;
+      }
+      .info-panel h3 svg {
+        width: 18px;
+        height: 18px;
+      }
       .info-panel p {
         margin: 6px 0;
         color: #b8c4ff;
@@ -1824,13 +3354,15 @@
   <body>
     <!-- Panel de información -->
     <div class="info-panel">
-      <h3>🏛️ Facultad Virtual VR</h3>
+      <h3 class="panel-title"><span data-lucide-icon="landmark"></span>Facultad Virtual VR</h3>
       <p><strong>PC:</strong> WASD para moverse, Mouse para mirar</p>
       <p><strong>VR:</strong> Gatillo para teletransportarte</p>
       <div class="location">
-        <p>📍 Pasillo Principal</p>
-        <p>🚪 Aula 1 (Izquierda) | Aula 2 (Derecha)</p>
-        <p>🚪 Aula 3 CPU | Aula 4 Fisica</p>
+        <p class="icon-row"><span data-lucide-icon="map-pin"></span>Pasillo Principal</p>
+        <p class="icon-row"><span data-lucide-icon="door-open"></span>Impar izquierda | Par derecha</p>
+        <p class="icon-row"><span data-lucide-icon="door-open"></span>1 Analisis Matematico | 2 Programación</p>
+        <p class="icon-row"><span data-lucide-icon="door-open"></span>3 CPU | 4 Fisica</p>
+        <p class="icon-row"><span data-lucide-icon="door-open"></span>5 Probabilidad | 6 Complejidad</p>
       </div>
     </div>
 
@@ -1846,7 +3378,7 @@
       <a-assets timeout="30000">
         <!-- Texturas -->
         <img id="textura-pared" src="pared.jpg" crossorigin="anonymous" />
-        <img id="textura-suelo" src="suelo.jpg" crossorigin="anonymous" />
+        <img id="textura-suelo" src="piso.jpg" crossorigin="anonymous" />
 
         <!-- Modelos 3D -->
         <a-asset-item id="modelo-pizarra" src="pizarra.glb"></a-asset-item>
@@ -1870,8 +3402,8 @@
       ></a-entity>
 
       <!-- ################################################################## -->
-      <!-- GRUPO: PASILLO PRINCIPAL (4m ancho x 22m largo x 3.5m alto)       -->
-      <!-- Centrado en X=0, desde Z=-14.5 hasta Z=7.5                        -->
+      <!-- GRUPO: PASILLO PRINCIPAL (4m ancho x 29m largo x 3.5m alto)       -->
+      <!-- Centrado en X=0, desde Z=-21.5 hasta Z=7.5                        -->
       <!-- ################################################################## -->
       <a-entity id="pasillo" position="0 0 0">
         <!-- SUELO DEL PASILLO -->
@@ -1879,10 +3411,10 @@
           id="pasillo-suelo"
           class="navegable"
           width="4"
-          height="22"
+          height="29"
           rotation="-90 0 0"
-          position="0 0.01 -3.5"
-          material="src: #textura-suelo; repeat: 2 12; roughness: 0.7"
+          position="0 0.01 -7"
+          material="src: #textura-suelo; repeat: 2 15; roughness: 0.7"
           shadow="receive: true"
         ></a-plane>
 
@@ -1890,14 +3422,14 @@
         <a-plane
           id="techo-pasillo"
           width="4"
-          height="22"
+          height="29"
           rotation="90 0 0"
-          position="0 3.5 -3.5"
+          position="0 3.5 -7"
           material="color: #e8e4dc; roughness: 0.9"
         ></a-plane>
 
-        <!-- PAREDES LATERALES DEL PASILLO (huecos para Aula 1-4) -->
-        <!-- Pared izquierda: conecta Aula 1 y Aula 3 -->
+        <!-- PAREDES LATERALES DEL PASILLO (huecos para Aula 1-5) -->
+        <!-- Pared izquierda: conecta Aula 1, Aula 3 y Aula 5 -->
         <a-box
           class="collidable"
           src="#textura-pared"
@@ -1923,8 +3455,18 @@
           src="#textura-pared"
           width="0.2"
           height="3.5"
+          depth="3"
+          position="-2 1.75 -11.5"
+          material="src: #textura-pared; repeat: 1.5 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
           depth="4.5"
-          position="-2 1.75 -12.25"
+          position="-2 1.75 -19.25"
           material="src: #textura-pared; repeat: 2.25 1.75; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
@@ -1993,6 +3535,38 @@
           shadow="cast: true; receive: true"
         ></a-box>
 
+        <!-- Hueco puerta Aula 5 -->
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="1.2"
+          depth="4"
+          position="-2 2.9 -15"
+          material="src: #textura-pared; repeat: 2 0.6; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="-2 1.15 -16.4"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="-2 1.15 -13.6"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
         <!-- Pared derecha: conecta Aula 2 y Aula 4 -->
         <a-box
           class="collidable"
@@ -2019,8 +3593,18 @@
           src="#textura-pared"
           width="0.2"
           height="3.5"
+          depth="3"
+          position="2 1.75 -11.5"
+          material="src: #textura-pared; repeat: 1.5 1.75; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="3.5"
           depth="4.5"
-          position="2 1.75 -12.25"
+          position="2 1.75 -19.25"
           material="src: #textura-pared; repeat: 2.25 1.75; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
@@ -2089,6 +3673,38 @@
           shadow="cast: true; receive: true"
         ></a-box>
 
+        <!-- Hueco puerta Aula 6 -->
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="1.2"
+          depth="4"
+          position="2 2.9 -15"
+          material="src: #textura-pared; repeat: 2 0.6; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="2 1.15 -16.4"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+        <a-box
+          class="collidable"
+          src="#textura-pared"
+          width="0.2"
+          height="2.3"
+          depth="1.2"
+          position="2 1.15 -13.6"
+          material="src: #textura-pared; repeat: 0.6 1.15; roughness: 0.85"
+          shadow="cast: true; receive: true"
+        ></a-box>
+
         <!-- PARED TRASERA DEL PASILLO (fondo) -->
         <a-box
           class="collidable"
@@ -2096,7 +3712,7 @@
           width="4"
           height="3.5"
           depth="0.2"
-          position="0 1.75 -14.5"
+          position="0 1.75 -21.5"
           material="src: #textura-pared; repeat: 2 1.75; roughness: 0.85"
           shadow="cast: true; receive: true"
         ></a-box>
@@ -2187,7 +3803,7 @@
         <!-- LOGO 3D GIRANDO al fondo del pasillo -->
         <a-entity
           id="logo-pasillo"
-          position="0 2 -13.5"
+          position="0 2 -20.5"
           scale="3 3 3"
           animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear"
         >
@@ -2198,12 +3814,20 @@
           type="point"
           color="#FFFFFF"
           intensity="1"
-          position="0 3.2 -13.5"
+          position="0 3.2 -20.5"
           distance="5"
           decay="1"
         ></a-light>
 
         <!-- ILUMINACIÓN DEL PASILLO -->
+        <a-light
+          type="point"
+          color="#FFF8DC"
+          intensity="0.6"
+          position="0 3.2 -17"
+          distance="8"
+          decay="2"
+        ></a-light>
         <a-light
           type="point"
           color="#FFF8DC"
@@ -2256,6 +3880,14 @@
       <a-entity
         id="aula4"
         generar-aula="posicionXYZ: 6 0 -8; colorParedes: #f3fff1; tipo: fisica"
+      ></a-entity>
+      <a-entity
+        id="aula5"
+        generar-aula="posicionXYZ: -6 0 -15; colorParedes: #f0fffb; tipo: probabilidad"
+      ></a-entity>
+      <a-entity
+        id="aula6"
+        generar-aula="posicionXYZ: 6 0 -15; colorParedes: #fff7ed; tipo: complejidad"
       ></a-entity>
 
       <!-- ========================================== -->
@@ -3602,6 +5234,2059 @@
         scheduleCpuTimeout(runCpuTick, 1600);
       }
 
+      // ===== LABORATORIO DE COMPLEJIDAD COMPUTACIONAL =====
+      // Adaptado de C:\Programacion\complexity_simulator:
+      // el proyecto original analiza AST de Python y estima Big O con
+      // reglas heuristicas sobre bucles, recursividad, sort y estructuras.
+
+      var COMPLEXITY_QUALITATIVE = {
+        "O(1)": "Excelente: tiempo constante.",
+        "O(log n)": "Excelente: crecimiento muy lento.",
+        "O(n)": "Buena: crecimiento lineal.",
+        "O(n log n)": "Buena: tipica de ordenamientos eficientes.",
+        "O(n^2)": "Aceptable solo para entradas pequenas o medianas.",
+        "O(n^3)": "Costosa para entradas medianas o grandes.",
+        "O(2^n)": "Muy costosa: viable solo con n pequeno.",
+        "O(n!)": "Extrema: evitar para entradas grandes.",
+      };
+
+      var COMPLEXITY_FEEDBACK = {
+        "O(1)": { ok: true, msg: "Tiempo constante: el costo no depende del tamano de la entrada. Es el mejor caso posible." },
+        "O(log n)": { ok: true, msg: "Crecimiento logaritmico: aunque la entrada crezca mucho, el costo sube muy poco. Patron de busqueda binaria." },
+        "O(n)": { ok: true, msg: "Crecimiento lineal: el costo acompana al tamano de la entrada de forma proporcional. Eficiente y escalable." },
+        "O(n log n)": { ok: true, msg: "Tipico de ordenamientos eficientes. Escala muy bien incluso con entradas grandes." },
+        "O(n^2)": { ok: false, msg: "Bucles anidados: el costo crece al cuadrado. Sirve para entradas chicas. Tip: un set o diccionario auxiliar suele bajarlo a O(n)." },
+        "O(n^3)": { ok: false, msg: "Tres bucles anidados: crecimiento cubico. Para datos medianos o grandes revisa algoritmos optimizados o librerias numericas." },
+        "O(2^n)": { ok: false, msg: "Recursividad multiple: el trabajo se duplica en cada paso. Solo viable con n chico. Tip: memoizacion o programacion dinamica." },
+        "O(n!)": { ok: false, msg: "Crecimiento factorial: evitar para entradas grandes. Busca podas o heuristicas." },
+      };
+
+      var COMPLEXITY_RANK = {
+        "O(1)": 0, "O(log n)": 1, "O(n)": 2, "O(n log n)": 3,
+        "O(n^2)": 4, "O(n^3)": 5, "O(2^n)": 6, "O(n!)": 7,
+      };
+
+      var COMPLEXITY_CODE_LIBRARY = [
+        {
+          id: "const",
+          name: "Constante",
+          code:
+            "def first_item(items):\n" +
+            "    return items[0]\n",
+          traits: { loops: 0, recursion: "no", sort: false, halving: false },
+          metrics: {
+            functions: 1,
+            loops: 0,
+            recursion: "no",
+            conditionals: 0,
+            calls: 0,
+            assigns: 0,
+            depth: 1,
+          },
+          explain: "Acceso directo a un elemento. No depende de n.",
+          recommend: "Ideal cuando solo necesitas el primer elemento o un indice fijo.",
+        },
+        {
+          id: "lineal",
+          name: "Lineal",
+          code:
+            "def linear_search(items, target):\n" +
+            "    for i in range(len(items)):\n" +
+            "        if items[i] == target:\n" +
+            "            return i\n" +
+            "    return -1\n",
+          traits: { loops: 1, recursion: "no", sort: false, halving: false },
+          metrics: {
+            functions: 1,
+            loops: 1,
+            recursion: "no",
+            conditionals: 1,
+            calls: 1,
+            assigns: 0,
+            depth: 2,
+          },
+          explain: "Recorre la lista completa en el peor caso.",
+          recommend: "Si la lista esta ordenada, usa busqueda binaria para bajar a O(log n).",
+        },
+        {
+          id: "binaria",
+          name: "Binaria",
+          code:
+            "def binary_search(items, target):\n" +
+            "    low, high = 0, len(items) - 1\n" +
+            "    while low <= high:\n" +
+            "        mid = (low + high) // 2\n" +
+            "        if items[mid] == target:\n" +
+            "            return mid\n" +
+            "        if items[mid] < target:\n" +
+            "            low = mid + 1\n" +
+            "        else:\n" +
+            "            high = mid - 1\n" +
+            "    return -1\n",
+          traits: { loops: 0, recursion: "no", sort: false, halving: true },
+          metrics: {
+            functions: 1,
+            loops: 1,
+            recursion: "no",
+            conditionals: 2,
+            calls: 1,
+            assigns: 3,
+            depth: 3,
+          },
+          explain: "Parte el problema a la mitad en cada paso.",
+          recommend: "Requiere datos ordenados; si no, ordena primero.",
+        },
+        {
+          id: "ordena",
+          name: "Ordena",
+          code:
+            "def sort_values(values):\n" +
+            "    return sorted(values)\n",
+          traits: { loops: 0, recursion: "no", sort: true, halving: false },
+          metrics: {
+            functions: 1,
+            loops: 0,
+            recursion: "no",
+            conditionals: 0,
+            calls: 1,
+            assigns: 0,
+            depth: 1,
+          },
+          explain: "Usa un algoritmo de ordenamiento eficiente (n log n).",
+          recommend: "Si no necesitas orden total, usa seleccion parcial (n).",
+        },
+        {
+          id: "doble",
+          name: "Doble bucle",
+          code:
+            "total = 0\n" +
+            "for i in range(n):\n" +
+            "    for j in range(n):\n" +
+            "        total += matrix[i][j]\n",
+          traits: { loops: 2, recursion: "no", sort: false, halving: false },
+          metrics: {
+            functions: 0,
+            loops: 2,
+            recursion: "no",
+            conditionals: 0,
+            calls: 1,
+            assigns: 2,
+            depth: 3,
+          },
+          explain: "Dos bucles anidados: n * n operaciones.",
+          recommend: "Busca reducir una dimension o usar estructuras precomputadas.",
+        },
+        {
+          id: "fibo",
+          name: "Fibonacci",
+          code:
+            "def fib(n):\n" +
+            "    if n <= 1:\n" +
+            "        return n\n" +
+            "    return fib(n - 1) + fib(n - 2)\n",
+          traits: { loops: 0, recursion: "multiple", sort: false, halving: false },
+          metrics: {
+            functions: 1,
+            loops: 0,
+            recursion: "multiple",
+            conditionals: 1,
+            calls: 2,
+            assigns: 0,
+            depth: 2,
+          },
+          explain: "Cada llamada se divide en dos ramas recursivas.",
+          recommend: "Usa memoizacion o version iterativa para bajar a O(n).",
+        },
+      ];
+
+      function formatAstMetrics(sample) {
+        if (!sample || !sample.metrics) return "";
+        var m = sample.metrics;
+        return (
+          "Funciones: " + m.functions + "\n" +
+          "Bucles: " + m.loops + "\n" +
+          "Recursividad: " + m.recursion + "\n" +
+          "Condicionales: " + m.conditionals + "\n" +
+          "Llamadas: " + m.calls + "\n" +
+          "Asignaciones: " + m.assigns + "\n" +
+          "Profundidad: " + m.depth
+        );
+      }
+
+      function getComplexitySample(sampleId) {
+        return COMPLEXITY_CODE_LIBRARY.find(function (sample) {
+          return sample.id === sampleId;
+        });
+      }
+
+      function deriveBigO(state) {
+        if (state.recursion === "multiple") {
+          return state.loops >= 1 ? "O(n!)" : "O(2^n)";
+        }
+        var candidates = [];
+        if (state.loops >= 3) candidates.push("O(n^3)");
+        else if (state.loops === 2) candidates.push("O(n^2)");
+        else if (state.loops === 1) candidates.push("O(n)");
+        else candidates.push(state.halving ? "O(log n)" : "O(1)");
+        if (state.sort) candidates.push("O(n log n)");
+        if (state.recursion === "simple") candidates.push("O(n)");
+        var best = candidates[0];
+        candidates.forEach(function (c) {
+          if (COMPLEXITY_RANK[c] > COMPLEXITY_RANK[best]) best = c;
+        });
+        return best;
+      }
+
+      function deriveReason(state, bigO) {
+        var traits =
+          "Bucles anidados sobre n: " + state.loops + "\n" +
+          "Recursividad: " + state.recursion + "\n" +
+          "Ordena (sort): " + (state.sort ? "si" : "no") + "\n" +
+          "Divide a la mitad: " + (state.halving ? "si" : "no");
+        var why;
+        if (state.recursion === "multiple") why = "La recursividad multiple domina el costo.";
+        else if (state.loops >= 2) why = state.loops + " bucles anidados elevan n a la potencia " + state.loops + ".";
+        else if (state.sort && COMPLEXITY_RANK[bigO] === COMPLEXITY_RANK["O(n log n)"]) why = "La operacion de ordenamiento domina con crecimiento n log n.";
+        else if (state.loops === 1) why = "Un unico recorrido de la entrada da crecimiento lineal.";
+        else if (state.halving) why = "Descartar la mitad en cada paso da crecimiento logaritmico.";
+        else why = "No hay bucles ni recursividad que dependan de n.";
+        return { traits: traits, why: why };
+      }
+
+      var complexityState = {
+        n: 1000,
+        loops: 1,
+        recursion: "no",
+        sort: false,
+        halving: false,
+        sampleId: null,
+        easyMode: true,
+        calculated: false,
+        result: null,
+      };
+
+      function complexityValue(label, n) {
+        if (label === "O(1)") return 1;
+        if (label === "O(log n)") return Math.log2(Math.max(2, n));
+        if (label === "O(n)") return n;
+        if (label === "O(n log n)") return n * Math.log2(Math.max(2, n));
+        if (label === "O(n^2)") return n * n;
+        if (label === "O(n^3)") return n * n * n;
+        if (label === "O(2^n)") return Math.pow(2, Math.min(n, 30));
+        if (label === "O(n!)") {
+          var total = 1;
+          for (var i = 2; i <= Math.min(n, 12); i++) total *= i;
+          return total;
+        }
+        return n;
+      }
+
+      function formatComplexityOps(value) {
+        if (!Number.isFinite(value)) return "muy grande";
+        if (value >= 1000000) return value.toExponential(2);
+        return Math.round(value).toString();
+      }
+
+      function complexityColor(label) {
+        if (label === "O(1)") return "#22C55E";
+        if (label === "O(log n)") return "#14B8A6";
+        if (label === "O(n)") return "#3B82F6";
+        if (label === "O(n log n)") return "#8B5CF6";
+        if (label === "O(n^2)") return "#F59E0B";
+        if (label === "O(n^3)") return "#F97316";
+        return "#EF4444";
+      }
+
+      function handleComplexityAction(action) {
+        var s = complexityState;
+        if (action.indexOf("complexity-code-") === 0) {
+          var sampleId = action.slice("complexity-code-".length);
+          var sample = getComplexitySample(sampleId);
+          if (sample) {
+            s.sampleId = sample.id;
+            s.loops = sample.traits.loops;
+            s.recursion = sample.traits.recursion;
+            s.sort = sample.traits.sort;
+            s.halving = sample.traits.halving;
+            s.result = deriveBigO(s);
+            s.calculated = true;
+          }
+          renderComplexityLab();
+          return;
+        }
+        if (action === "complexity-mode-toggle") {
+          s.easyMode = !s.easyMode;
+          renderComplexityLab();
+          return;
+        }
+        if (action === "complexity-n-minus") s.n = Math.max(10, s.n - 10);
+        else if (action === "complexity-n-plus") s.n = Math.min(2000, s.n + 10);
+        else if (action === "complexity-n-big-minus") s.n = Math.max(10, s.n - 100);
+        else if (action === "complexity-n-big-plus") s.n = Math.min(2000, s.n + 100);
+        else if (action === "complexity-loops-minus") { s.loops = Math.max(0, s.loops - 1); s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-loops-plus") { s.loops = Math.min(3, s.loops + 1); s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-rec-no") { s.recursion = "no"; s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-rec-simple") { s.recursion = "simple"; s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-rec-multiple") { s.recursion = "multiple"; s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-sort-toggle") { s.sort = !s.sort; s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-halving-toggle") { s.halving = !s.halving; s.calculated = false; s.sampleId = null; }
+        else if (action === "complexity-calcular") { s.result = deriveBigO(s); s.calculated = true; }
+        else if (action === "complexity-reset") {
+          s.loops = 1; s.recursion = "no"; s.sort = false; s.halving = false;
+          s.n = 1000; s.calculated = false; s.result = null; s.sampleId = null;
+        }
+        renderComplexityLab();
+      }
+
+      function renderComplexityChart(root, selectedBigO) {
+        clearEntityChildren(root);
+        if (!root) return;
+
+        selectedBigO = selectedBigO || "O(n^2)";
+        var hardCap = selectedBigO === "O(2^n)" || selectedBigO === "O(n!)" ? 30 : 2000;
+        var maxN = Math.max(10, Math.min(hardCap, complexityState.n));
+        var width = 2.45;
+        var height = 0.82;
+        var originX = 0.12;
+        var originY = 0.08;
+        var points = [];
+        var samples = 42;
+        var maxLog = 1;
+
+        for (var i = 0; i < samples; i++) {
+          var n = 1 + Math.round(((maxN - 1) * i) / (samples - 1));
+          var value = complexityValue(selectedBigO, n);
+          var logValue = Math.log10(value + 1);
+          maxLog = Math.max(maxLog, logValue);
+          points.push({ n: n, value: value, logValue: logValue });
+        }
+
+        points.forEach(function (point) {
+          point.x = originX + ((point.n - 1) / (maxN - 1)) * width;
+          point.y = originY + (point.logValue / maxLog) * height;
+        });
+
+        function addLine(x1, y1, x2, y2, color, thickness) {
+          var dx = x2 - x1;
+          var dy = y2 - y1;
+          var length = Math.sqrt(dx * dx + dy * dy);
+          var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          appendEl(root, "a-plane", {
+            width: length,
+            height: thickness || "0.018",
+            position: ((x1 + x2) / 2) + " " + ((y1 + y2) / 2) + " 0.02",
+            rotation: "0 0 " + angle,
+            color: color,
+            opacity: "0.95",
+            material: "side: double",
+          });
+        }
+
+        appendEl(root, "a-plane", {
+          width: "2.8",
+          height: "1.05",
+          position: "1.35 0.46 -0.01",
+          color: "#050505",
+          opacity: "0.35",
+          material: "side: double",
+        });
+        appendEl(root, "a-plane", {
+          width: width,
+          height: "0.025",
+          position: (originX + width / 2) + " " + originY + " 0.01",
+          color: "#78716C",
+          material: "side: double",
+        });
+        appendEl(root, "a-plane", {
+          width: "0.025",
+          height: height,
+          position: originX + " " + (originY + height / 2) + " 0.01",
+          color: "#78716C",
+          material: "side: double",
+        });
+
+        for (var s = 0; s < points.length - 1; s++) {
+          addLine(points[s].x, points[s].y, points[s + 1].x, points[s + 1].y, complexityColor(selectedBigO), "0.022");
+        }
+
+        points.forEach(function (point, index) {
+          if (index % 8 !== 0 && index !== points.length - 1) return;
+          appendEl(root, "a-circle", {
+            radius: "0.035",
+            position: point.x + " " + point.y + " 0.04",
+            color: complexityColor(selectedBigO),
+            material: "side: double",
+          });
+          addText(root, {
+            value: String(point.n),
+            position: point.x + " " + (originY - 0.11) + " 0.04",
+            align: "center",
+            color: "#D6D3D1",
+            width: "0.7",
+            scale: "0.24 0.24 0.24",
+          });
+        });
+
+        var markerN = Math.max(1, Math.min(maxN, complexityState.n));
+        var markerValue = complexityValue(selectedBigO, markerN);
+        var markerLog = Math.log10(markerValue + 1);
+        var markerX = originX + ((markerN - 1) / (maxN - 1)) * width;
+        var markerY = originY + (markerLog / maxLog) * height;
+        addLine(markerX, originY, markerX, markerY, "#FDE68A", "0.014");
+        appendEl(root, "a-circle", {
+          radius: "0.055",
+          position: markerX + " " + markerY + " 0.06",
+          color: "#FDE68A",
+          material: "side: double",
+        });
+        addText(root, {
+          value: selectedBigO,
+          position: "1.38 1.02 0.05",
+          align: "center",
+          color: complexityColor(selectedBigO),
+          width: "2.6",
+          scale: "0.42 0.42 0.42",
+        });
+        addText(root, {
+          value: "n",
+          position: (originX + width + 0.17) + " " + (originY - 0.01) + " 0.04",
+          align: "center",
+          color: "#E7E5E4",
+          width: "0.5",
+          scale: "0.32 0.32 0.32",
+        });
+        addText(root, {
+          value: "ops",
+          position: (originX - 0.08) + " " + (originY + height + 0.12) + " 0.04",
+          align: "center",
+          color: "#E7E5E4",
+          width: "0.7",
+          scale: "0.28 0.28 0.28",
+        });
+        addText(root, {
+          value:
+            "n=" + complexityState.n +
+            "  ops~" + formatComplexityOps(complexityValue(selectedBigO, Math.min(complexityState.n, maxN))),
+          position: "1.38 -0.17 0.04",
+          align: "center",
+          color: "#FFFFFF",
+          width: "2.7",
+          scale: "0.31 0.31 0.31",
+        });
+      }
+
+      function renderComplexityLab() {
+        var lab = document.getElementById("complexity-lab");
+        if (!lab) return;
+        var s = complexityState;
+
+        var caseName = lab.querySelector("#complexity-case-name");
+        var sortLabel = lab.querySelector("#complexity-sort-label");
+        var halvingLabel = lab.querySelector("#complexity-halving-label");
+        var codeTitle = lab.querySelector("#complexity-code-title");
+        var code = lab.querySelector("#complexity-code");
+        var result = lab.querySelector("#complexity-result");
+        var metrics = lab.querySelector("#complexity-metrics");
+        var recommendation = lab.querySelector("#complexity-recommendation");
+        var chart = lab.querySelector("#complexity-chart");
+        var selectedSample = s.sampleId ? getComplexitySample(s.sampleId) : null;
+        if (sortLabel) sortLabel.setAttribute("value", "");
+        if (halvingLabel) halvingLabel.setAttribute("value", "");
+
+        var preview = s.result || deriveBigO(s);
+        var info = deriveReason(s, preview);
+        if (selectedSample) {
+          if (codeTitle) codeTitle.setAttribute("value", "CODIGO: " + selectedSample.name);
+          if (code) code.setAttribute("value", selectedSample.code);
+        } else {
+          if (codeTitle) codeTitle.setAttribute("value", "TU SELECCION");
+          if (code) code.setAttribute("value", info.traits);
+        }
+
+        if (!s.calculated) {
+          if (caseName) caseName.setAttribute("value", "Esperando seleccion");
+          if (result) result.setAttribute("value", "Selecciona una complejidad en el panel izquierdo");
+          if (metrics) metrics.setAttribute("value", "Metricas de ejecucion de codigo.");
+          if (recommendation) recommendation.setAttribute("value", "");
+          clearEntityChildren(chart);
+          return;
+        }
+
+        var bigO = s.result;
+        var ops = complexityValue(bigO, s.n);
+
+        if (caseName) caseName.setAttribute("value", "Complejidad: " + bigO);
+        if (result) {
+          result.setAttribute(
+            "value",
+            "Funcion del comportamiento: " + bigO +
+              " | ops aprox. (n=" + s.n + "): " + formatComplexityOps(ops) +
+              "\n" + (COMPLEXITY_QUALITATIVE[bigO] || ""),
+          );
+        }
+
+        if (selectedSample) {
+          if (codeTitle) codeTitle.setAttribute("value", "ESTRUCTURA: " + selectedSample.name);
+          if (code) code.setAttribute("value", selectedSample.code);
+
+          if (metrics) {
+            metrics.setAttribute(
+              "value",
+              "RESUMEN METRICAS ESTRUCTURALES:\n" +
+                formatAstMetrics(selectedSample) +
+                "\n\nEXPLICACION:\n" + selectedSample.explain,
+            );
+          }
+          if (recommendation) {
+            recommendation.setAttribute(
+              "value",
+              "RECOMENDACIONES DE OPTIMIZACION:\n" + selectedSample.recommend,
+            );
+          }
+        }
+
+        renderComplexityChart(chart, bigO);
+      }
+
+      // ===== LABORATORIO DE DISTRIBUCIONES DE PROBABILIDAD =====
+
+      var PROB_DISTRIBUTIONS = [
+        {
+          id: "normal",
+          name: "Normal",
+          kind: "continuous",
+          parameters: [
+            { key: "mu", label: "mu", step: 0.1 },
+            { key: "sigma", label: "sigma", min: 0.0001, step: 0.1 },
+          ],
+          defaults: { mu: 0, sigma: 1 },
+          description: "Modelo continuo simetrico usado para errores, mediciones y fenomenos agregados.",
+        },
+        {
+          id: "student",
+          name: "t de Student",
+          kind: "continuous",
+          parameters: [{ key: "df", label: "nu", min: 0.0001, step: 1 }],
+          defaults: { df: 8 },
+          description: "Distribucion simetrica con colas pesadas, frecuente en muestras pequenas.",
+        },
+        {
+          id: "chiSquared",
+          name: "Chi-cuadrado",
+          kind: "continuous",
+          parameters: [{ key: "df", label: "nu", min: 0.0001, step: 1 }],
+          defaults: { df: 4 },
+          description: "Distribucion positiva asociada a sumas de cuadrados de normales estandar.",
+        },
+        {
+          id: "fDistribution",
+          name: "Distribucion F",
+          kind: "continuous",
+          parameters: [
+            { key: "df1", label: "nu1", min: 0.0001, step: 1 },
+            { key: "df2", label: "nu2", min: 0.0001, step: 1 },
+          ],
+          defaults: { df1: 5, df2: 12 },
+          description: "Distribucion positiva para razones de varianzas independientes.",
+        },
+        {
+          id: "exponential",
+          name: "Exponencial",
+          kind: "continuous",
+          parameters: [{ key: "lambda", label: "lambda", min: 0.0001, step: 0.1 }],
+          defaults: { lambda: 1 },
+          description: "Modelo de tiempos de espera con tasa constante.",
+        },
+        {
+          id: "cauchy",
+          name: "Cauchy",
+          kind: "continuous",
+          parameters: [
+            { key: "x0", label: "x0", step: 0.1 },
+            { key: "gamma", label: "gamma", min: 0.0001, step: 0.1 },
+          ],
+          defaults: { x0: 0, gamma: 1 },
+          description: "Distribucion simetrica de colas muy pesadas, sin media ni varianza definidas.",
+        },
+        {
+          id: "weibull",
+          name: "Weibull",
+          kind: "continuous",
+          parameters: [
+            { key: "k", label: "k", min: 0.0001, step: 0.1 },
+            { key: "lambda", label: "lambda", min: 0.0001, step: 0.1 },
+          ],
+          defaults: { k: 1.5, lambda: 1 },
+          description: "Modelo flexible para tiempos de vida y confiabilidad.",
+        },
+        {
+          id: "gamma",
+          name: "Gamma",
+          kind: "continuous",
+          parameters: [
+            { key: "alpha", label: "alpha", min: 0.0001, step: 0.1 },
+            { key: "theta", label: "theta", min: 0.0001, step: 0.1 },
+          ],
+          defaults: { alpha: 2, theta: 1 },
+          description: "Distribucion positiva para tiempos acumulados y variables sesgadas.",
+        },
+        {
+          id: "beta",
+          name: "Beta",
+          kind: "continuous",
+          parameters: [
+            { key: "alpha", label: "alpha", min: 0.0001, step: 0.1 },
+            { key: "beta", label: "beta", min: 0.0001, step: 0.1 },
+          ],
+          defaults: { alpha: 2, beta: 5 },
+          description: "Distribucion sobre [0, 1], ideal para proporciones.",
+        },
+        {
+          id: "logNormal",
+          name: "Log-normal",
+          kind: "continuous",
+          parameters: [
+            { key: "mu", label: "mu", step: 0.1 },
+            { key: "sigma", label: "sigma", min: 0.0001, step: 0.1 },
+          ],
+          defaults: { mu: 0, sigma: 0.5 },
+          description: "Modelo positivo para variables cuyo logaritmo es normal.",
+        },
+        {
+          id: "logistic",
+          name: "Logistica",
+          kind: "continuous",
+          parameters: [
+            { key: "mu", label: "mu", step: 0.1 },
+            { key: "s", label: "s", min: 0.0001, step: 0.1 },
+          ],
+          defaults: { mu: 0, s: 1 },
+          description: "Distribucion simetrica similar a la normal, con acumulada sigmoide.",
+        },
+        {
+          id: "uniformDiscrete",
+          name: "Uniforme discreta",
+          kind: "discrete",
+          parameters: [{ key: "m", label: "caras", min: 2, max: 12, step: 1, integer: true }],
+          defaults: { m: 6 },
+          description: "Todos los resultados enteros de 1 a m tienen la misma probabilidad.",
+        },
+        {
+          id: "binomial",
+          name: "Binomial",
+          kind: "discrete",
+          parameters: [
+            { key: "n", label: "n", min: 1, step: 1, integer: true },
+            { key: "p", label: "p", min: 0, max: 1, step: 0.05 },
+          ],
+          defaults: { n: 10, p: 0.4 },
+          description: "Cuenta exitos en un numero fijo de ensayos independientes.",
+        },
+        {
+          id: "negativeBinomial",
+          name: "Pascal / binomial negativa",
+          kind: "discrete",
+          parameters: [
+            { key: "r", label: "r", min: 1, step: 1, integer: true },
+            { key: "p", label: "p", min: 0, max: 1, step: 0.05 },
+          ],
+          defaults: { r: 4, p: 0.45 },
+          description: "Cuenta fallos antes de alcanzar una cantidad fija de exitos.",
+        },
+        {
+          id: "poisson",
+          name: "Poisson",
+          kind: "discrete",
+          parameters: [{ key: "lambda", label: "lambda", min: 0.0001, step: 0.5 }],
+          defaults: { lambda: 4 },
+          description: "Cuenta eventos raros en un intervalo cuando la tasa media es conocida.",
+        },
+        {
+          id: "hypergeometric",
+          name: "Hipergeometrica",
+          kind: "discrete",
+          parameters: [
+            { key: "N", label: "N", min: 1, step: 1, integer: true },
+            { key: "K", label: "K", min: 1, step: 1, integer: true },
+            { key: "n", label: "n", min: 1, step: 1, integer: true },
+          ],
+          defaults: { N: 40, K: 12, n: 8 },
+          description: "Cuenta exitos al muestrear sin reemplazo desde una poblacion finita.",
+        },
+      ];
+
+      var PROB_INTERVALS = ["between", "left", "right", "outside"];
+      var PROB_CASINO_STATIONS = [
+        {
+          id: "coin",
+          label: "Binomial",
+          distributionId: "binomial",
+          params: { n: 10, p: 0.5 },
+          intervalType: "between",
+          a: 4,
+          b: 6,
+          description: "Binomial: cuenta caras en n lanzamientos con probabilidad p.",
+          pending: false,
+        },
+        {
+          id: "dice",
+          label: "Uniforme discreta",
+          distributionId: "uniformDiscrete",
+          params: { m: 6 },
+          intervalType: "between",
+          a: 1,
+          b: 6,
+          description: "Uniforme discreta: resultado de 1 a m con igual probabilidad.",
+          pending: false,
+        },
+        {
+          id: "calls",
+          label: "Poisson",
+          distributionId: "poisson",
+          params: { lambda: 3 },
+          intervalType: "between",
+          a: 2,
+          b: 6,
+          description: "Poisson: cuenta autos por minuto con tasa media lambda.",
+          pending: false,
+        },
+      ];
+      var probabilityState = {
+        distributionIndex: 0,
+        parameters: { n: 10, p: 0.5 },
+        intervalType: "between",
+        a: 4,
+        b: 6,
+        activeStation: "coin",
+        observedSamples: [],
+        lastCoinFlips: [],
+        trialCount: 0,
+        lastOutcome: "Elegi una maquina y activa el experimento.",
+        machineRunning: false,
+      };
+
+      var lanczosCoefficients = [
+        676.5203681218851, -1259.1392167224028, 771.3234287776531,
+        -176.6150291621406, 12.507343278686905, -0.13857109526572012,
+        9.984369578019572e-6, 1.5056327351493116e-7,
+      ];
+
+      function clampProbability(value) {
+        if (!Number.isFinite(value)) return Number.NaN;
+        return Math.min(1, Math.max(0, value));
+      }
+
+      function erf(x) {
+        var sign = x < 0 ? -1 : 1;
+        var z = Math.abs(x);
+        var t = 1 / (1 + 0.3275911 * z);
+        var y =
+          1 -
+          (((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t -
+            0.284496736) *
+            t +
+            0.254829592) *
+            t *
+            Math.exp(-z * z));
+        return sign * y;
+      }
+
+      function logGamma(z) {
+        if (z < 0.5) {
+          return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * z)) - logGamma(1 - z);
+        }
+        var x = 0.99999999999980993;
+        var shifted = z - 1;
+        for (var i = 0; i < lanczosCoefficients.length; i++) {
+          x += lanczosCoefficients[i] / (shifted + i + 1);
+        }
+        var t = shifted + lanczosCoefficients.length - 0.5;
+        return 0.5 * Math.log(2 * Math.PI) + (shifted + 0.5) * Math.log(t) - t + Math.log(x);
+      }
+
+      function betaFunction(a, b) {
+        return Math.exp(logGamma(a) + logGamma(b) - logGamma(a + b));
+      }
+
+      function betaContinuedFraction(a, b, x) {
+        var maxIterations = 200;
+        var epsilon = 3e-12;
+        var fpMin = 1e-30;
+        var qab = a + b;
+        var qap = a + 1;
+        var qam = a - 1;
+        var c = 1;
+        var d = 1 - (qab * x) / qap;
+        if (Math.abs(d) < fpMin) d = fpMin;
+        d = 1 / d;
+        var h = d;
+        for (var m = 1; m <= maxIterations; m++) {
+          var m2 = 2 * m;
+          var aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
+          d = 1 + aa * d;
+          if (Math.abs(d) < fpMin) d = fpMin;
+          c = 1 + aa / c;
+          if (Math.abs(c) < fpMin) c = fpMin;
+          d = 1 / d;
+          h *= d * c;
+          aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
+          d = 1 + aa * d;
+          if (Math.abs(d) < fpMin) d = fpMin;
+          c = 1 + aa / c;
+          if (Math.abs(c) < fpMin) c = fpMin;
+          d = 1 / d;
+          var delta = d * c;
+          h *= delta;
+          if (Math.abs(delta - 1) < epsilon) break;
+        }
+        return h;
+      }
+
+      function regularizedBeta(x, a, b) {
+        if (x <= 0) return 0;
+        if (x >= 1) return 1;
+        var bt = Math.exp(logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log1p(-x));
+        if (x < (a + 1) / (a + b + 2)) {
+          return clampProbability((bt * betaContinuedFraction(a, b, x)) / a);
+        }
+        return clampProbability(1 - (bt * betaContinuedFraction(b, a, 1 - x)) / b);
+      }
+
+      function regularizedGammaP(a, x) {
+        if (x <= 0) return 0;
+        if (x < a + 1) {
+          var sum = 1 / a;
+          var del = sum;
+          var ap = a;
+          for (var n = 1; n <= 200; n++) {
+            ap += 1;
+            del *= x / ap;
+            sum += del;
+            if (Math.abs(del) < Math.abs(sum) * 1e-12) break;
+          }
+          return clampProbability(sum * Math.exp(-x + a * Math.log(x) - logGamma(a)));
+        }
+        var b = x + 1 - a;
+        var c = 1 / 1e-30;
+        var d = 1 / b;
+        var h = d;
+        for (var i = 1; i <= 200; i++) {
+          var an = -i * (i - a);
+          b += 2;
+          d = an * d + b;
+          if (Math.abs(d) < 1e-30) d = 1e-30;
+          c = b + an / c;
+          if (Math.abs(c) < 1e-30) c = 1e-30;
+          d = 1 / d;
+          var delta = d * c;
+          h *= delta;
+          if (Math.abs(delta - 1) < 1e-12) break;
+        }
+        return clampProbability(1 - Math.exp(-x + a * Math.log(x) - logGamma(a)) * h);
+      }
+
+      function logCombination(n, k) {
+        if (k < 0 || k > n) return Number.NEGATIVE_INFINITY;
+        return logGamma(n + 1) - logGamma(k + 1) - logGamma(n - k + 1);
+      }
+
+      function probValue(params, key, fallback) {
+        return params[key] !== undefined ? params[key] : fallback;
+      }
+
+      function createContinuousMath(distribution, params) {
+        switch (distribution.id) {
+          case "normal": {
+            var mu = probValue(params, "mu", 0);
+            var sigma = probValue(params, "sigma", 1);
+            return {
+              pdf: function (x) { return Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2)) / (sigma * Math.sqrt(2 * Math.PI)); },
+              cdf: function (x) { return 0.5 * (1 + erf((x - mu) / (sigma * Math.SQRT2))); },
+              domain: [mu - 6 * sigma, mu + 6 * sigma],
+            };
+          }
+          case "student": {
+            var df = probValue(params, "df", 8);
+            var constant = Math.exp(logGamma((df + 1) / 2) - logGamma(df / 2)) / Math.sqrt(df * Math.PI);
+            return {
+              pdf: function (x) { return constant * Math.pow(1 + (x * x) / df, -(df + 1) / 2); },
+              cdf: function (x) {
+                var z = df / (df + x * x);
+                var ib = regularizedBeta(z, df / 2, 0.5);
+                return x >= 0 ? clampProbability(1 - 0.5 * ib) : clampProbability(0.5 * ib);
+              },
+              domain: [-Math.max(7, Math.sqrt(df) * 4.2), Math.max(7, Math.sqrt(df) * 4.2)],
+            };
+          }
+          case "chiSquared": {
+            var dfChi = probValue(params, "df", 4);
+            return {
+              pdf: function (x) {
+                return x <= 0 ? 0 : Math.exp((dfChi / 2 - 1) * Math.log(x) - x / 2 - (dfChi / 2) * Math.log(2) - logGamma(dfChi / 2));
+              },
+              cdf: function (x) { return regularizedGammaP(dfChi / 2, x / 2); },
+              domain: [0, Math.max(8, dfChi + 8 * Math.sqrt(2 * dfChi))],
+            };
+          }
+          case "fDistribution": {
+            var df1 = probValue(params, "df1", 5);
+            var df2 = probValue(params, "df2", 12);
+            return {
+              pdf: function (x) {
+                if (x <= 0) return 0;
+                var numerator = Math.sqrt((Math.pow(df1 * x, df1) * Math.pow(df2, df2)) / Math.pow(df1 * x + df2, df1 + df2));
+                return numerator / (x * betaFunction(df1 / 2, df2 / 2));
+              },
+              cdf: function (x) {
+                if (x <= 0) return 0;
+                return regularizedBeta((df1 * x) / (df1 * x + df2), df1 / 2, df2 / 2);
+              },
+              domain: [0, Math.max(7, (df2 / Math.max(1, df2 - 2)) * 7)],
+            };
+          }
+          case "exponential": {
+            var lambda = probValue(params, "lambda", 1);
+            return {
+              pdf: function (x) { return x < 0 ? 0 : lambda * Math.exp(-lambda * x); },
+              cdf: function (x) { return x < 0 ? 0 : clampProbability(1 - Math.exp(-lambda * x)); },
+              domain: [0, 9 / lambda],
+            };
+          }
+          case "cauchy": {
+            var x0 = probValue(params, "x0", 0);
+            var gamma = probValue(params, "gamma", 1);
+            return {
+              pdf: function (x) { return 1 / (Math.PI * gamma * (1 + Math.pow((x - x0) / gamma, 2))); },
+              cdf: function (x) { return 0.5 + Math.atan((x - x0) / gamma) / Math.PI; },
+              domain: [x0 - 16 * gamma, x0 + 16 * gamma],
+            };
+          }
+          case "weibull": {
+            var wk = probValue(params, "k", 1.5);
+            var wl = probValue(params, "lambda", 1);
+            return {
+              pdf: function (x) { return x < 0 ? 0 : (wk / wl) * Math.pow(x / wl, wk - 1) * Math.exp(-Math.pow(x / wl, wk)); },
+              cdf: function (x) { return x < 0 ? 0 : clampProbability(1 - Math.exp(-Math.pow(x / wl, wk))); },
+              domain: [0, wl * Math.max(5.5, Math.pow(-Math.log(0.0002), 1 / wk))],
+            };
+          }
+          case "gamma": {
+            var alpha = probValue(params, "alpha", 2);
+            var theta = probValue(params, "theta", 1);
+            return {
+              pdf: function (x) {
+                return x <= 0 ? 0 : Math.exp((alpha - 1) * Math.log(x) - x / theta - logGamma(alpha) - alpha * Math.log(theta));
+              },
+              cdf: function (x) { return x <= 0 ? 0 : regularizedGammaP(alpha, x / theta); },
+              domain: [0, Math.max(8 * theta, alpha * theta + 8 * Math.sqrt(alpha) * theta)],
+            };
+          }
+          case "beta": {
+            var ba = probValue(params, "alpha", 2);
+            var bb = probValue(params, "beta", 5);
+            var betaNorm = betaFunction(ba, bb);
+            return {
+              pdf: function (x) { return x <= 0 || x >= 1 ? 0 : (Math.pow(x, ba - 1) * Math.pow(1 - x, bb - 1)) / betaNorm; },
+              cdf: function (x) { return regularizedBeta(x, ba, bb); },
+              domain: [-0.08, 1.08],
+            };
+          }
+          case "logNormal": {
+            var lmu = probValue(params, "mu", 0);
+            var lsigma = probValue(params, "sigma", 0.5);
+            return {
+              pdf: function (x) {
+                return x <= 0 ? 0 : Math.exp(-Math.pow(Math.log(x) - lmu, 2) / (2 * lsigma * lsigma)) / (x * lsigma * Math.sqrt(2 * Math.PI));
+              },
+              cdf: function (x) { return x <= 0 ? 0 : 0.5 * (1 + erf((Math.log(x) - lmu) / (lsigma * Math.SQRT2))); },
+              domain: [0, Math.exp(lmu + 5 * lsigma)],
+            };
+          }
+          case "logistic": {
+            var smu = probValue(params, "mu", 0);
+            var ss = probValue(params, "s", 1);
+            return {
+              pdf: function (x) {
+                var z = Math.exp(-(x - smu) / ss);
+                return z / (ss * Math.pow(1 + z, 2));
+              },
+              cdf: function (x) { return 1 / (1 + Math.exp(-(x - smu) / ss)); },
+              domain: [smu - 10 * ss, smu + 10 * ss],
+            };
+          }
+        }
+        throw new Error(distribution.name + " no es continua.");
+      }
+
+      function makeRange(start, end) {
+        var values = [];
+        for (var k = start; k <= end; k++) values.push(k);
+        return values;
+      }
+
+      function cumulativeFromPmf(pmf, min, k) {
+        var total = 0;
+        for (var i = min; i <= k; i++) total += pmf(i);
+        return clampProbability(total);
+      }
+
+      function createDiscreteMath(distribution, params) {
+        switch (distribution.id) {
+          case "uniformDiscrete": {
+            var m = Math.round(probValue(params, "m", 6));
+            var uniPmf = function (k) {
+              return Number.isInteger(k) && k >= 1 && k <= m ? 1 / m : 0;
+            };
+            return {
+              pmf: uniPmf,
+              cdf: function (k) { return clampProbability(Math.floor(k) / m); },
+              support: makeRange(1, m),
+            };
+          }
+          case "binomial": {
+            var n = Math.round(probValue(params, "n", 10));
+            var p = probValue(params, "p", 0.4);
+            var binPmf = function (k) {
+              if (!Number.isInteger(k) || k < 0 || k > n) return 0;
+              if (p === 0) return k === 0 ? 1 : 0;
+              if (p === 1) return k === n ? 1 : 0;
+              return Math.exp(logCombination(n, k) + k * Math.log(p) + (n - k) * Math.log1p(-p));
+            };
+            return { pmf: binPmf, cdf: function (k) { return cumulativeFromPmf(binPmf, 0, Math.floor(k)); }, support: makeRange(0, n) };
+          }
+          case "negativeBinomial": {
+            var r = Math.round(probValue(params, "r", 4));
+            var np = probValue(params, "p", 0.45);
+            var negPmf = function (k) {
+              if (!Number.isInteger(k) || k < 0) return 0;
+              if (np === 1) return k === 0 ? 1 : 0;
+              if (np === 0) return 0;
+              return Math.exp(logCombination(k + r - 1, k) + r * Math.log(np) + k * Math.log1p(-np));
+            };
+            var support = [];
+            var cumulative = 0;
+            var maxK = Math.max(80, Math.ceil((r * (1 - np)) / np + 10 * Math.sqrt((r * (1 - np)) / (np * np))));
+            for (var k2 = 0; k2 <= Math.min(500, maxK); k2++) {
+              support.push(k2);
+              cumulative += negPmf(k2);
+              if (k2 > r && cumulative > 0.99995) break;
+            }
+            return { pmf: negPmf, cdf: function (k) { return cumulativeFromPmf(negPmf, 0, Math.floor(k)); }, support: support };
+          }
+          case "poisson": {
+            var pl = probValue(params, "lambda", 4);
+            var poiPmf = function (k) {
+              if (!Number.isInteger(k) || k < 0) return 0;
+              if (pl === 0) return k === 0 ? 1 : 0;
+              return Math.exp(k * Math.log(pl) - pl - logGamma(k + 1));
+            };
+            var poiSupport = [];
+            var poiCum = 0;
+            var poiMax = Math.max(25, Math.ceil(pl + 10 * Math.sqrt(pl)));
+            for (var pk = 0; pk <= Math.min(500, poiMax); pk++) {
+              poiSupport.push(pk);
+              poiCum += poiPmf(pk);
+              if (pk > pl && poiCum > 0.99995) break;
+            }
+            return { pmf: poiPmf, cdf: function (k) { return cumulativeFromPmf(poiPmf, 0, Math.floor(k)); }, support: poiSupport };
+          }
+          case "hypergeometric": {
+            var N = Math.round(probValue(params, "N", 40));
+            var K = Math.round(probValue(params, "K", 12));
+            var sample = Math.round(probValue(params, "n", 8));
+            var min = Math.max(0, sample - (N - K));
+            var max = Math.min(sample, K);
+            var denominator = logCombination(N, sample);
+            var hypPmf = function (k) {
+              if (!Number.isInteger(k) || k < min || k > max) return 0;
+              return Math.exp(logCombination(K, k) + logCombination(N - K, sample - k) - denominator);
+            };
+            return { pmf: hypPmf, cdf: function (k) { return cumulativeFromPmf(hypPmf, min, Math.floor(k)); }, support: makeRange(min, max) };
+          }
+        }
+        throw new Error(distribution.name + " no es discreta.");
+      }
+
+      function formatProbNumber(value, digits) {
+        if (!Number.isFinite(value)) return "no definido";
+        var fixed = value.toFixed(digits === undefined ? 3 : digits);
+        return fixed.replace(/\.?0+$/, "");
+      }
+
+      function formatProbValue(value) {
+        if (!Number.isFinite(value)) return "no definido";
+        return value.toFixed(value < 0.0001 && value > 0 ? 6 : 4);
+      }
+
+      function formatProbExpression(type, a, b) {
+        var left = formatProbNumber(a, 3);
+        var right = formatProbNumber(b, 3);
+        if (type === "left") return "P(X <= " + left + ")";
+        if (type === "right") return "P(X >= " + left + ")";
+        if (type === "outside") return "P(X <= " + left + ") + P(X >= " + right + ")";
+        return "P(" + left + " <= X <= " + right + ")";
+      }
+
+      function probabilityIncludedValues(support, type, a, b) {
+        return support.filter(function (k) {
+          if (type === "left") return k <= Math.floor(a);
+          if (type === "right") return k >= Math.ceil(a);
+          if (type === "outside") return k <= Math.floor(a) || k >= Math.ceil(b);
+          return k >= Math.ceil(a) && k <= Math.floor(b);
+        });
+      }
+
+      function calculateProbabilityVR(distribution, params, intervalType, a, b) {
+        var expression = formatProbExpression(intervalType, a, b);
+        if (distribution.kind === "continuous") {
+          var cmath = createContinuousMath(distribution, params);
+          var cvalue =
+            intervalType === "left"
+              ? cmath.cdf(a)
+              : intervalType === "right"
+                ? 1 - cmath.cdf(a)
+                : intervalType === "outside"
+                  ? cmath.cdf(a) + 1 - cmath.cdf(b)
+                  : cmath.cdf(b) - cmath.cdf(a);
+          return { expression: expression, value: clampProbability(cvalue), math: cmath, includedValues: [] };
+        }
+        var dmath = createDiscreteMath(distribution, params);
+        var included = probabilityIncludedValues(dmath.support, intervalType, a, b);
+        var dvalue = included.reduce(function (total, k) { return total + dmath.pmf(k); }, 0);
+        return { expression: expression, value: clampProbability(dvalue), math: dmath, includedValues: included };
+      }
+
+      function validateProbabilityInputs(distribution, params, intervalType, a, b) {
+        var errors = [];
+        distribution.parameters.forEach(function (parameter) {
+          var current = params[parameter.key];
+          if (!Number.isFinite(current)) errors.push(parameter.label + " debe ser numerico.");
+          if (parameter.integer && !Number.isInteger(current)) errors.push(parameter.label + " debe ser entero.");
+          if (parameter.min !== undefined && current < parameter.min) errors.push(parameter.label + " debe ser >= " + parameter.min + ".");
+          if (parameter.max !== undefined && current > parameter.max) errors.push(parameter.label + " debe ser <= " + parameter.max + ".");
+        });
+        if ((intervalType === "between" || intervalType === "outside") && a > b) {
+          errors.push("Debe cumplirse a <= b.");
+        }
+        if (distribution.id === "hypergeometric") {
+          if (params.K > params.N) errors.push("K debe ser menor o igual que N.");
+          if (params.n > params.N) errors.push("n debe ser menor o igual que N.");
+        }
+        return errors;
+      }
+
+      function getCurrentProbabilityDistribution() {
+        return PROB_DISTRIBUTIONS[probabilityState.distributionIndex];
+      }
+
+      function getProbabilityStation(id) {
+        var stationId = id || probabilityState.activeStation;
+        return PROB_CASINO_STATIONS.find(function (station) {
+          return station.id === stationId;
+        }) || PROB_CASINO_STATIONS[0];
+      }
+
+      function setProbabilityDistributionById(id) {
+        var index = PROB_DISTRIBUTIONS.findIndex(function (item) {
+          return item.id === id;
+        });
+        probabilityState.distributionIndex = index >= 0 ? index : 0;
+      }
+
+      function resetProbabilityObserved(message) {
+        probabilityState.observedSamples = [];
+        probabilityState.lastCoinFlips = [];
+        probabilityState.trialCount = 0;
+        probabilityState.machineRunning = false;
+        probabilityState.lastOutcome = message || "Datos observados reiniciados.";
+      }
+
+      function applyProbabilityStation(stationId) {
+        var station = getProbabilityStation(stationId);
+        probabilityState.activeStation = station.id;
+        setProbabilityDistributionById(station.distributionId);
+        probabilityState.parameters = Object.assign({}, station.params);
+        probabilityState.intervalType = station.intervalType;
+        probabilityState.a = station.a;
+        probabilityState.b = station.b;
+        resetProbabilityObserved(station.pending ? station.description : "Estacion activa: " + station.label);
+      }
+
+      function resetProbabilityForDistribution() {
+        var distribution = getCurrentProbabilityDistribution();
+        probabilityState.parameters = Object.assign({}, distribution.defaults);
+        probabilityState.a = distribution.kind === "continuous" ? -1 : 2;
+        probabilityState.b = distribution.kind === "continuous" ? 1 : 6;
+        resetProbabilityObserved();
+      }
+
+      function randomNormal(mu, sigma) {
+        var u1 = Math.max(Math.random(), 1e-12);
+        var u2 = Math.random();
+        return mu + sigma * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      }
+
+      function sampleProbabilityValue(station) {
+        var params = probabilityState.parameters;
+        if (station.id === "coin") {
+          var flips = Math.round(params.n || 10);
+          var p = params.p || 0.5;
+          var successes = 0;
+          var coinFlips = [];
+          for (var i = 0; i < flips; i++) {
+            var isSuccess = Math.random() < p;
+            coinFlips.push(isSuccess);
+            if (isSuccess) successes++;
+          }
+          probabilityState.lastCoinFlips = coinFlips;
+          return successes;
+        }
+        if (station.id === "dice") {
+          var faces = Math.round(params.m || 6);
+          return 1 + Math.floor(Math.random() * faces);
+        }
+        if (station.id === "calls") {
+          var lambda = params.lambda || 4;
+          var threshold = Math.exp(-lambda);
+          var product = 1;
+          var count = 0;
+          do {
+            count++;
+            product *= Math.random();
+          } while (product > threshold);
+          return count - 1;
+        }
+        if (station.id === "wait") {
+          return -Math.log(Math.max(Math.random(), 1e-12)) / (params.lambda || 1);
+        }
+        if (station.id === "normal") {
+          return randomNormal(params.mu || 0, params.sigma || 1);
+        }
+        if (station.id === "student") {
+          var df = Math.max(1, Math.round(params.df || 8));
+          var z = randomNormal(0, 1);
+          var chi = 0;
+          for (var c = 0; c < df; c++) {
+            var n = randomNormal(0, 1);
+            chi += n * n;
+          }
+          return z / Math.sqrt(chi / df);
+        }
+        if (station.id === "variance") {
+          var vdf = Math.max(1, Math.round(params.df || 4));
+          var sum = 0;
+          for (var j = 0; j < vdf; j++) {
+            var g = randomNormal(0, 1);
+            sum += g * g;
+          }
+          return sum;
+        }
+        return 0;
+      }
+
+      function runProbabilityExperiment(times) {
+        var station = getProbabilityStation();
+        if (station.pending) {
+          probabilityState.lastOutcome = station.description;
+          return;
+        }
+        probabilityState.machineRunning = true;
+        var values = [];
+        for (var i = 0; i < times; i++) {
+          var value = sampleProbabilityValue(station);
+          probabilityState.observedSamples.push(value);
+          values.push(value);
+        }
+        probabilityState.trialCount = probabilityState.observedSamples.length;
+        var last = values[values.length - 1];
+        probabilityState.lastOutcome =
+          "Ultimo: " + formatProbNumber(last, 2) +
+          "\nGenerados: +" + times +
+          "\nTotal: " + probabilityState.trialCount;
+      }
+
+      function handleProbabilityAction(action) {
+        var distribution = getCurrentProbabilityDistribution();
+        if (action.indexOf("prob-station-") === 0) {
+          applyProbabilityStation(action.replace("prob-station-", ""));
+        } else if (action === "prob-run-once") {
+          runProbabilityExperiment(1);
+        } else if (action === "prob-run-ten") {
+          runProbabilityExperiment(10);
+        } else if (action === "prob-run-hundred") {
+          runProbabilityExperiment(100);
+        } else if (action === "prob-reset-observed") {
+          resetProbabilityObserved("Datos observados reiniciados.");
+        } else if (action === "prob-prev" || action === "prob-next") {
+          var delta = action === "prob-prev" ? -1 : 1;
+          probabilityState.distributionIndex =
+            (probabilityState.distributionIndex + delta + PROB_DISTRIBUTIONS.length) % PROB_DISTRIBUTIONS.length;
+          resetProbabilityForDistribution();
+        } else if (action === "prob-interval") {
+          var currentInterval = PROB_INTERVALS.indexOf(probabilityState.intervalType);
+          probabilityState.intervalType = PROB_INTERVALS[(currentInterval + 1) % PROB_INTERVALS.length];
+        } else if (action === "prob-a-minus") {
+          probabilityState.a -= distribution.kind === "continuous" ? 0.25 : 1;
+        } else if (action === "prob-a-plus") {
+          probabilityState.a += distribution.kind === "continuous" ? 0.25 : 1;
+        } else if (action === "prob-b-minus") {
+          probabilityState.b -= distribution.kind === "continuous" ? 0.25 : 1;
+        } else if (action === "prob-b-plus") {
+          probabilityState.b += distribution.kind === "continuous" ? 0.25 : 1;
+        } else if (action.indexOf("prob-param-") === 0) {
+          var minus = action.lastIndexOf("-minus") === action.length - 6;
+          var plus = action.lastIndexOf("-plus") === action.length - 5;
+          var key = action.replace("prob-param-", "").replace("-minus", "").replace("-plus", "");
+          var parameter = distribution.parameters.find(function (item) { return item.key === key; });
+          if (parameter && (minus || plus)) {
+            var nextValue = (probabilityState.parameters[key] || 0) + (plus ? parameter.step : -parameter.step);
+            if (parameter.integer) nextValue = Math.round(nextValue);
+            if (parameter.min !== undefined) nextValue = Math.max(parameter.min, nextValue);
+            if (parameter.max !== undefined) nextValue = Math.min(parameter.max, nextValue);
+            probabilityState.parameters[key] = Number(nextValue.toFixed(4));
+            resetProbabilityObserved("Parametro actualizado. Genera nuevos datos.");
+          }
+        }
+        renderProbabilityLab();
+      }
+
+      function clearEntityChildren(el) {
+        if (!el) return;
+        while (el.firstChild) el.removeChild(el.firstChild);
+      }
+
+      function intervalLabel(type) {
+        if (type === "left") return "Cola izquierda: X <= a";
+        if (type === "right") return "Cola derecha: X >= a";
+        if (type === "outside") return "Exterior: X <= a o X >= b";
+        return "Entre limites: a <= X <= b";
+      }
+
+      function isValueIncluded(type, x, a, b) {
+        if (type === "left") return x <= a;
+        if (type === "right") return x >= a;
+        if (type === "outside") return x <= a || x >= b;
+        return x >= a && x <= b;
+      }
+
+      function renderProbabilityChart(root, distribution, result) {
+        clearEntityChildren(root);
+        if (!root || !result.math) return;
+        appendEl(root, "a-plane", {
+          width: "4.9",
+          height: "0.025",
+          position: "2.45 -0.18 0",
+          color: "#607D8B",
+        });
+
+        if (distribution.kind === "continuous") {
+          var math = result.math;
+          var samples = 48;
+          var start = math.domain[0];
+          var end = math.domain[1];
+          var values = [];
+          var maxPdf = 0;
+          for (var i = 0; i < samples; i++) {
+            var x = start + ((end - start) * i) / (samples - 1);
+            var y = math.pdf(x);
+            values.push({ x: x, y: y });
+            if (Number.isFinite(y)) maxPdf = Math.max(maxPdf, y);
+          }
+          values.forEach(function (point, index) {
+            var h = maxPdf > 0 ? Math.max(0.045, (point.y / maxPdf) * 1.75) : 0.045;
+            appendEl(root, "a-box", {
+              width: "0.065",
+              height: h,
+              depth: "0.035",
+              position: index * 0.102 + " " + (-0.18 + h / 2) + " 0",
+              color: "#FFB74D",
+              opacity: "0.95",
+            });
+            if (index % 8 === 0 || index === samples - 1) {
+              addText(root, {
+                value: formatProbNumber(point.x, 1),
+                position: index * 0.102 + " -0.33 0.04",
+                align: "center",
+                color: "#CBD5E1",
+                width: "1.2",
+                scale: "0.18 0.18 0.18",
+              });
+            }
+          });
+        } else {
+          var support = result.math.support.slice(0, 34);
+          var included = {};
+          result.includedValues.forEach(function (k) { included[k] = true; });
+          var maxP = support.reduce(function (max, k) { return Math.max(max, result.math.pmf(k)); }, 0);
+          support.forEach(function (k, index) {
+            var p = result.math.pmf(k);
+            var h = maxP > 0 ? Math.max(0.045, (p / maxP) * 1.7) : 0.045;
+            appendEl(root, "a-box", {
+              width: "0.095",
+              height: h,
+              depth: "0.05",
+              position: index * 0.14 + " " + (-0.18 + h / 2) + " 0",
+              color: "#FFB74D",
+              opacity: "0.95",
+            });
+            if (support.length <= 16 || index % 2 === 0 || index === support.length - 1) {
+              addText(root, {
+                value: String(k),
+                position: index * 0.14 + " -0.34 0.04",
+                align: "center",
+                color: "#CBD5E1",
+                width: "0.8",
+                scale: "0.22 0.22 0.22",
+              });
+            }
+          });
+        }
+
+        if (probabilityState.observedSamples.length > 0) {
+          var counts = {};
+          probabilityState.observedSamples.forEach(function (value) {
+            var key = distribution.kind === "discrete" ? Math.round(value) : Number(value).toFixed(1);
+            counts[key] = (counts[key] || 0) + 1;
+          });
+          var maxCount = Object.keys(counts).reduce(function (max, key) {
+            return Math.max(max, counts[key]);
+          }, 1);
+
+          if (distribution.kind === "discrete") {
+            var obsSupport = result.math.support.slice(0, 34);
+            Object.keys(counts).forEach(function (key) {
+              var k = parseInt(key, 10);
+              var obsIndex = obsSupport.indexOf(k);
+              if (obsIndex < 0) return;
+              var oh = Math.max(0.045, (counts[key] / maxCount) * 1.45);
+              appendEl(root, "a-box", {
+                width: "0.052",
+                height: oh,
+                depth: "0.08",
+                position: obsIndex * 0.14 + 0.045 + " " + (-0.18 + oh / 2) + " 0.08",
+                color: "#EF4444",
+                opacity: "0.95",
+              });
+            });
+          } else {
+            var domain = result.math.domain || [-4, 4];
+            Object.keys(counts).forEach(function (key) {
+              var value = parseFloat(key);
+              if (!Number.isFinite(value) || value < domain[0] || value > domain[1]) return;
+              var ratio = (value - domain[0]) / (domain[1] - domain[0]);
+              var ch = Math.max(0.045, (counts[key] / maxCount) * 1.2);
+              appendEl(root, "a-box", {
+                width: "0.055",
+                height: ch,
+                depth: "0.08",
+                position: Math.max(0, Math.min(4.85, ratio * 4.85)) + " " + (-0.18 + ch / 2) + " 0.08",
+                color: "#EF4444",
+                opacity: "0.9",
+              });
+            });
+          }
+        }
+      }
+
+      function renderProbabilityParameters(root, distribution) {
+        clearEntityChildren(root);
+        if (!root) return;
+        var station = getProbabilityStation();
+
+        function getParameter(key) {
+          return distribution.parameters.find(function (item) {
+            return item.key === key;
+          });
+        }
+
+        function addParamButton(parameter, plus, x, y) {
+          if (!parameter) return;
+          addButton(root, {
+            id: "prob-param-" + parameter.key + (plus ? "-plus" : "-minus"),
+            position: x + " " + y + " 0.04",
+            action: "prob-param-" + parameter.key + (plus ? "-plus" : "-minus"),
+            color: plus ? "#2E7D32" : "#3B302B",
+            label: plus ? "+" : "-",
+            width: "0.34",
+            height: "0.26",
+            depth: "0.045",
+            textWidth: "0.9",
+            textPosition: "0 0 0.035",
+          });
+        }
+
+        function addParamCard(config) {
+          var y = Number(config.y);
+          appendEl(root, "a-plane", {
+            position: "0 " + y + " -0.005",
+            width: config.width || "3.65",
+            height: config.height || "0.37",
+            color: config.color || "#0B1622",
+            opacity: "0.82",
+            material: "side: double; transparent: true",
+          });
+        }
+
+        function addParameterRow(config) {
+          var parameter = getParameter(config.key);
+          var y = Number(config.y);
+          addParamCard({ y: y, width: config.width || "3.65", height: config.height || "0.39" });
+          addText(root, {
+            value: config.symbol,
+            position: "-1.58 " + (y + 0.005) + " 0.04",
+            align: "center",
+            color: config.symbolColor || "#FFFFFF",
+            width: "1.15",
+            scale: config.symbolScale || "0.92 0.92 0.92",
+          });
+          addText(root, {
+            value: config.title,
+            position: "-1.25 " + (y + (config.subtitle ? 0.055 : 0.005)) + " 0.04",
+            align: "left",
+            color: "#F8FAFC",
+            width: "2.55",
+            wrapCount: "34",
+            scale: "0.39 0.39 0.39",
+          });
+          if (config.subtitle) {
+            addText(root, {
+              value: config.subtitle,
+              position: "-1.25 " + (y - 0.095) + " 0.04",
+              align: "left",
+              color: "#93C5FD",
+              width: "2.35",
+              wrapCount: "34",
+              scale: "0.29 0.29 0.29",
+            });
+          }
+          addText(root, {
+            value: formatProbNumber(probabilityState.parameters[config.key], config.digits || 3),
+            position: (config.valueX || "0.78") + " " + (y + 0.005) + " 0.04",
+            align: "center",
+            color: "#FFFFFF",
+            width: "1.25",
+            scale: "1.75 1.75 1.75",
+          });
+          addParamButton(parameter, false, "1.34", y);
+          addParamButton(parameter, true, "1.75", y);
+        }
+
+        function addModelFooter(config) {
+          var y = Number(config.y);
+          appendEl(root, "a-plane", {
+            position: "0 " + y + " 0",
+            width: config.width || "3.3",
+            height: config.height || "0.42",
+            color: "#0B1622",
+            opacity: "0.72",
+            material: "side: double; transparent: true",
+          });
+          addText(root, {
+            value: config.icon || "i",
+            position: "-1.45 " + (y + 0.02) + " 0.04",
+            align: "center",
+            color: "#60A5FA",
+            width: "0.5",
+            scale: "0.42 0.42 0.42",
+          });
+          addText(root, {
+            value: config.title,
+            position: "-1.22 " + (y + 0.085) + " 0.04",
+            align: "left",
+            color: "#60A5FA",
+            width: "2.75",
+            wrapCount: "42",
+            scale: "0.38 0.38 0.38",
+          });
+          addText(root, {
+            value: config.subtitle,
+            position: "-1.22 " + (y - 0.095) + " 0.04",
+            align: "left",
+            color: "#BFDBFE",
+            width: "2.9",
+            wrapCount: "50",
+            scale: "0.31 0.31 0.31",
+          });
+        }
+
+        function addCenteredModelText(config) {
+          addText(root, {
+            value: config.title,
+            position: "0 " + config.titleY + " 0.04",
+            align: "center",
+            color: "#60A5FA",
+            width: "3.4",
+            scale: "0.42 0.42 0.42",
+          });
+          addText(root, {
+            value: config.subtitle || "Estos valores cambian la distribucion teorica.",
+            position: "0 " + config.subtitleY + " 0.04",
+            align: "center",
+            color: "#BFDBFE",
+            width: "3.6",
+            scale: "0.32 0.32 0.32",
+          });
+        }
+
+        if (station.id === "coin") {
+          addParameterRow({
+            key: "n",
+            symbol: "n",
+            title: "Numero de ensayos",
+            y: "0.14",
+            digits: 0,
+            symbolScale: "1.35 1.35 1.35",
+          });
+          addParameterRow({
+            key: "p",
+            symbol: "p",
+            title: "Probabilidad de exito",
+            y: "-0.33",
+            digits: 2,
+            symbolScale: "1.35 1.35 1.35",
+          });
+          appendEl(root, "a-plane", {
+            position: "0 -0.64 0.02",
+            width: "3.55",
+            height: "0.008",
+            color: "#94A3B8",
+            opacity: "0.35",
+            material: "side: double; transparent: true",
+          });
+          addCenteredModelText({
+            title: "Modelo binomial: X ~ Bin(n, p)",
+            titleY: "-0.82",
+            subtitleY: "-1.03",
+          });
+        } else if (station.id === "dice") {
+          addParameterRow({
+            key: "m",
+            symbol: "m",
+            title: "Numero de posibles resultados (caras)",
+            subtitle: "caras",
+            y: "0.06",
+            digits: 0,
+            width: "3.75",
+            height: "0.45",
+            symbolColor: "#60A5FA",
+            symbolScale: "0.62 0.62 0.62",
+          });
+          appendEl(root, "a-plane", {
+            position: "0 -0.57 0.02",
+            width: "3.55",
+            height: "0.008",
+            color: "#94A3B8",
+            opacity: "0.35",
+            material: "side: double; transparent: true",
+          });
+          addCenteredModelText({
+            title: "Modelo uniforme-discreto: X ~ U{1, ..., m}",
+            titleY: "-0.76",
+            subtitleY: "-0.97",
+          });
+        } else if (station.id === "calls") {
+          appendEl(root, "a-plane", {
+            position: "0 0.18 0",
+            width: "3.75",
+            height: "0.25",
+            color: "#1E3A5F",
+            opacity: "0.76",
+            material: "side: double; transparent: true",
+          });
+          addText(root, {
+            value: "Parametro",
+            position: "-1.65 0.18 0.04",
+            align: "left",
+            color: "#FFFFFF",
+            width: "1.75",
+            scale: "0.88 0.88 0.88",
+          });
+          addText(root, {
+            value: "Valor actual",
+            position: "0.45 0.18 0.04",
+            align: "center",
+            color: "#FFFFFF",
+            width: "1.75",
+            scale: "0.88 0.88 0.88",
+          });
+          addText(root, {
+            value: "Ajustar",
+            position: "1.48 0.18 0.04",
+            align: "center",
+            color: "#FFFFFF",
+            width: "1.55",
+            scale: "0.88 0.88 0.88",
+          });
+          addParameterRow({
+            key: "lambda",
+            symbol: "lambda",
+            title: "lambda",
+            subtitle: "Parametro de Poisson (lambda)",
+            y: "-0.12",
+            digits: 1,
+            valueX: "0.45",
+            width: "3.75",
+            height: "0.45",
+            symbolColor: "#60A5FA",
+            symbolScale: "1.05 1.05 1.05",
+          });
+          appendEl(root, "a-plane", {
+            position: "0 -0.57 0.02",
+            width: "3.75",
+            height: "0.008",
+            color: "#94A3B8",
+            opacity: "0.28",
+            material: "side: double; transparent: true",
+          });
+          addCenteredModelText({
+            title: "Modelo de Poisson: X ~ Poisson(lambda)",
+            titleY: "-0.85",
+            subtitleY: "-1.06",
+          });
+        }
+      }
+
+      function setTextIfPresent(root, selector, value) {
+        var el = root.querySelector(selector);
+        if (el) el.setAttribute("value", value);
+      }
+
+      function highlightActiveProbabilityMachine(lab) {
+        [
+          ["#prob-coin-machine", "coin", "#422006"],
+          ["#prob-dice-machine", "dice", "#082F49"],
+          ["#prob-calls-machine", "calls", "#1A2E05"],
+        ].forEach(function (item) {
+          var machine = lab.querySelector(item[0]);
+          if (!machine) return;
+          machine.setAttribute("scale", item[1] === probabilityState.activeStation ? "1.08 1.08 1.08" : "1 1 1");
+        });
+      }
+
+      function addDigitalDigit(parent, digit, size, color) {
+        var maps = {
+          "0": ["a", "b", "c", "d", "e", "f"],
+          "1": ["b", "c"],
+          "2": ["a", "b", "g", "e", "d"],
+          "3": ["a", "b", "g", "c", "d"],
+          "4": ["f", "g", "b", "c"],
+          "5": ["a", "f", "g", "c", "d"],
+          "6": ["a", "f", "g", "e", "c", "d"],
+          "7": ["a", "b", "c"],
+          "8": ["a", "b", "c", "d", "e", "f", "g"],
+          "9": ["a", "b", "c", "d", "f", "g"],
+        };
+        var active = maps[String(digit)] || [];
+        if (!active.length) {
+          addText(parent, {
+            value: "?",
+            position: "0 -0.01 0.01",
+            align: "center",
+            color: color,
+            width: (size * 3).toString(),
+            scale: size + " " + size + " " + size,
+          });
+          return;
+        }
+        var horizontal = {
+          a: [0, 0.5, size * 0.48, size * 0.065],
+          g: [0, 0, size * 0.48, size * 0.065],
+          d: [0, -0.5, size * 0.48, size * 0.065],
+        };
+        var vertical = {
+          f: [-0.24, 0.25, size * 0.065, size * 0.3],
+          b: [0.24, 0.25, size * 0.065, size * 0.3],
+          e: [-0.24, -0.25, size * 0.065, size * 0.3],
+          c: [0.24, -0.25, size * 0.065, size * 0.3],
+        };
+        active.forEach(function (segment) {
+          var spec = horizontal[segment] || vertical[segment];
+          appendEl(parent, "a-box", {
+            position: (spec[0] * size) + " " + (spec[1] * size) + " 0",
+            width: spec[2].toString(),
+            height: spec[3].toString(),
+            depth: "0.012",
+            color: color,
+            opacity: "0.98",
+          });
+        });
+      }
+
+      function setDigitalNumber(parent, value, places, size, color, gap) {
+        clearEntityChildren(parent);
+        if (!parent) return;
+        var text = value == null ? "" : String(value);
+        if (places && text !== "?") text = text.padStart(places, "0");
+        if (!text) text = "?";
+        gap = gap || size * 0.34;
+        var start = -((text.length - 1) * gap) / 2;
+        for (var i = 0; i < text.length; i++) {
+          var digit = appendEl(parent, "a-entity", {
+            position: (start + i * gap) + " 0 0",
+          });
+          addDigitalDigit(digit, text.charAt(i), size, color);
+        }
+      }
+
+      function renderCoinVisuals(lab) {
+        var root = lab.querySelector("#prob-coin-visuals");
+        clearEntityChildren(root);
+        if (!root) return;
+        var flips = probabilityState.activeStation === "coin" ? probabilityState.lastCoinFlips : [];
+        for (var flip = 0; flip < 10; flip++) {
+          var body = lab.querySelector("#prob-coin-flip-body-" + flip);
+          var rim = lab.querySelector("#prob-coin-flip-rim-" + flip);
+          var faceHead = lab.querySelector("#prob-coin-flip-face-head-" + flip);
+          var faceBody = lab.querySelector("#prob-coin-flip-face-body-" + flip);
+          var crossA = lab.querySelector("#prob-coin-flip-cross-a-" + flip);
+          var crossB = lab.querySelector("#prob-coin-flip-cross-b-" + flip);
+          var label = lab.querySelector("#prob-coin-flip-label-" + flip);
+          var hasResult = flip < flips.length;
+          var isFace = !!flips[flip];
+          if (body) {
+            body.setAttribute("color", !hasResult ? "#C9BFA8" : isFace ? "#FACC15" : "#9CA3AF");
+            body.setAttribute("opacity", hasResult ? "1" : "0.72");
+            if (probabilityState.machineRunning && probabilityState.activeStation === "coin" && hasResult) {
+              body.removeAttribute("animation__flip");
+              body.setAttribute("rotation", "90 0 0");
+              (function (coinBody, delay) {
+                setTimeout(function () {
+                  coinBody.setAttribute("animation__flip", "property: rotation; from: 90 0 0; to: 450 0 0; dur: 560; delay: " + delay + "; easing: easeOutCubic");
+                }, 0);
+              })(body, flip * 42);
+            }
+          }
+          if (rim) {
+            rim.setAttribute("color", !hasResult ? "#A78A2D" : isFace ? "#B8860B" : "#64748B");
+            rim.setAttribute("opacity", hasResult ? "0.95" : "0.55");
+          }
+          [faceHead, faceBody].forEach(function (part) {
+            if (!part) return;
+            part.setAttribute("visible", hasResult && isFace ? "true" : "false");
+            part.setAttribute("color", "#B8860B");
+          });
+          [crossA, crossB].forEach(function (part) {
+            if (!part) return;
+            part.setAttribute("visible", hasResult && !isFace ? "true" : "false");
+          });
+          if (label) {
+            label.setAttribute("value", hasResult ? "" : "?");
+            label.setAttribute("color", "#5B5144");
+          }
+        }
+      }
+
+      function renderDiceVisuals(lab) {
+        var last = probabilityState.activeStation === "dice" && probabilityState.observedSamples.length
+          ? Math.round(probabilityState.observedSamples[probabilityState.observedSamples.length - 1])
+          : "?";
+        setTextIfPresent(lab, "#prob-dice-result", last === "?" ? "Tira el dado" : "Salio: " + last);
+        var cube = lab.querySelector("#prob-dice-cube");
+        if (cube && probabilityState.machineRunning && probabilityState.activeStation === "dice") {
+          var finalRotations = {
+            1: "0 0 0",
+            2: "90 0 0",
+            3: "0 0 90",
+            4: "0 0 -90",
+            5: "-90 0 0",
+            6: "180 0 0",
+          };
+          var target = finalRotations[last] || "0 0 0";
+          cube.setAttribute("animation__roll", "property: rotation; startEvents: casino-run; from: -360 -720 -360; to: " + target + "; dur: 720; easing: easeOutCubic");
+          cube.emit("casino-run");
+        } else if (cube && last !== "?") {
+          var stableRotations = {
+            1: "0 0 0",
+            2: "90 0 0",
+            3: "0 0 90",
+            4: "0 0 -90",
+            5: "-90 0 0",
+            6: "180 0 0",
+          };
+          cube.setAttribute("rotation", stableRotations[last] || "0 0 0");
+        }
+      }
+
+      function renderCallsVisuals(lab) {
+        var last = probabilityState.activeStation === "calls" && probabilityState.observedSamples.length
+          ? Math.round(probabilityState.observedSamples[probabilityState.observedSamples.length - 1])
+          : 0;
+        var visibleCars = Math.min(last, 10);
+        for (var i = 0; i < 10; i++) {
+          var car = lab.querySelector("#prob-traffic-car-" + i);
+          if (!car) continue;
+          var isVisible = i < visibleCars;
+          var laneY = i % 2 === 0 ? 0.94 : 0.82;
+          var x = -0.44 + ((i * 19 + probabilityState.trialCount * 11) % 86) / 100;
+          car.setAttribute("visible", isVisible ? "true" : "false");
+          if (!isVisible) continue;
+          car.setAttribute("position", x + " " + laneY + " 0.23");
+          if (probabilityState.machineRunning && probabilityState.activeStation === "calls") {
+            car.setAttribute("animation__drive", "property: position; from: -0.58 " + laneY + " 0.23; to: " + x + " " + laneY + " 0.23; dur: 620; delay: " + (i * 65) + "; easing: easeOutCubic");
+          }
+        }
+        var trafficLight = lab.querySelector("#prob-traffic-light");
+        if (trafficLight) {
+          trafficLight.setAttribute("color", visibleCars > 0 ? "#22C55E" : "#365314");
+        }
+      }
+
+      function renderProbabilityMachines(lab, distribution, result) {
+        var station = getProbabilityStation();
+        var last = probabilityState.observedSamples.length
+          ? probabilityState.observedSamples[probabilityState.observedSamples.length - 1]
+          : null;
+        var coinLast = station.id === "coin" && last !== null ? Math.round(last) : null;
+        setTextIfPresent(lab, "#prob-coin-display", coinLast === null ? "Simula 10 monedas\nCara = exito" : "Caras: " + coinLast + " de 10\nCruces: " + (10 - coinLast));
+        setTextIfPresent(lab, "#prob-dice-display", "Dado justo: caras 1 a 6\nTiradas: " + probabilityState.trialCount);
+        setTextIfPresent(lab, "#prob-calls-display", "λ = " + formatProbNumber(probabilityState.parameters.lambda || 3, 1) + " autos/min\nMinuto actual: " + probabilityState.trialCount + "\nAutos que pasaron: " + (station.id === "calls" && last !== null ? Math.round(last) : "-"));
+        renderCoinVisuals(lab);
+        renderDiceVisuals(lab);
+        renderCallsVisuals(lab);
+        highlightActiveProbabilityMachine(lab);
+      }
+
+      function renderProbabilityLab() {
+        var lab = document.getElementById("probability-lab");
+        if (!lab) return;
+        var station = getProbabilityStation();
+        if (getCurrentProbabilityDistribution().id !== station.distributionId) {
+          setProbabilityDistributionById(station.distributionId);
+        }
+        var distribution = getCurrentProbabilityDistribution();
+        var errors = validateProbabilityInputs(
+          distribution,
+          probabilityState.parameters,
+          probabilityState.intervalType,
+          probabilityState.a,
+          probabilityState.b,
+        );
+        var result = null;
+        if (!errors.length) {
+          result = calculateProbabilityVR(
+            distribution,
+            probabilityState.parameters,
+            probabilityState.intervalType,
+            probabilityState.a,
+            probabilityState.b,
+          );
+        }
+
+        var title = lab.querySelector("#prob-title");
+        var desc = lab.querySelector("#prob-description");
+        var theoryBlock = lab.querySelector("#prob-theory-block");
+        var chartExplanation = lab.querySelector("#prob-chart-explanation");
+        var distName = lab.querySelector("#prob-dist-name");
+        var limits = lab.querySelector("#prob-limits-text");
+        var resultText = lab.querySelector("#prob-result");
+        var outcomeText = lab.querySelector("#prob-last-outcome");
+        if (title) {
+          var boardTitle = "Distribucion observada";
+          if (station.id === "coin") boardTitle = "Distribucion binomial";
+          if (station.id === "dice") boardTitle = "Distribucion uniforme discreta";
+          if (station.id === "calls") boardTitle = "Distribucion de Poisson";
+          title.setAttribute(
+            "value",
+            boardTitle,
+          );
+        }
+        if (theoryBlock) {
+          var theoryText = "";
+          if (station.id === "coin") {
+            theoryText =
+              "Experimento: lanzar 10 monedas\n" +
+              "X = cantidad de caras obtenidas\n" +
+              "Modelo: X ~ Binomial(n = 10, p = 0.5)";
+          } else if (station.id === "dice") {
+            var faces = Math.round(probabilityState.parameters.m || 6);
+            theoryText =
+              "Experimento: lanzar un dado justo de " + faces + " caras\n" +
+              "X = resultado obtenido\n" +
+              "Modelo: X ~ Uniforme{1, ..., " + faces + "}";
+          } else if (station.id === "calls") {
+            var lambda = formatProbNumber(probabilityState.parameters.lambda || 3, 1);
+            theoryText =
+              "Experimento: contar autos durante 1 minuto\n" +
+              "X = cantidad de autos que pasan\n" +
+              "Modelo: X ~ Poisson(lambda = " + lambda + ")";
+          }
+          theoryBlock.setAttribute(
+            "value",
+            theoryText,
+          );
+        }
+        if (chartExplanation) {
+          var chartText = "";
+          if (station.id === "coin") {
+            chartText = "La grafica muestra la probabilidad teorica de obtener 0 a 10 caras.";
+          } else if (station.id === "dice") {
+            chartText = "La grafica muestra que cada cara tiene la misma probabilidad.";
+          } else if (station.id === "calls") {
+            chartText = "La grafica muestra la probabilidad de contar distintas cantidades de autos por minuto.";
+          }
+          chartExplanation.setAttribute(
+            "value",
+            chartText,
+          );
+        }
+        if (desc) {
+          var baseDesc = station.label + " | " + station.description;
+          if (station.id === "coin") {
+            baseDesc =
+              "Binomial: caras en 10 lanzamientos" +
+              "\np = probabilidad de cara en cada lanzamiento";
+          } else if (station.id === "dice") {
+            baseDesc =
+              "Uniforme discreta: resultado de un dado justo" +
+              "\nCada cara tiene la misma probabilidad";
+          } else if (station.id === "calls") {
+            baseDesc =
+              "Poisson: autos que pasan por minuto" +
+              "\nλ = promedio esperado de autos por minuto";
+          }
+          desc.setAttribute("value", baseDesc);
+        }
+        if (distName) distName.setAttribute("value", station.label + " -> " + distribution.name);
+        if (limits) {
+          limits.setAttribute(
+            "value",
+            "Intentos: " + probabilityState.trialCount +
+              " | Intervalo: " + intervalLabel(probabilityState.intervalType),
+          );
+        }
+        if (resultText) {
+          var observedLegend = probabilityState.observedSamples.length > 0
+            ? "\nBarra roja: resultado simulado"
+            : "\nResultado simulado: aparecera al ejecutar";
+          resultText.setAttribute(
+            "value",
+            errors.length
+              ? "Corrige datos: " + errors.join(" ")
+              : "Barras doradas: probabilidad teorica" + observedLegend,
+          );
+        }
+        if (outcomeText) {
+          var initialMessage = "Activa una maquina para generar datos.";
+          if (station.id === "coin") {
+            initialMessage = "Lanza 10 monedas y compara el resultado con la distribucion teorica.";
+          } else if (station.id === "dice") {
+            initialMessage = "Lanza el dado y compara el resultado con la distribucion teorica.";
+          } else if (station.id === "calls") {
+            initialMessage = "Avanza un minuto y compara la cantidad de autos con la distribucion teorica.";
+          }
+          outcomeText.setAttribute(
+            "value",
+            probabilityState.observedSamples.length === 0
+              ? initialMessage
+              : probabilityState.lastOutcome || initialMessage,
+          );
+        }
+        renderProbabilityParameters(lab.querySelector("#prob-param-rows"), distribution);
+        renderProbabilityChart(lab.querySelector("#prob-chart"), distribution, result || {});
+        renderProbabilityMachines(lab, distribution, result || {});
+        probabilityState.machineRunning = false;
+      }
+
 
       // ===== FUNCIONES DE FÍSICA/MRUV =====
 
@@ -3899,9 +7584,9 @@
         var scene = document.querySelector("a-scene");
 
         scene.addEventListener("loaded", function () {
-          console.log("🏛️ Facultad Virtual VR cargada correctamente");
-          console.log("📍 Aula 1: Análisis Matemático | Aula 2: Algoritmos");
-          console.log("🔬 Aula 4: Física (MRUV)");
+          console.log("Facultad Virtual VR cargada correctamente");
+          console.log("Aula 1: Análisis Matemático | Aula 2: Algoritmos");
+          console.log("Aula 4: Física (MRUV)");
         });
 
         scene.addEventListener("enter-vr", function () {
