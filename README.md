@@ -27,10 +27,6 @@ La investigación tiene como objetivo general desarrollar y evaluar una platafor
   - Nicolás Médula
 
 
-## Licencia
-
-Este proyecto se distribuye bajo la licencia [MIT](LICENSE).
-
 ## Tests y cobertura
 
 Requiere Node.js 22.12 o superior dentro de la rama 22 (el CI utiliza Node 22).
@@ -80,3 +76,10 @@ SVG y el resumen; no requiere Codecov ni secretos adicionales. Hasta la primera
 ejecución exitosa en esa rama, el badge de cobertura no estará disponible.
 La publicación utiliza `GITHUB_TOKEN` con `contents: write` solamente en ese job;
 las pruebas de pull requests tienen permiso de lectura.
+
+
+
+
+## Licencia
+
+Este proyecto se distribuye bajo la licencia [MIT](LICENSE).
