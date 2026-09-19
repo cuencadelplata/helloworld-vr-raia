@@ -1,0 +1,66 @@
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.info-panel {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(20, 20, 40, 0.9);
+  color: white;
+  padding: 20px 25px;
+  border-radius: 12px;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  z-index: 998;
+  border: 1px solid rgba(100, 126, 234, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  max-width: 280px;
+}
+.info-panel h3 {
+  margin: 0 0 12px 0;
+  color: #8b9cff;
+  font-size: 18px;
+  font-weight: 600;
+}
+.info-panel .panel-title,
+.info-panel .icon-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info-panel [data-lucide-icon] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #8b9cff;
+  flex: 0 0 18px;
+  width: 18px;
+  min-width: 18px;
+}
+.info-panel .location [data-lucide-icon] {
+  color: #ff6b9d;
+}
+.info-panel svg {
+  width: 16px;
+  height: 16px;
+}
+.info-panel h3 svg {
+  width: 18px;
+  height: 18px;
+}
+.info-panel p {
+  margin: 6px 0;
+  color: #b8c4ff;
+}
+.info-panel strong {
+  color: #ffffff;
+}
+.info-panel .location {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(100, 126, 234, 0.3);
+  font-size: 12px;
+  color: #7a8adb;
+}
