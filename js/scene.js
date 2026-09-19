@@ -2940,6 +2940,7 @@
           this.rightDir = new THREE.Vector3();
           this.tempBox = new THREE.Box3();
           this.ready = false;
+          this.cameraEl = this.el.querySelector("[camera]");
 
           // Escuchar teclas
           this.onKeyDown = function (e) {
@@ -2948,18 +2949,32 @@
           this.onKeyUp = function (e) {
             this.keys[e.code] = false;
           }.bind(this);
+          this.onWindowBlur = function () {
+            this.keys = {};
+          }.bind(this);
           window.addEventListener("keydown", this.onKeyDown);
           window.addEventListener("keyup", this.onKeyUp);
+          window.addEventListener("blur", this.onWindowBlur);
 
           // Esperar a que la escena renderice un frame para que
-          // las matrices de mundo estén actualizadas
+          // las matrices de mundo estén actualizadas. Como los scripts
+          // se cargan desde Vite, la escena puede estar cargada antes de
+          // que este componente se registre.
           var self = this;
-          this.el.sceneEl.addEventListener("loaded", function () {
+          this.initializeMovement = function () {
             setTimeout(function () {
               self.buildCollisionBoxes();
               self.ready = true;
             }, 500);
-          });
+          };
+
+          if (this.el.sceneEl.hasLoaded) {
+            this.initializeMovement();
+          } else {
+            this.el.sceneEl.addEventListener("loaded", this.initializeMovement, {
+              once: true,
+            });
+          }
         },
 
         // Construir bounding boxes MANUALMENTE desde atributos
@@ -3057,8 +3072,9 @@
           var dt = delta / 1000;
 
           // Obtener cámara para dirección de mirada
-          var cam = this.el.querySelector("[camera]");
+          var cam = this.cameraEl || this.el.querySelector("[camera]");
           if (!cam) return;
+          this.cameraEl = cam;
 
           // Vector "adelante" (sin componente Y)
           this.forward.set(0, 0, -1);
@@ -3113,6 +3129,8 @@
         remove: function () {
           window.removeEventListener("keydown", this.onKeyDown);
           window.removeEventListener("keyup", this.onKeyUp);
+          window.removeEventListener("blur", this.onWindowBlur);
+          this.el.sceneEl.removeEventListener("loaded", this.initializeMovement);
         },
       });
 

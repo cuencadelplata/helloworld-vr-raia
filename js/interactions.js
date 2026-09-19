@@ -3576,7 +3576,7 @@
       // Los botones se manejan via componente btn-action (registrado arriba)
       // Solo queda el manejo de VR enter/exit
 
-      document.addEventListener("DOMContentLoaded", function () {
+      function initializeSceneEvents() {
         var scene = document.querySelector("a-scene");
 
         scene.addEventListener("loaded", function () {
@@ -3599,4 +3599,4 @@
           var cursor = document.querySelector("a-cursor");
           if (cursor) cursor.setAttribute("visible", true);
         });
-      });
+      }

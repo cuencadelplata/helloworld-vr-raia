@@ -1,6 +1,9 @@
 import "./vendor.js";
+import iconsUrl from "./lucide-icons.js?url";
+import sceneUrl from "./scene.js?url";
+import interactionsUrl from "./interactions.js?url";
 
-const scripts = ["/js/lucide-icons.js", "/js/scene.js", "/js/interactions.js"];
+const scripts = [iconsUrl, sceneUrl, interactionsUrl];
 
 function loadClassicScript(src) {
   return new Promise((resolve, reject) => {
@@ -15,3 +18,8 @@ function loadClassicScript(src) {
 for (const src of scripts) {
   await loadClassicScript(src);
 }
+
+// Instanciar las entidades solamente después de registrar sus componentes.
+const template = document.getElementById("scene-template");
+template.replaceWith(template.content.cloneNode(true));
+window.initializeSceneEvents();
