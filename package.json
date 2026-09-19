@@ -1,0 +1,10 @@
+{
+  "name": "helloworld-vr-raia",
+  "version": "1.0.0",
+  "description": "Facultad Virtual VR - simulacion A-Frame",
+  "scripts": {
+    "start": "npx serve .",
+    "serve": "python -m http.server 8080"
+  },
+  "license": "UNLICENSED"
+}
