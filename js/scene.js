@@ -733,13 +733,13 @@
         });
       }
 
-      function buildPlaceholderContent(parent, id, tipo, posicionXYZ) {
+      function buildPlaceholderContent(parent, id, tipo, posicionXYZ, colorParedes) {
         if (tipo === "fisica") {
           buildFisicaContent(parent, id, posicionXYZ);
         } else if (tipo === "cpu") {
           buildCpuSchedulerContent(parent, id, posicionXYZ);
         } else if (tipo === "probabilidad") {
-          buildProbabilityContent(parent, id, posicionXYZ);
+          buildProbabilityContent(parent, id, posicionXYZ, colorParedes);
         } else if (tipo === "complejidad") {
           buildComplexityContent(parent, id, posicionXYZ);
         } else {
@@ -1526,7 +1526,7 @@
         });
       }
 
-      function buildProbabilityContent(parent, id, posicionXYZ) {
+      function buildProbabilityContent(parent, id, posicionXYZ, colorParedes) {
         var side = getAulaSide(posicionXYZ);
         var frontX = side * 3.82;
         var frontRot = "0 " + -side * 90 + " 0";
@@ -2895,7 +2895,7 @@
         } else if (tipo === "algoritmos") {
           buildAlgorithmContent(aula);
         } else if (tipo === "cpu" || tipo === "fisica" || tipo === "probabilidad" || tipo === "complejidad") {
-          buildPlaceholderContent(aula, id, tipo, posicionXYZ);
+          buildPlaceholderContent(aula, id, tipo, posicionXYZ, colorParedes);
         }
 
         if (!targetEl && scene) scene.appendChild(aula);
