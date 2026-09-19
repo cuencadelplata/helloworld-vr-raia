@@ -1,4 +1,4 @@
-      // ============================================
+// ============================================
       // COMPONENTE BTN-ACTION
       // Maneja clicks en botones interactivos.
       // Funciona con cursor de PC, gaze VR y
@@ -733,13 +733,13 @@
         });
       }
 
-      function buildPlaceholderContent(parent, id, tipo, posicionXYZ) {
+      function buildPlaceholderContent(parent, id, tipo, posicionXYZ, colorParedes) {
         if (tipo === "fisica") {
           buildFisicaContent(parent, id, posicionXYZ);
         } else if (tipo === "cpu") {
           buildCpuSchedulerContent(parent, id, posicionXYZ);
         } else if (tipo === "probabilidad") {
-          buildProbabilityContent(parent, id, posicionXYZ);
+          buildProbabilityContent(parent, id, posicionXYZ, colorParedes);
         } else if (tipo === "complejidad") {
           buildComplexityContent(parent, id, posicionXYZ);
         } else {
@@ -1526,7 +1526,7 @@
         });
       }
 
-      function buildProbabilityContent(parent, id, posicionXYZ) {
+      function buildProbabilityContent(parent, id, posicionXYZ, colorParedes) {
         var side = getAulaSide(posicionXYZ);
         var frontX = side * 3.82;
         var frontRot = "0 " + -side * 90 + " 0";
@@ -2895,7 +2895,7 @@
         } else if (tipo === "algoritmos") {
           buildAlgorithmContent(aula);
         } else if (tipo === "cpu" || tipo === "fisica" || tipo === "probabilidad" || tipo === "complejidad") {
-          buildPlaceholderContent(aula, id, tipo, posicionXYZ);
+          buildPlaceholderContent(aula, id, tipo, posicionXYZ, colorParedes);
         }
 
         if (!targetEl && scene) scene.appendChild(aula);
@@ -2940,6 +2940,7 @@
           this.rightDir = new THREE.Vector3();
           this.tempBox = new THREE.Box3();
           this.ready = false;
+          this.cameraEl = this.el.querySelector("[camera]");
 
           // Escuchar teclas
           this.onKeyDown = function (e) {
@@ -2948,18 +2949,32 @@
           this.onKeyUp = function (e) {
             this.keys[e.code] = false;
           }.bind(this);
+          this.onWindowBlur = function () {
+            this.keys = {};
+          }.bind(this);
           window.addEventListener("keydown", this.onKeyDown);
           window.addEventListener("keyup", this.onKeyUp);
+          window.addEventListener("blur", this.onWindowBlur);
 
           // Esperar a que la escena renderice un frame para que
-          // las matrices de mundo estén actualizadas
+          // las matrices de mundo estén actualizadas. Como los scripts
+          // se cargan desde Vite, la escena puede estar cargada antes de
+          // que este componente se registre.
           var self = this;
-          this.el.sceneEl.addEventListener("loaded", function () {
+          this.initializeMovement = function () {
             setTimeout(function () {
               self.buildCollisionBoxes();
               self.ready = true;
             }, 500);
-          });
+          };
+
+          if (this.el.sceneEl.hasLoaded) {
+            this.initializeMovement();
+          } else {
+            this.el.sceneEl.addEventListener("loaded", this.initializeMovement, {
+              once: true,
+            });
+          }
         },
 
         // Construir bounding boxes MANUALMENTE desde atributos
@@ -3057,8 +3072,9 @@
           var dt = delta / 1000;
 
           // Obtener cámara para dirección de mirada
-          var cam = this.el.querySelector("[camera]");
+          var cam = this.cameraEl || this.el.querySelector("[camera]");
           if (!cam) return;
+          this.cameraEl = cam;
 
           // Vector "adelante" (sin componente Y)
           this.forward.set(0, 0, -1);
@@ -3113,6 +3129,8 @@
         remove: function () {
           window.removeEventListener("keydown", this.onKeyDown);
           window.removeEventListener("keyup", this.onKeyUp);
+          window.removeEventListener("blur", this.onWindowBlur);
+          this.el.sceneEl.removeEventListener("loaded", this.initializeMovement);
         },
       });
 

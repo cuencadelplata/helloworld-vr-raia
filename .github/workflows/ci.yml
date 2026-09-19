@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [coverage-badge]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests, cobertura y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:coverage
+      - name: Registrar resumen y generar badge
+        if: always() && hashFiles('coverage/coverage-summary.json') != ''
+        run: node scripts/coverage-summary.js
+      - name: Conservar reportes de cobertura
+        if: always() && hashFiles('coverage/coverage-summary.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage/
+            !coverage/tmp/
+          retention-days: 30
+          if-no-files-found: error
+      - run: npm run build
+
+  coverage-badge:
+    name: Publicar badge de la rama principal
+    needs: test
+    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage
+      - name: Actualizar rama coverage-badge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const repo = context.repo;
+            const branch = 'coverage-badge';
+            let parent;
+            try {
+              const ref = await github.rest.git.getRef({ ...repo, ref: 'heads/' + branch });
+              parent = ref.data.object.sha;
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            const tree = await github.rest.git.createTree({
+              ...repo,
+              tree: ['badge.svg', 'coverage-summary.json', 'summary.md'].map(path => ({
+                path, mode: '100644', type: 'blob',
+                content: fs.readFileSync('coverage/' + path, 'utf8'),
+              })),
+            });
+            const commit = await github.rest.git.createCommit({
+              ...repo,
+              message: 'docs: cobertura para ' + context.sha,
+              tree: tree.data.sha,
+              parents: parent ? [parent] : [],
+            });
+            if (parent) {
+              await github.rest.git.updateRef({
+                ...repo, ref: 'heads/' + branch, sha: commit.data.sha,
+              });
+            } else {
+              await github.rest.git.createRef({
+                ...repo, ref: 'refs/heads/' + branch, sha: commit.data.sha,
+              });
+            }
