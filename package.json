@@ -1,0 +1,20 @@
+{
+  "name": "facultad-virtual-vr",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "aframe": "1.6.0",
+    "aframe-environment-component": "1.5.0",
+    "aframe-teleport-controls": "0.3.1",
+    "gsap": "3.12.2"
+  },
+  "devDependencies": {
+    "vite": "^7.1.5"
+  }
+}
