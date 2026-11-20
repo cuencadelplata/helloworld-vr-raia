@@ -317,7 +317,6 @@
         var boardX = side * 4;
         var hallX = -side * 4;
         var facingRotation = "0 " + -side * 90 + " 0";
-        var deskRotation = "0 " + side * 90 + " 0";
 
         appendEl(parent, "a-plane", {
           id: id + "-suelo",
@@ -384,37 +383,11 @@
         );
 
         appendEl(parent, "a-entity", {
-          "gltf-model": "#modelo-puerta",
-          position: -side * 3.9 + " 0 0",
-          rotation: "0 " + side * 90 + " 0",
-          scale: "2 2 2",
-          shadow: "cast: true; receive: true",
-        });
-
-        appendEl(parent, "a-entity", {
           "gltf-model": "#modelo-pizarra",
           position: side * 3.5 + " 1.3 0",
           rotation: facingRotation,
           scale: "0.5 0.5 0.5",
           shadow: "cast: true; receive: true",
-        });
-
-        [
-          [side * 1.5, 0, -1.5],
-          [side * 1.5, 0, 0],
-          [side * 1.5, 0, 1.5],
-          [-side * 1, 0, -1.5],
-          [-side * 1, 0, 0],
-          [-side * 1, 0, 1.5],
-        ].forEach(function (position) {
-          appendEl(parent, "a-entity", {
-            class: "pupitre",
-            "gltf-model": "#modelo-pupitre",
-            position: position.join(" "),
-            rotation: deskRotation,
-            scale: "0.3 0.3 0.3",
-            shadow: "cast: true; receive: true",
-          });
         });
 
         appendEl(parent, "a-light", {
@@ -764,13 +737,6 @@
         var side = getAulaSide(posicionXYZ);
         var frontX = side * 3.86;
         var frontRot = "0 " + -side * 90 + " 0";
-
-        parent.querySelectorAll(".pupitre").forEach(function (desk, i) {
-          var x = i < 3 ? -side * 3.05 : side * 3.05;
-          var z = [-2.2, 0, 2.2][i % 3];
-          desk.setAttribute("position", x + " 0 " + z);
-          desk.setAttribute("scale", "0.22 0.22 0.22");
-        });
 
         var root = appendEl(parent, "a-entity", {
           id: "cpu-lab",
@@ -1534,10 +1500,6 @@
         var rightMachineX = -side * 3.15;
         var rightWallRot = "0 " + side * 90 + " 0";
 
-        parent.querySelectorAll(".pupitre").forEach(function (desk) {
-          desk.parentNode.removeChild(desk);
-        });
-
         var root = appendEl(parent, "a-entity", {
           id: "probability-lab",
           position: "0 0.03 0",
@@ -1615,24 +1577,6 @@
         }
 
         expandProbabilityClassroom();
-
-        [
-          [-1.45, 0, 1.25],
-          [0, 0, 1.25],
-          [1.45, 0, 1.25],
-          [-1.45, 0, 0.25],
-          [0, 0, 0.25],
-          [1.45, 0, 0.25],
-        ].forEach(function (pos) {
-          appendEl(root, "a-entity", {
-            class: "prob-audience-chair",
-            "gltf-model": "#modelo-pupitre",
-            position: pos.join(" "),
-            rotation: "0 -90 0",
-            scale: "0.24 0.24 0.24",
-            shadow: "cast: true; receive: true",
-          });
-        });
 
         var centerTable = appendEl(root, "a-entity", {
           id: "prob-center-table-group",
@@ -2670,13 +2614,6 @@
         var side = getAulaSide(posicionXYZ);
         var frontX = side * 3.82;
         var frontRot = "0 " + -side * 90 + " 0";
-
-        parent.querySelectorAll(".pupitre").forEach(function (desk, i) {
-          var x = i < 3 ? -side * 3.0 : side * 3.0;
-          var z = [-2.15, 0, 2.15][i % 3];
-          desk.setAttribute("position", x + " 0 " + z);
-          desk.setAttribute("scale", "0.22 0.22 0.22");
-        });
 
         var root = appendEl(parent, "a-entity", {
           id: "complexity-lab",
