@@ -14,7 +14,21 @@ Nota: los scripts se corren con `pnpm run` (preferencia del usuario), sin cambia
 - [x] 2.3 En `js/scene.js`, borrar los bucles `querySelectorAll(".pupitre")` de CPU, probabilidad y complejidad, y verificar con `grep -n "pupitre" js/scene.js` que no hay resultados
 - [x] 2.4 En `index.html`, borrar `<a-asset-item id="modelo-pupitre">` y verificar con `grep -rn "pupitre" index.html js` que no hay resultados
 
-## 3. Verificación
+## 3. Verificación (sillas)
 
 - [x] 3.1 Correr `pnpm run test:coverage`, `node scripts/coverage-summary.js` y `pnpm run build`, y verificar que todos salen con código 0
 - [x] 3.2 Levantar `pnpm run dev` en localhost y pasarle la URL al usuario para que confirme que no hay sillas en ningún aula
+
+## 4. Quitar marcos de puerta
+
+- [x] 4.1 En `js/scene.js`, borrar la entidad `#modelo-puerta` de `addBaseClassroom` y verificar con `grep -n "modelo-puerta" js/scene.js` que no hay resultados
+- [x] 4.2 En `index.html`, borrar el bloque "Marco de puerta principal (entrada doble)" con sus dos entidades y el `<a-asset-item id="modelo-puerta">`, y verificar con `grep -rn "modelo-puerta\|marco_en_madera" index.html js` que no hay resultados
+
+## 5. Bloqueo de la entrada
+
+- [x] 5.1 En `index.html`, volver a precargar `<a-asset-item id="modelo-pupitre">`, poner 2 sillas en x ±0,6, z 7,0 y una caja `.collidable` invisible que cubra el hueco, y verificar con grep que hay exactamente 2 usos de `#modelo-pupitre`
+
+## 6. Verificación (marcos y bloqueo)
+
+- [x] 6.1 Correr `pnpm run test:coverage`, `node scripts/coverage-summary.js` y `pnpm run build`, y verificar que todos salen con código 0
+- [x] 6.2 Levantar `pnpm run dev` en localhost y pasarle la URL al usuario para que confirme que no quedan marcos en las aulas ni en la entrada, que se ven las 2 sillas y que no se puede salir por la entrada

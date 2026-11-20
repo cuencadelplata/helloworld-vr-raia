@@ -41,8 +41,8 @@
         <!-- Modelos 3D -->
         <a-asset-item id="modelo-pizarra" src="/assets/pizarra.glb"></a-asset-item>
         <a-asset-item
-          id="modelo-puerta"
-          src="/assets/marco_en_madera_puerta.glb"
+          id="modelo-pupitre"
+          src="/assets/silla_pupitre_disgraf_8b.glb"
         ></a-asset-item>
         <a-asset-item id="modelo-logo" src="/assets/Iso.gltf"></a-asset-item>
         <img id="textura-logo" src="/assets/logo.png" crossorigin="anonymous" />
@@ -438,19 +438,27 @@
           shadow="cast: true; receive: true"
         ></a-box>
 
-        <!-- Marco de puerta principal (entrada doble) -->
+        <!-- Bloqueo de la entrada: sillas diegéticas + colisión invisible -->
+        <a-box
+          class="collidable"
+          visible="false"
+          width="2.4"
+          height="1.5"
+          depth="0.9"
+          position="0 0.75 7.15"
+        ></a-box>
         <a-entity
-          gltf-model="#modelo-puerta"
-          position="-0.7 0 7.3"
+          gltf-model="#modelo-pupitre"
+          position="-0.6 0 7"
           rotation="0 180 0"
-          scale="2 2 2"
+          scale="0.3 0.3 0.3"
           shadow="cast: true; receive: true"
         ></a-entity>
         <a-entity
-          gltf-model="#modelo-puerta"
-          position="0.7 0 7.3"
+          gltf-model="#modelo-pupitre"
+          position="0.6 0 7"
           rotation="0 180 0"
-          scale="2 2 2"
+          scale="0.3 0.3 0.3"
           shadow="cast: true; receive: true"
         ></a-entity>
 

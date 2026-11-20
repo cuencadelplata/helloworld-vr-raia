@@ -383,14 +383,6 @@
         );
 
         appendEl(parent, "a-entity", {
-          "gltf-model": "#modelo-puerta",
-          position: -side * 3.9 + " 0 0",
-          rotation: "0 " + side * 90 + " 0",
-          scale: "2 2 2",
-          shadow: "cast: true; receive: true",
-        });
-
-        appendEl(parent, "a-entity", {
           "gltf-model": "#modelo-pizarra",
           position: side * 3.5 + " 1.3 0",
           rotation: facingRotation,
